@@ -25,7 +25,7 @@ const UpdateBase = {
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters').optional(),
   description: z.string().max(255).optional(),
   group: PermissionGroupSchema.optional(),
-  isActive: z.boolean().optional(),
+ isActive: z.boolean().optional(),
 };
 
 export const UpdatePermissionDto = z.object({
@@ -202,3 +202,37 @@ export type CreateCategoryInput = z.infer<typeof CreateCategoryDto>;
 export type UpdateCategoryInput = z.infer<typeof UpdateCategoryDto>;
 export type PartialUpdateCategoryInput = z.infer<typeof PartialUpdateCategoryDto>;
 export type ListCategoriesInput = z.infer<typeof ListCategoryDto>;
+
+// Brand DTOs (Task 10: Brand System)
+export const CreateBrandDto = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  description: z.string().max(255).optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
+  mediaId: z.string().optional(), // Optional reference to a Media item for logo
+});
+
+export const UpdateBrandDto = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  description: z.string().max(255).optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
+  mediaId: z.string().optional(),
+});
+
+export const PartialUpdateBrandDto = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters').optional(),
+  description: z.string().max(255).optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
+  mediaId: z.string().optional(),
+});
+
+export const ListBrandDto = z.object({
+  page: z.number().min(1).default(1).optional(),
+  limit: z.number().min(1).max(100).default(10).optional(),
+  search: z.string().optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
+});
+
+export type CreateBrandInput = z.infer<typeof CreateBrandDto>;
+export type UpdateBrandInput = z.infer<typeof UpdateBrandDto>;
+export type PartialUpdateBrandInput = z.infer<typeof PartialUpdateBrandDto>;
+export type ListBrandsInput = z.infer<typeof ListBrandDto>;

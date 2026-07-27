@@ -11,6 +11,7 @@ import { roleRoutes } from './modules/role/role.routes';
 import { userRoutes } from './modules/user/user.routes';
 import { mediaRoutes } from './modules/media/media.routes';
 import { categoryRoutes } from './modules/category/category.routes';
+import { brandRoutes } from './modules/brand/brand.routes';
 
 /**
  * Express application instance.
@@ -56,6 +57,9 @@ mediaRoutes(app);
 
 // Mount category routes (nested tree, cycle detection, slug validation)
 categoryRoutes(app);
+
+// Mount brand routes (CRUD, status management, logo upload with media integration)
+brandRoutes(app);
 
 // Global error handler — must be last
 app.use(errorHandler);

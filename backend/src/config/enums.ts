@@ -41,3 +41,8 @@ export enum MediaStatus {
   READY,
   ERROR,
 }
+
+export enum BrandStatus {
+  ACTIVE,
+  INACTIVE,
+}

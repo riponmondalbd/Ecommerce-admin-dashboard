@@ -154,6 +154,7 @@ model Media {
   uploadedBy  User             @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
   uploadedById String           @db.Uuid
   status      MediaStatus      @default(PENDING)
+  brands      Brand[]          // Inverse of Brand.media
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -188,4 +189,27 @@ model Category {
   @@index([slug])
   @@map("categories")
 }
+
+// ─── Brand Model ───────────────────────────────────────────────────────────────
+
+model Brand {
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String           @unique
+  description String?
+  status      BrandStatus      @default(ACTIVE)
+  mediaId     String?          @db.Uuid
+  media       Media?           @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([status])
+  @@index([mediaId])
+  @@map("brands")
+}
+
+enum BrandStatus {
+  ACTIVE
+  INACTIVE
+}
+
 
