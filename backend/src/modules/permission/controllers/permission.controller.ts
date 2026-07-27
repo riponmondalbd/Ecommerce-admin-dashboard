@@ -17,10 +17,10 @@ export const permissionController = {
   async list(req: Request, res: Response) {
     try {
       const queryParams = {
-        page: Number(req.query.page),
-        limit: Number(req.query.limit),
-        group: req.query.group,
-        search: req.query.search,
+        page: req.query.page ? Number(req.query.page) : 1,
+        limit: req.query.limit ? Number(req.query.limit) : 10,
+        group: req.query.group as string | undefined,
+        search: req.query.search as string | undefined,
         isActive: req.query.isActive === 'true'
       };
       const result = await getPermissions(queryParams);
@@ -36,7 +36,11 @@ export const permissionController = {
   // GET /api/permissions/:id - Get a single permission by ID
   async getById(req: Request, res: Response) {
     try {
-      const permission = await getPermissionById(req.params.id);
+      const id = req.params.id;
+      if (!id || typeof id !== 'string') {
+        return res.status(400).json({ success: false, message: 'Invalid permission ID' });
+      }
+      const permission = await getPermissionById(id);
       return successResponse(res, permission, 'Permission retrieved successfully');
     } catch (error) {
       if (error instanceof AppError) {
@@ -62,7 +66,11 @@ export const permissionController = {
   // PUT /api/permissions/:id - Full update of a permission
   async update(req: Request, res: Response) {
     try {
-      const permission = await updatePermission(req.params.id, req.body);
+      const id = req.params.id;
+      if (!id || typeof id !== 'string') {
+        return res.status(400).json({ success: false, message: 'Invalid permission ID' });
+      }
+      const permission = await updatePermission(id, req.body);
       return successResponse(res, permission, 'Permission updated successfully');
     } catch (error) {
       if (error instanceof AppError) {
@@ -75,7 +83,11 @@ export const permissionController = {
   // PATCH /api/permissions/:id - Partial update of a permission
   async partialUpdate(req: Request, res: Response) {
     try {
-      const permission = await partialUpdatePermission(req.params.id, req.body);
+      const id = req.params.id;
+      if (!id || typeof id !== 'string') {
+        return res.status(400).json({ success: false, message: 'Invalid permission ID' });
+      }
+      const permission = await partialUpdatePermission(id, req.body);
       return successResponse(res, permission, 'Permission updated successfully');
     } catch (error) {
       if (error instanceof AppError) {
@@ -88,7 +100,11 @@ export const permissionController = {
   // DELETE /api/permissions/:id - Delete a permission
   async delete(req: Request, res: Response) {
     try {
-      const result = await deletePermission(req.params.id);
+      const id = req.params.id;
+      if (!id || typeof id !== 'string') {
+        return res.status(400).json({ success: false, message: 'Invalid permission ID' });
+      }
+      const result = await deletePermission(id);
       return successResponse(res, {}, 'Permission deleted successfully');
     } catch (error) {
       if (error instanceof AppError) {
@@ -101,8 +117,12 @@ export const permissionController = {
   // POST /api/permissions/:id/roles/:roleId - Assign a permission to a role
   async assignToRole(req: Request, res: Response) {
     try {
-      const { roleId } = req.params;
-      const assignment = await assignPermissionToRole(roleId, req.params.id);
+      const id = req.params.id;
+      const roleId = req.params.roleId;
+      if (!id || !roleId || typeof id !== 'string' || typeof roleId !== 'string') {
+        return res.status(400).json({ success: false, message: 'Invalid permission or role ID' });
+      }
+      const assignment = await assignPermissionToRole(roleId, id);
       return successResponse(res, assignment, 'Permission assigned to role successfully');
     } catch (error) {
       if (error instanceof AppError) {
@@ -115,8 +135,12 @@ export const permissionController = {
   // DELETE /api/permissions/:id/roles/:roleId - Remove a permission from a role
   async removeFromRole(req: Request, res: Response) {
     try {
-      const { roleId } = req.params;
-      const result = await removePermissionFromRole(roleId, req.params.id);
+      const id = req.params.id;
+      const roleId = req.params.roleId;
+      if (!id || !roleId || typeof id !== 'string' || typeof roleId !== 'string') {
+        return res.status(400).json({ success: false, message: 'Invalid permission or role ID' });
+      }
+      const result = await removePermissionFromRole(roleId, id);
       return successResponse(res, result, 'Permission removed from role successfully');
     } catch (error) {
       if (error instanceof AppError) {

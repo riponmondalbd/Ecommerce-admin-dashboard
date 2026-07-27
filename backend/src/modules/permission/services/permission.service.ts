@@ -1,6 +1,12 @@
 import { prisma } from '../../../database/prisma';
 import { AppError } from '../../../utils/appError';
-import { env } from '../../../config/env';
+import * as z from 'zod';
+import {
+  ListPermissionDto,
+  CreatePermissionDto,
+  UpdatePermissionDto,
+  PartialUpdatePermissionDto,
+} from '../../../validation/schemas';
 
 // Validate the input against Zod schemas
 const validateInput = <T>(input: unknown, schema: z.Schema<T>): T => {
@@ -20,7 +26,7 @@ export const getPermissions = async (input: unknown) => {
 
   const where = {} as any;
 
-  if (validated.group) {
+  if (validated.group !== undefined) {
     where.group = validated.group;
   }
 
@@ -28,19 +34,21 @@ export const getPermissions = async (input: unknown) => {
     where.isActive = validated.isActive;
   }
 
-  if (validated.search) {
+  if (validated.search !== undefined && validated.search !== '') {
     where.OR = [
       { name: { contains: validated.search, mode: 'insensitive' } },
       { key: { contains: validated.search, mode: 'insensitive' } },
     ];
   }
 
-  const skip = (validated.page - 1) * validated.limit;
+  const page = validated.page || 1;
+const limit = validated.limit || 10;
+const skip = (page - 1) * limit;
 
   const [permissions, total] = await Promise.all([
     prisma.permission.findMany({
       where,
-      take: validated.limit,
+      take: limit,
       skip,
       orderBy: { createdAt: 'desc' },
       include: {
@@ -59,12 +67,12 @@ export const getPermissions = async (input: unknown) => {
   return {
     data: permissions,
     pagination: {
-      page: validated.page,
-      limit: validated.limit,
+      page: page,
+      limit: limit,
       total,
-      pages: Math.ceil(total / validated.limit),
-      hasNext: validated.page < Math.ceil(total / validated.limit),
-      hasPrev: validated.page > 1
+      pages: Math.ceil(total / limit),
+      hasNext: page < Math.ceil(total / limit),
+      hasPrev: page > 1
     }
   };
 };
@@ -250,9 +258,10 @@ export const assignPermissionToRole = async (roleId: string, permissionId: strin
   if (!permission) throw new AppError('Permission not found', 404);
 
   // Check if already assigned
-  const existing = await prisma.rolePermission.findUnique({
-    where: { roleId, permissionId }
-  });
+  const existing = await prisma.rolePermission.findMany({
+    where: { roleId, permissionId },
+    take: 1
+  }).then(r => r[0]);
 
   if (existing) {
     throw new AppError('Permission already assigned to this role', 409);
@@ -267,9 +276,10 @@ export const assignPermissionToRole = async (roleId: string, permissionId: strin
  * Remove a permission from a role
  */
 export const removePermissionFromRole = async (roleId: string, permissionId: string) => {
-  const assignment = await prisma.rolePermission.findUnique({
-    where: { roleId, permissionId }
-  });
+  const assignment = await prisma.rolePermission.findMany({
+    where: { roleId, permissionId },
+    take: 1
+  }).then(r => r[0]);
 
   if (!assignment) {
     throw new AppError('Permission not assigned to this role', 404);
@@ -304,9 +314,10 @@ export const getUserPermissions = async (userId: string) => {
     throw new AppError('User not found', 404);
   }
 
-  const permissions = user.role.permissions.flatMap(rp =>
-    rp.permission.map(p => ({ key: p.key, name: p.name }))
-  );
+  // Extract permission keys from role permissions relationship
+const permissions = user.role.permissions.flatMap(rp =>
+  [rp.permission].map(p => ({ key: p.key, name: p.name }))
+);
 
   return permissions;
 };

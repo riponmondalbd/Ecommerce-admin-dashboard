@@ -20,19 +20,19 @@ export const authRoutes = (app: Express) => {
   });
 
   app.get('/api/auth/me', jwtAuthMiddleware, async (req, res) => {
-    import('./auth.service').then(({ authService }) => {
-      if (!req.userId) {
+    try {
+      const { authService } = await import('./auth.service');
+      if (!req.userId || typeof req.userId !== 'string') {
         return res.status(500).json({ success: false, message: 'User ID not available' });
       }
-      authService.getUserById(req.userId).then(user => {
-        if (!user) {
-          return res.status(404).json({ success: false, message: 'User not found' });
-        }
-        const { password, ...safeUser } = user;
-        res.json({ success: true, data: safeUser });
-      }).catch(err => {
-        res.status(500).json({ success: false, message: 'Failed to fetch user' });
-      });
-    });
+      const user = await authService.getUserById(req.userId);
+      if (!user) {
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+      const { password, ...safeUser } = user;
+      return res.json({ success: true, data: safeUser });
+    } catch (error) {
+      return res.status(500).json({ success: false, message: 'Failed to fetch user' });
+    }
   });
 };

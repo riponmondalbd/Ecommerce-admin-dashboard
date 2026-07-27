@@ -1,11 +1,10 @@
 import bcrypt from 'bcrypt';
-import jwt from 'jsonwebtoken';
+import jwt, { JsonWebTokenError, SignOptions } from 'jsonwebtoken';
 import { prisma } from '../../database/prisma';
 import { env } from '../../config/env';
 import { AppError } from '../../utils/appError';
 import { LoginInput } from './dtos/login.dto';
 import { RegisterInput } from './dtos/register.dto';
-import { SignOptions } from 'jsonwebtoken';
 
 export class AuthService {
   async register(input: RegisterInput) {
@@ -36,9 +35,9 @@ export class AuthService {
     if (user.status !== 'ACTIVE') throw new AppError('Account is not active', 403);
 
     const accessToken = jwt.sign(
-      { id: user.id, email: user.email, role: user.role.name },
+      { userId: user.id, email: user.email, role: user.role.name },
       env.jwtAccessSecret,
-      { expiresIn: env.jwtAccessExpiresIn }
+      { expiresIn: env.jwtAccessExpiresIn } as SignOptions
     );
 
     const refreshTokenObj = await this.getOrCreateRefreshToken(user);
@@ -83,9 +82,9 @@ export class AuthService {
     if (!db || db.revoked || db.expiresAt < new Date()) throw new AppError('Invalid or expired refresh token', 401);
 
     const accessToken = jwt.sign(
-      { id: db.user.id, email: db.user.email, role: db.user.role.name },
+      { userId: db.user.id, email: db.user.email, role: db.user.role.name },
       env.jwtAccessSecret,
-      { expiresIn: env.jwtAccessExpiresIn }
+      { expiresIn: env.jwtAccessExpiresIn } as SignOptions
     );
 
     await this.rotateRefreshToken(db.userId, db.id);
