@@ -10,6 +10,7 @@ import { permissionRoutes } from './modules/permission/permission.routes';
 import { roleRoutes } from './modules/role/role.routes';
 import { userRoutes } from './modules/user/user.routes';
 import { mediaRoutes } from './modules/media/media.routes';
+import { categoryRoutes } from './modules/category/category.routes';
 
 /**
  * Express application instance.
@@ -52,6 +53,9 @@ userRoutes(app);
 
 // Mount media routes (upload, thumbnails, delete, filter)
 mediaRoutes(app);
+
+// Mount category routes (nested tree, cycle detection, slug validation)
+categoryRoutes(app);
 
 // Global error handler — must be last
 app.use(errorHandler);

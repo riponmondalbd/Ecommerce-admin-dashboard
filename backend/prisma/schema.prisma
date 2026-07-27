@@ -169,3 +169,23 @@ enum MediaStatus {
   READY
   ERROR
 }
+
+// ─── Category Model (Nested Tree) ──────────────────────────────────────────────
+
+model Category {
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String
+  slug        String           @unique
+  description String?
+  parentId    String?          @db.Uuid
+  parent      Category?        @relation("CategoryParents", fields: [parentId], references: [id], onDelete: SetNull)
+  children    Category[]       @relation("CategoryParents")
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([parentId])
+  @@index([slug])
+  @@map("categories")
+}
+

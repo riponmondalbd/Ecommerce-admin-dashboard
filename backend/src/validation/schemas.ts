@@ -165,3 +165,40 @@ export type CreateMediaInput = z.infer<typeof CreateMediaDto>;
 export type UpdateMediaInput = z.infer<typeof UpdateMediaDto>;
 export type PartialUpdateMediaInput = z.infer<typeof PartialUpdateMediaDto>;
 export type ListMediaInput = z.infer<typeof ListMediaDto>;
+
+// Category DTOs (Task 9: Category System)
+export const CreateCategoryDto = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  slug: z.string().min(1, 'Slug is required').max(100, 'Slug must be less than 100 characters').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
+  description: z.string().max(255).optional(),
+  parentId: z.string().optional(), // Reference to parent category ID
+});
+
+export const UpdateCategoryDto = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters').optional(),
+  slug: z.string().min(1, 'Slug is required').max(100, 'Slug must be less than 100 characters').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens').optional(),
+  description: z.string().max(255).optional(),
+  parentId: z.string().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const PartialUpdateCategoryDto = z.object({
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters').optional(),
+  slug: z.string().min(1, 'Slug is required').max(100, 'Slug must be less than 100 characters').optional(),
+  description: z.string().max(255).optional(),
+  parentId: z.string().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const ListCategoryDto = z.object({
+  page: z.number().min(1).default(1).optional(),
+  limit: z.number().min(1).max(100).default(10).optional(),
+  search: z.string().optional(),
+  parentId: z.string().optional(),
+  isActive: z.boolean().optional(),
+});
+
+export type CreateCategoryInput = z.infer<typeof CreateCategoryDto>;
+export type UpdateCategoryInput = z.infer<typeof UpdateCategoryDto>;
+export type PartialUpdateCategoryInput = z.infer<typeof PartialUpdateCategoryDto>;
+export type ListCategoriesInput = z.infer<typeof ListCategoryDto>;
