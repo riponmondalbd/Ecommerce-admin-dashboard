@@ -53,3 +53,19 @@ export enum AttributeType {
   COLOR,
   IMAGE,
 }
+
+export enum ProductStatus {
+  DRAFT = 'DRAFT',
+  PUBLISHED = 'PUBLISHED',
+  ARCHIVED = 'ARCHIVED',
+}
+
+export enum TransactionType {
+  CREATE = 'CREATE',
+  UPDATE = 'UPDATE',
+  DELETE = 'DELETE',
+  SELL = 'SELL',
+  RESTOCK = 'RESTOCK',
+  ADJUST = 'ADJUST',
+  TRANSFER = 'TRANSFER',
+}

@@ -181,6 +181,7 @@ model Category {
   parentId    String?          @db.Uuid
   parent      Category?        @relation("CategoryParents", fields: [parentId], references: [id], onDelete: SetNull)
   children    Category[]       @relation("CategoryParents")
+  products    Product[]        // Inverse of Product.category
   isActive    Boolean          @default(true)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
@@ -199,6 +200,7 @@ model Brand {
   status      BrandStatus      @default(ACTIVE)
   mediaId     String?          @db.Uuid
   media       Media?           @relation(fields: [mediaId], references: [id], onDelete: SetNull)
+  products    Product[]        // Inverse of Product.brand
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -245,6 +247,7 @@ model AttributeValue {
   sortOrder   Int              @default(0)
   attribute   Attribute        @relation(fields: [attributeId], references: [id], onDelete: Cascade)
   attributeId String           @db.Uuid
+  productAttributeValues ProductAttributeValue[] // Inverse of ProductAttributeValue.attributeValue
 
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
@@ -252,6 +255,106 @@ model AttributeValue {
   @@index([attributeId])
   @@index([valueCode])
   @@map("attribute_values")
+}
+
+// ─── Product Model ───────────────────────────────────────────────────────────────
+
+model Product {
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String
+  description String?
+  price       Decimal
+  sku         String?          // Unique stock keeping unit (may be auto-generated)
+  category    Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  categoryId  String?          @db.Uuid
+  brand       Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  brandId     String?          @db.Uuid
+  status      ProductStatus    @default(DRAFT)
+  variants    ProductVariant[] // Inverse of ProductVariant.product
+  transactions ProductTransaction[] // Inverse of ProductTransaction.product
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([status])
+  @@index([categoryId])
+  @@index([brandId])
+  @@unique([sku])
+  @@map("products")
+}
+
+enum ProductStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+// ─── Product Variant Model ──────────────────────────────────────────────────────
+
+model ProductVariant {
+  id          String           @id @default(uuid()) @db.Uuid
+  productId   String           @db.Uuid
+  product     Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku         String?          // Unique variant SKU
+  price       Decimal?          // Variant-specific price (overrides product base price)
+  inventory   Int               @default(0) // Stock quantity
+  weight      Decimal?          // Optional weight for shipping
+  dimensions  Json?             // Optional width, height, depth
+  attributeValues ProductAttributeValue[] // Inverse of ProductAttributeValue.productVariant
+  transactions ProductTransaction[] // Inverse of ProductTransaction.variant
+
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([productId])
+  @@unique([sku])
+  @@map("product_variants")
+}
+
+// ─── Product Attribute Value Pair (junction table for many-to-many) ───────────
+
+// Keeping this simplified - no inverse relations for now
+model ProductAttributeValue {
+  id            String             @id @default(uuid()) @db.Uuid
+  productVariantId String         @db.Uuid
+  productVariant ProductVariant   @relation(fields: [productVariantId], references: [id], onDelete: Cascade)
+  attributeValueId String         @db.Uuid
+  attributeValue AttributeValue   @relation(fields: [attributeValueId], references: [id], onDelete: Cascade)
+
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
+
+  @@unique([productVariantId, attributeValueId])
+  @@map("product_attribute_values")
+}
+
+// ─── Product Transaction Model ──────────────────────────────────────────────────
+
+model ProductTransaction {
+  id          String           @id @default(uuid()) @db.Uuid
+  variantId   String?          @db.Uuid
+  variant     ProductVariant?  @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  productId   String           @db.Uuid
+  product     Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  type        TransactionType  // create, update, sell, restock, etc.
+  quantity    Int              // Number of units affected
+  priceAtTime Decimal          // Price at time of transaction
+  notes       String?          // Optional description
+  createdBy  String?          @db.Uuid // User ID who initiated
+  createdAt   DateTime         @default(now())
+
+  @@index([productId, variantId, type])
+  @@index([createdAt])
+  @@map("product_transactions")
+}
+
+enum TransactionType {
+  CREATE
+  UPDATE
+  DELETE
+  SELL
+  RESTOCK
+  ADJUST
+  TRANSFER
 }
 
 

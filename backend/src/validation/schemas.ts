@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PermissionGroup, MediaType, MediaStatus, AttributeType } from '../config/enums';
+import { PermissionGroup, MediaType, MediaStatus, AttributeType, BrandStatus } from '../config/enums';
 
 export const PermissionGroupSchema = z.nativeEnum(PermissionGroup);
 export const MediaTypeSchema = z.nativeEnum(MediaType);
@@ -236,6 +236,85 @@ export type CreateBrandInput = z.infer<typeof CreateBrandDto>;
 export type UpdateBrandInput = z.infer<typeof UpdateBrandDto>;
 export type PartialUpdateBrandInput = z.infer<typeof PartialUpdateBrandDto>;
 export type ListBrandsInput = z.infer<typeof ListBrandDto>;
+
+// Product DTOs (Task 12: Product Module)
+export const ProductStatusEnum = z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']);
+export const TransactionTypeEnum = z.enum(['CREATE', 'UPDATE', 'SELL', 'RESTOCK', 'ADJUST', 'TRANSFER']);
+
+export const CreateProductDto = z.object({
+  name: z.string().min(1, 'Name is required').max(255),
+  description: z.string().max(1000).optional(),
+  price: z.number().min(0, 'Price must be non-negative'),
+  sku: z.string().max(50).optional(),
+  categoryId: z.string().optional(),
+  brandId: z.string().optional(),
+  status: ProductStatusEnum.default('DRAFT'),
+});
+
+export const UpdateProductDto = z.object({
+  name: z.string().min(1, 'Name is required').max(255),
+  description: z.string().max(1000).optional(),
+  price: z.number().min(0, 'Price must be non-negative'),
+  sku: z.string().max(50).optional(),
+  categoryId: z.string().optional(),
+  brandId: z.string().optional(),
+  status: ProductStatusEnum.optional(),
+});
+
+export const PartialUpdateProductDto = z.object({
+  name: z.string().min(1, 'Name is required').max(255).optional(),
+  description: z.string().max(1000).optional(),
+  price: z.number().min(0, 'Price must be non-negative').optional(),
+  sku: z.string().max(50).optional(),
+  categoryId: z.string().optional(),
+  brandId: z.string().optional(),
+  status: ProductStatusEnum.optional(),
+});
+
+export const ListProductDto = z.object({
+  page: z.number().min(1).default(1).optional(),
+  limit: z.number().min(1).max(100).default(10).optional(),
+  search: z.string().optional(),
+  categoryId: z.string().optional(),
+  brandId: z.string().optional(),
+  status: ProductStatusEnum.optional(),
+});
+
+export type CreateProductInput = z.infer<typeof CreateProductDto>;
+export type UpdateProductInput = z.infer<typeof UpdateProductDto>;
+export type PartialUpdateProductInput = z.infer<typeof PartialUpdateProductDto>;
+export type ListProductsInput = z.infer<typeof ListProductDto>;
+
+export const CreateProductVariantDto = z.object({
+  productId: z.string(),
+  sku: z.string().max(50).optional(),
+  price: z.number().min(0, 'Price must be non-negative').optional(),
+  inventory: z.number().min(0, 'Inventory must be non-negative').default(0),
+  weight: z.number().min(0).optional(),
+  dimensions: z.record(z.unknown()).optional(),
+  attributeValueIds: z.array(z.string()).optional(), // Array of attribute value IDs for this variant
+});
+
+export const UpdateProductVariantDto = z.object({
+  sku: z.string().max(50).optional(),
+  price: z.number().min(0, 'Price must be non-negative').optional(),
+  inventory: z.number().min(0, 'Inventory must be non-negative').optional(),
+  weight: z.number().min(0).optional(),
+  dimensions: z.record(z.unknown()).optional(),
+  attributeValueIds: z.array(z.string()).optional(),
+});
+
+export type CreateProductVariantInput = z.infer<typeof CreateProductVariantDto>;
+export type UpdateProductVariantInput = z.infer<typeof UpdateProductVariantDto>;
+
+export const ProductTransactionDto = z.object({
+  variantId: z.string().optional(),
+  type: TransactionTypeEnum,
+  quantity: z.number(),
+  priceAtTime: z.number(),
+  notes: z.string().max(500).optional(),
+});
+
 
 // Attribute Type Schema
 export const AttributeTypeSchema = z.nativeEnum(AttributeType);

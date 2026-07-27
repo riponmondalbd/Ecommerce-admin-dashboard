@@ -13,6 +13,7 @@ import { mediaRoutes } from './modules/media/media.routes';
 import { categoryRoutes } from './modules/category/category.routes';
 import { brandRoutes } from './modules/brand/brand.routes';
 import { attributeRoutes } from './modules/attribute/attribute.routes';
+import { productRoutes } from './modules/product/product.routes';
 
 /**
  * Express application instance.
@@ -64,6 +65,9 @@ brandRoutes(app);
 
 // Mount attribute routes (CRUD, values, color/image types)
 attributeRoutes(app);
+
+// Mount product routes (star feature: products, variants, inventory, transactions)
+productRoutes(app);
 
 // Global error handler — must be last
 app.use(errorHandler);
