@@ -1,16 +1,18 @@
-import express, { Application } from 'express';
+import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import { env } from './config/env';
 import { requestLogger } from './middleware/requestLogger';
 import { errorHandler } from './middleware/errorHandler';
+import { authRoutes } from './modules/auth/auth.routes';
+import { permissionRoutes } from './modules/permission/permission.routes';
 
 /**
  * Express application instance.
  * Configures global middleware: CORS, security headers, compression, logging, error handling.
  */
-const app: Application = express();
+const app = express();
 
 // Security middleware
 app.use(helmet());
@@ -33,8 +35,11 @@ app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// API routes placeholder — modules will be mounted here in later phases
-// app.use('/api/auth', authRoutes);
+// API routes - Mount auth routes
+authRoutes(app);
+
+// Mount permission routes (requires authentication)
+permissionRoutes(app);
 
 // Global error handler — must be last
 app.use(errorHandler);

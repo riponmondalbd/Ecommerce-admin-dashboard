@@ -1,0 +1,134 @@
+// =============================================================================
+// E-Commerce Admin Dashboard — Database Schema (Minimal for Auth Phase)
+// =============================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Enums ────────────────────────────────────────────────────────────────────
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  CATALOG_MANAGER
+  SUPPORT_AGENT
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+  LOCKED
+}
+
+// ─── User Model ───────────────────────────────────────────────────────────────
+
+model User {
+  id           String       @id @default(uuid()) @db.Uuid
+  name         String
+  email        String       @unique
+  password     String       // bcrypt hashed
+  role         Role         @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId       String      @db.Uuid
+  status       UserStatus   @default(ACTIVE)
+  avatarUrl    String?
+  lastLoginAt  DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  refreshTokens RefreshToken[]
+
+  @@index([email])
+  @@index([roleId])
+  @@index([status])
+  @@map("users")
+}
+
+model Role {
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String           @unique // e.g. "Admin", "Catalog Manager"
+  description String?
+  isSystem    Boolean          @default(false) // system roles cannot be deleted/modified
+  isActive    Boolean          @default(true)
+  users       User[]
+  permissions RolePermission[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@map("roles")
+}
+
+// ─── Refresh Token Model (for JWT rotation) ──────────────────────────────────
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  token     String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId    String   @db.Uuid
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  revokedAt DateTime?
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// ─── Permission & Role (RBAC) ────────────────────────────────────────────────
+
+enum PermissionGroup {
+  AUTHENTICATION
+  USER_MANAGEMENT
+  ROLE_MANAGEMENT
+  PERMISSION_MANAGEMENT
+  PRODUCT
+  CATEGORY
+  BRAND
+  ATTRIBUTE
+  MEDIA
+  ORDER
+  DASHBOARD
+  SETTINGS
+}
+
+model Permission {
+  id          String           @id @default(uuid()) @db.Uuid
+  key         String           @unique // e.g. "product:create"
+  name        String           // e.g. "Create Product"
+  description String?
+  group       PermissionGroup
+  isActive    Boolean          @default(true)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  roles       RolePermission[]
+
+  @@index([group])
+  @@index([key])
+  @@index([isActive])
+  @@map("permissions")
+}
+
+model RolePermission {
+  id           String   @id @default(uuid()) @db.Uuid
+  role         Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  roleId       String   @db.Uuid
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  permissionId String   @db.Uuid
+
+  createdAt    DateTime @default(now())
+
+  @@unique([roleId, permissionId])
+  @@map("role_permissions")
+}
