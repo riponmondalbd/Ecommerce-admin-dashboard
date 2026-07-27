@@ -13,7 +13,8 @@
     "lint": "eslint src/ --ext .ts",
     "lint:fix": "eslint src/ --ext .ts --fix",
     "format": "prettier --write src/",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "node scripts/seed-database.js",
+"seed-init": "ts-node scripts/seed-database.ts"
   },
   "keywords": [],
   "author": "",

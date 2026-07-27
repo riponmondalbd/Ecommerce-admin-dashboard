@@ -1,0 +1,377 @@
+{
+  "info": {
+    "_postman-id": "ecommerce-backend",
+    "name": "Trends Bird E-Commerce Admin API",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "protocol": "https",
+  "authentication": {
+    "type": "bearer",
+    "bearer": {
+      "token": "{{access_token}}"
+    }
+  },
+  "request": {
+    "method": "GET",
+    "header": []
+  },
+  "event": [],
+  "response": [],
+  "folder": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Register New User",
+          "request": {
+            "url": "${{base_url}}/api/register",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePass123\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Login (Get JWT)",
+          "request": {
+            "url": "${{base_url}}/api/login",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@trends-bird.com\",\n  \"password\": \"{{admin_password}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Refresh Token",
+          "request": {
+            "url": "${{base_url}}/api/refresh",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Logout (Revoke Token)",
+          "request": {
+            "url": "${{base_url}}/api/logout",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{}"
+            }
+          }
+        },
+        {
+          "name": "Get Current User Info",
+          "request": {
+            "url": "${{base_url}}/api/me",
+            "method": "GET",
+            "header": [],
+            "body": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "User Management",
+      "item": [
+        {
+          "name": "List Users (Paginated)",
+          "request": {
+            "url": "${{base_url}}/api/users?page=1&limit=10",
+            "method": "GET",
+            "header": [],
+            "body": {}
+          }
+        },
+        {
+          "name": "Create User",
+          "request": {
+            "url": "${{base_url}}/api/users",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"New User\",\n  \"email\": \"newuser@trends-bird.com\",\n  \"password\": \"UserPassword456\",\n  \"role\": \"CATALOG_MANAGER\",\n  \"status\": \"ACTIVE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Activate User",
+          "request": {
+            "url": "${{base_url}}/api/users/{{user_id}}/activate",
+            "method": "PUT",
+            "header": [],
+            "body": {}
+          }
+        },
+        {
+          "name": "Deactivate User",
+          "request": {
+            "url": "${{base_url}}/api/users/{{user_id}}/deactivate",
+            "method": "PUT",
+            "header": [],
+            "body": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Media Library",
+      "item": [
+        {
+          "name": "Upload File (Multiformal-data)",
+          "request": {
+            "url": "${{base_url}}/api/media",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "formdata",
+              "formdata": [
+                {
+                  "key": "file",
+                  "value": "<Choose File>",
+                  "type": "file"
+                }
+              ]
+            }
+          }
+        },
+        {
+          "name": "List Media with Filters",
+          "request": {
+            "url": "${{base_url}}/api/media?type=IMAGE&status=READY&page=1&limit=10",
+            "method": "GET",
+            "header": [],
+            "body": {}
+          }
+        },
+        {
+          "name": "Delete Media",
+          "request": {
+            "url": "${{base_url}}/api/media/{{media_id}}",
+            "method": "DELETE",
+            "header": [],
+            "body": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Category System",
+      "item": [
+        {
+          "name": "Create Root Category",
+          "request": {
+            "url": "${{base_url}}/api/categories",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Electronics\",\n  \"slug\": \"electronics\",\n  \"description\": \"Electronic devices category\",\n  \"isActive\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Subcategory",
+          "request": {
+            "url": "${{base_url}}/api/categories",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Phones\",\n  \"slug\": \"phones\",\n  \"parentId\": \"{{parent_category_id}}\",\n  \"isActive\": true\n}"
+            }
+          }
+        },
+        {
+          "name": "Get Category Tree",
+          "request": {
+            "url": "${{base_url}}/api/categories/tree",
+            "method": "GET",
+            "header": [],
+            "body": {}
+          }
+        },
+        {
+          "name": "Get Breadcrumbs for Category",
+          "request": {
+            "url": "${{base_url}}/api/categories/{{category_id}}/ancestors",
+            "method": "GET",
+            "header": [],
+            "body": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Brand System",
+      "item": [
+        {
+          "name": "Create Brand",
+          "request": {
+            "url": "${{base_url}}/api/brands",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Samsung\",\n  \"description\": \"Tech brand\",\n  \"status\": \"ACTIVE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Update Brand Status",
+          "request": {
+            "url": "${{base_url}}/api/brands/{{brand_id}}",
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"INACTIVE\"\n}"
+            }
+          }
+        },
+        {
+          "name": "List Brands",
+          "request": {
+            "url": "${{base_url}}/api/brands",
+            "method": "GET",
+            "header": [],
+            "body": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Attribute System",
+      "item": [
+        {
+          "name": "Create Attribute (Color)",
+          "request": {
+            "url": "${{base_url}}/api/attributes",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Color\",\n  \"type\": \"IMAGE\",\n  \"description\": \"Color options\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Add Attribute Value",
+          "request": {
+            "url": "${{base_url}}/api/attributes/{{attr_id}}/values",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"label\": \"Red\",\n  \"valueCode\": \"#FF0000\",\n  \"sortOrder\": 1\n}"
+            }
+          }
+        },
+        {
+          "name": "Get All Values for Attribute",
+          "request": {
+            "url": "${{base_url}}/api/attributes/{{attr_id}}/values",
+            "method": "GET",
+            "header": [],
+            "body": {}
+          }
+        }
+      ]
+    },
+    {
+      "name": "Product Module (⭐)",
+      "item": [
+        {
+          "name": "Create Product",
+          "request": {
+            "url": "${{base_url}}/api/products",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Smartphone\",\n  \"description\": \"Latest smartphone model\",\n  \"price\": 799.99,\n  \"sku\": \"SM-2024\",\n  \"categoryId\": \"{{category_id}}\",\n  \"brandId\": \"{{brand_id}}\",\n  \"status\": \"PUBLISHED\"\n}"
+            }
+          }
+        },
+        {
+          "name": "Create Product Variant",
+          "request": {
+            "url": "${{base_url}}/api/products/{{product_id}}/variants",
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"SM-2024-BLUE\",\n  \"price\": 849.99,\n  \"inventory\": 50,\n  \"attributeValueIds\": [\"{{color_value_id}}\", \"{{size_value_id}}\"]\n}"
+            }
+          }
+        },
+        {
+          "name": "Restock Variant Inventory",
+          "request": {
+            "url": "${{base_url}}/api/variants/{{variant_id}}/restock",
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": \"{\\\"quantity\\\": 20}\"
+            }
+          }
+        },
+        {
+          "name": "Sell Variant (Deduct Inventory)",
+          "request": {
+            "url": "${{base_url}}/api/variants/{{variant_id}}/sell",
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\\\"quantity\\\": 2}"
+            }
+          }
+        },
+        {
+          "name": "Get Transaction History",
+          "request": {
+            "url": "${{base_url}}/api/products/{{product_id}}/transactions",
+            "method": "GET",
+            "header": [],
+            "body": {}
+          }
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "base_url",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "admin_password",
+      "value": "admin123",
+      "type": "string",
+      "enabled": true
+    }
+  ]
+}
