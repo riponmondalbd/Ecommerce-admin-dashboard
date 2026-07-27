@@ -285,7 +285,7 @@ export const removePermissionFromRole = async (roleId: string, permissionId: str
     throw new AppError('Permission not assigned to this role', 404);
   }
 
-  await prisma.rolePermission.delete({ where: { roleId, permissionId } });
+  await prisma.rolePermission.deleteMany({ where: { roleId, permissionId } });
   return { success: true, message: 'Permission removed from role' };
 };
 

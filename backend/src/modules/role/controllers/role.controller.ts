@@ -1,8 +1,19 @@
 import { Request, Response } from 'express';
-import { getRoles, getRoleById, createRole, updateRole, partialUpdateRole, deleteRole, assignPermissionToRole, removePermissionFromRole, getPermissionsByRole } from '../services/role.service';
+import * as z from 'zod';
+import {
+  getRoles,
+  getRoleById,
+  createRole,
+  updateRole,
+  partialUpdateRole,
+  deleteRole,
+  assignPermissionToRole,
+  removePermissionFromRole,
+  getPermissionsByRole,
+} from '../services/role.service';
 import { errorResponse, successResponse } from '../../../utils/apiResponse';
 import { AppError } from '../../../utils/appError';
-import { ListRoleDto, CreateRoleDto, UpdateRoleDto, PartialUpdateRoleDto } from '../../../../validation/schemas';
+import { ListRoleDto, CreateRoleDto, UpdateRoleDto, PartialUpdateRoleDto } from '../../../validation/schemas';
 
 // Validate input helper
 const validateInput = <T>(input: unknown, schema: z.Schema<T>): T => {

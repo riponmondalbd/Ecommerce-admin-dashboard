@@ -1,5 +1,5 @@
 import { Request, Response, NextFunction } from 'express';
-import { checkPermission } from '../../../permission/services/permission.service';
+import { checkPermission } from '../../permission/services/permission.service';
 
 export const requirePermission = (requiredPermission: string) => {
   return async (req: Request, res: Response, next: NextFunction) => {

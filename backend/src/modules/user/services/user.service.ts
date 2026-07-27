@@ -2,9 +2,7 @@ import { prisma } from '../../../database/prisma';
 import { AppError } from '../../../utils/appError';
 import * as z from 'zod';
 import bcrypt from 'bcrypt';
-import { ListUserDto, CreateUserDto, UpdateUserDto, PartialUpdateUserDto } from '../../../../validation/schemas';
-import { checkPermission from '../../../permission/services/permission.service';
-import { UserRole } from '../../../config/enums';
+import { ListUserDto, CreateUserDto, UpdateUserDto, PartialUpdateUserDto } from '../../../validation/schemas';
 
 // Validate the input against Zod schemas
 const validateInput = <T>(input: unknown, schema: z.Schema<T>): T => {
@@ -75,9 +73,7 @@ export const getUsers = async (input: unknown) => {
 export const getUserById = async (id: string) => {
   const user = await prisma.user.findUnique({
     where: { id },
-    include: {
-      role: { select: { name: true } },
-    },
+    include: { role: { select: { name: true } } },
   });
 
   if (!user) {
@@ -116,9 +112,7 @@ export const createUser = async (input: unknown, requestingUserId?: string) => {
       roleId: role.id,
       status: validated.status || 'ACTIVE',
     },
-    include: {
-      role: { select: { name: true } },
-    },
+    include: { role: { select: { name: true } } },
   });
 
   return user;
@@ -145,26 +139,23 @@ export const updateUser = async (id: string, input: unknown, requestingUserId?: 
 
   // Self-escalation prevention: A user cannot upgrade their own role
   if (requestingUserId && requestingUserId === id) {
-    const newRole = await prisma.role.findUnique({ where: { name: validated.role } });
-    const currentUserRole = await prisma.role.findUnique({ where: { id: user.roleId } });
+    const roleOrder: Record<string, number> = {
+      VIEWER: 0,
+      SUPPORT_AGENT: 1,
+      CATALOG_MANAGER: 2,
+      ADMIN: 3,
+      SUPER_ADMIN: 4,
+    };
 
-    if (newRole?.name && currentUserRole?.name) {
-      const roleOrder: Record<string, number> = {
-        [UserRole.VIEWER]: 0,
-        [UserRole.SUPPORT_AGENT]: 1,
-        [UserRole.CATALOG_MANAGER]: 2,
-        [UserRole.ADMIN]: 3,
-        [UserRole.SUPER_ADMIN]: 4,
-      };
+    const newRoleName = validated.role;
+    const currentRoleName = user.role?.name;
 
-      if (roleOrder[newRole.name!] >= roleOrder[currentUserRole.name!]) {
+    if (newRoleName && currentRoleName) {
+      if (roleOrder[newRoleName] >= roleOrder[currentRoleName]) {
         throw new AppError('Self-role escalation is not permitted', 403);
       }
     }
   }
-
-  // Also need to check if the requesting user is trying to elevate someone else's role beyond their own permissions
-  // This requires checking the requesting user's role permissions
 
   // Update the user (password only if provided)
   const updateData: any = {
@@ -198,7 +189,7 @@ export const partialUpdateUser = async (id: string, input: unknown, requestingUs
 
   const updateData: any = {};
 
-  if (validated.name !== undefined && validated.name !== user.name) {
+  if (validated.name !== undefined) {
     updateData.name = validated.name;
   }
 
@@ -221,19 +212,19 @@ export const partialUpdateUser = async (id: string, input: unknown, requestingUs
   if (validated.role !== undefined && validated.role !== user.roleId) {
     // Self-escalation prevention
     if (requestingUserId && requestingUserId === id) {
-      const newRole = await prisma.role.findUnique({ where: { name: validated.role } });
-      const currentUserRole = await prisma.role.findUnique({ where: { id: user.roleId } });
+      const roleOrder: Record<string, number> = {
+        VIEWER: 0,
+        SUPPORT_AGENT: 1,
+        CATALOG_MANAGER: 2,
+        ADMIN: 3,
+        SUPER_ADMIN: 4,
+      };
 
-      if (newRole?.name && currentUserRole?.name) {
-        const roleOrder: Record<string, number> = {
-          [UserRole.VIEWER]: 0,
-          [UserRole.SUPPORT_AGENT]: 1,
-          [UserRole.CATALOG_MANAGER]: 2,
-          [UserRole.ADMIN]: 3,
-          [UserRole.SUPER_ADMIN]: 4,
-        };
+      const newRoleName = validated.role;
+      const currentRoleName = user.role?.name;
 
-        if (roleOrder[newRole.name!] >= roleOrder[currentUserRole.name!]) {
+      if (newRoleName && currentRoleName) {
+        if (roleOrder[newRoleName] >= roleOrder[currentRoleName]) {
           throw new AppError('Self-role escalation is not permitted', 403);
         }
       }
@@ -262,19 +253,13 @@ export const deleteUser = async (id: string, requestingUserId?: string) => {
   }
 
   // Safety guard: Cannot delete the last super admin
-  if (user.role?.name === UserRole.SUPER_ADMIN) {
+  if (user.role?.name === 'SUPER_ADMIN') {
     const superAdminCount = await prisma.user.count({
-      where: { role: { name: UserRole.SUPER_ADMIN } },
+      where: { role: { name: 'SUPER_ADMIN' } },
     });
     if (superAdminCount <= 1) {
       throw new AppError('Cannot delete the last super administrator', 400);
     }
-  }
-
-  // Safety guard: Cannot delete your own account without proper logout handling
-  if (requestingUserId && requestingUserId === id) {
-    // Allow self-deletion but note this will log out the user
-    // This is allowed for security reasons (user can delete their own account)
   }
 
   await prisma.user.delete({ where: { id } });
@@ -372,9 +357,7 @@ export const getUsersByRole = async (roleId: string) => {
 
   const users = await prisma.user.findMany({
     where: { roleId },
-    include: {
-      role: { select: { name: true } },
-    },
+    include: { role: { select: { name: true } } },
   });
 
   return users;

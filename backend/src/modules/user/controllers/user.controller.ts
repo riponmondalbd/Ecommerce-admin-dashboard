@@ -15,7 +15,7 @@ import {
 } from '../services/user.service';
 import { errorResponse, successResponse } from '../../../utils/apiResponse';
 import { AppError } from '../../../utils/appError';
-import { ListUserDto, CreateUserDto, UpdateUserDto, PartialUpdateUserDto } from '../../../../validation/schemas';
+import { ListUserDto, CreateUserDto, UpdateUserDto, PartialUpdateUserDto } from '../../../validation/schemas';
 
 // Validate input helper
 const validateInput = <T>(input: unknown, schema: z.Schema<T>): T => {
@@ -60,7 +60,7 @@ export const getUser = (req: Request, res: Response) => {
  */
 export const createUserController = (req: Request, res: Response) => {
   try {
-    const requestingUserId = (req as any)?.userId; // Extracted from auth middleware
+    const requestingUserId = (req as any)?.userId;
     const validated = validateInput(req.body, CreateUserDto);
     createUser(validated, requestingUserId)
       .then((result) => successResponse(res, result, 201))

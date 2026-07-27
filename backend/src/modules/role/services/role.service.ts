@@ -1,7 +1,7 @@
 import { prisma } from '../../../database/prisma';
 import { AppError } from '../../../utils/appError';
 import * as z from 'zod';
-import { ListRoleDto, CreateRoleDto, UpdateRoleDto, PartialUpdateRoleDto } from '../../../../validation/schemas';
+import { ListRoleDto, CreateRoleDto, UpdateRoleDto, PartialUpdateRoleDto } from '../../../validation/schemas';
 
 // Validate the input against Zod schemas
 const validateInput = <T>(input: unknown, schema: z.Schema<T>): T => {
@@ -41,14 +41,10 @@ export const getRoles = async (input: unknown) => {
       include: {
         permissions: {
           select: {
-            permission: {
-              select: { key: true, name: true },
-            },
+            permission: { select: { key: true, name: true } },
           },
         },
-        users: {
-          select: { id: true, email: true },
-        },
+        users: { select: { id: true, email: true } },
       },
     }),
     prisma.role.count({ where }),
@@ -74,16 +70,8 @@ export const getRoleById = async (id: string) => {
   const role = await prisma.role.findUnique({
     where: { id },
     include: {
-      permissions: {
-        select: {
-          permission: {
-            select: { key: true, name: true },
-          },
-        },
-      },
-      users: {
-        select: { id, email },
-      },
+      permissions: { select: { permission: { select: { key: true, name: true } } } },
+      users: { select: { id: true, email: true } },
     },
   });
 
@@ -152,11 +140,10 @@ export const partialUpdateRole = async (id: string, input: unknown) => {
 
   const updateData: any = {};
 
-  if (validated.name !== undefined && validated.name !== role.name) {
-    // Check conflict before updating
-    const existing = await prisma.role.findUnique({ where: { name: validated.name } });
-    if (existing) {
-      throw new AppError('Role with this name already exists', 409);
+  if (validated.name !== undefined) {
+    if (validated.name !== role.name) {
+      const existing = await prisma.role.findUnique({ where: { name: validated.name } });
+      if (existing) throw new AppError('Role with this name already exists', 409);
     }
     updateData.name = validated.name;
   }
@@ -204,8 +191,8 @@ export const assignPermissionToRole = async (roleId: string, permissionId: strin
   if (!permission) throw new AppError('Permission not found', 404);
 
   // Check if already assigned
-  const existing = await prisma.rolePermission.findUnique({
-    where: { roleId_permissionId: { roleId, permissionId } },
+  const existing = await prisma.rolePermission.findFirst({
+    where: { roleId, permissionId },
   });
 
   if (existing) {
@@ -219,15 +206,15 @@ export const assignPermissionToRole = async (roleId: string, permissionId: strin
  * Remove a permission from a role
  */
 export const removePermissionFromRole = async (roleId: string, permissionId: string) => {
-  const assignment = await prisma.rolePermission.findUnique({
-    where: { roleId_permissionId: { roleId, permissionId } },
+  const assignment = await prisma.rolePermission.findFirst({
+    where: { roleId, permissionId },
   });
 
   if (!assignment) {
     throw new AppError('Permission not assigned to this role', 404);
   }
 
-  await prisma.rolePermission.delete({ where: { roleId_permissionId: { roleId, permissionId } } });
+  await prisma.rolePermission.deleteMany({ where: { roleId, permissionId } });
   return { success: true, message: 'Permission removed from role' };
 };
 
@@ -245,45 +232,9 @@ export const getPermissionsByRole = async (roleId: string) => {
       roles: { some: { roleId } },
     },
     include: {
-      roles: {
-        select: { role: { select: { name: true } } },
-      },
+      roles: { select: { role: { select: { name: true } } } },
     },
   });
 
   return permissions;
-};
-
-/**
- * Get all roles assigned to a specific permission
- */
-export const getRolesByPermission = async (permissionId: string) => {
-  const permission = await prisma.permission.findUnique({ where: { id: permissionId } });
-  if (!permission) {
-    throw new AppError('Permission not found', 404);
-  }
-
-  const roles = await prisma.role.findMany({
-    where: {
-      roles: { some: { permissionId } },
-    },
-    include: {
-      permissions: { select: { permission: { select: { key: true } } } },
-    },
-  });
-
-  return roles;
-};
-
-/**
- * Get all roles for a user to assign/removes permissions
- */
-export const getUserAssignableRoles = async (userId: string) => {
-  const user = await prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
-  if (!user) {
-    throw new AppError('User not found', 404);
-  }
-
-  // Super admin cannot change their own role (self-escalation prevention is handled at higher level)
-  return await prisma.role.findMany();
 };
