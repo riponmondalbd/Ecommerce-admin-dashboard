@@ -11,14 +11,14 @@ export const CreatePermissionDto = z.object({
     .regex(/^[a-z_]+:[a-z_]+$/, 'Key must follow format "module:action" (e.g., "product:create")')
     .toLowerCase(),
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
-  description: z.string().optional().max(255),
+  description: z.string().max(255).optional(),
   group: PermissionGroupSchema,
   isActive: z.boolean().default(true),
 });
 
 const UpdateBase = {
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters').optional(),
-  description: z.string().optional().max(255),
+  description: z.string().max(255).optional(),
   group: PermissionGroupSchema.optional(),
   isActive: z.boolean().optional(),
 };
@@ -34,8 +34,8 @@ export const PartialUpdatePermissionDto = z.object({
 });
 
 export const ListPermissionDto = z.object({
-  page: z.number().optional().default(1).min(1),
-  limit: z.number().optional().default(10).min(1).max(100),
+  page: z.number().min(1).default(1).optional(),
+  limit: z.number().min(1).max(100).default(10).optional(),
   group: PermissionGroupSchema.optional(),
   search: z.string().optional(),
   isActive: z.boolean().optional(),

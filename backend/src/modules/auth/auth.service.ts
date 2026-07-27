@@ -5,6 +5,7 @@ import { env } from '../../config/env';
 import { AppError } from '../../utils/appError';
 import { LoginInput } from './dtos/login.dto';
 import { RegisterInput } from './dtos/register.dto';
+import { SignOptions } from 'jsonwebtoken';
 
 export class AuthService {
   async register(input: RegisterInput) {

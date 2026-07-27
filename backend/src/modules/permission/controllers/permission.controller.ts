@@ -11,16 +11,19 @@ import {
 } from '../services/permission.service';
 import { successResponse, errorResponse } from '../../../utils/apiResponse';
 import { AppError } from '../../../utils/appError';
-import { ListPermissionDto } from '../dtos/list.permission.dto';
-import { CreatePermissionDto } from '../dtos/create.permission.dto';
-import { UpdatePermissionDto } from '../dtos/update.permission.dto';
-import { PartialUpdatePermissionDto } from '../dtos/update.permission.dto';
 
 export const permissionController = {
   // GET /api/permissions - List all permissions with pagination and search
   async list(req: Request, res: Response) {
     try {
-      const result = await getPermissions(req.query as any);
+      const queryParams = {
+        page: Number(req.query.page),
+        limit: Number(req.query.limit),
+        group: req.query.group,
+        search: req.query.search,
+        isActive: req.query.isActive === 'true'
+      };
+      const result = await getPermissions(queryParams);
       return successResponse(res, result.data, 'Permissions retrieved successfully', 200, result.pagination);
     } catch (error) {
       if (error instanceof AppError) {

@@ -1,12 +1,6 @@
 import { prisma } from '../../../database/prisma';
 import { AppError } from '../../../utils/appError';
 import { env } from '../../../config/env';
-import {
-  ListPermissionDto,
-  CreatePermissionDto,
-  UpdatePermissionDto,
-  PartialUpdatePermissionDto,
-} from '../../../validation/schemas';
 
 // Validate the input against Zod schemas
 const validateInput = <T>(input: unknown, schema: z.Schema<T>): T => {
@@ -21,7 +15,7 @@ const validateInput = <T>(input: unknown, schema: z.Schema<T>): T => {
 /**
  * Get all permissions with optional filtering and pagination
  */
-export const getPermissions = async (input: ListPermissionDto) => {
+export const getPermissions = async (input: unknown) => {
   const validated = validateInput(input, ListPermissionDto);
 
   const where = {} as any;
