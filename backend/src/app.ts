@@ -7,6 +7,8 @@ import { requestLogger } from './middleware/requestLogger';
 import { errorHandler } from './middleware/errorHandler';
 import { authRoutes } from './modules/auth/auth.routes';
 import { permissionRoutes } from './modules/permission/permission.routes';
+import { roleRoutes } from './modules/role/role.routes';
+import { userRoutes } from './modules/user/user.routes';
 
 /**
  * Express application instance.
@@ -40,6 +42,12 @@ authRoutes(app);
 
 // Mount permission routes (requires authentication)
 permissionRoutes(app);
+
+// Mount role routes (requires authentication and proper permissions)
+roleRoutes(app);
+
+// Mount user routes (requires authentication and proper permissions)
+userRoutes(app);
 
 // Global error handler — must be last
 app.use(errorHandler);
