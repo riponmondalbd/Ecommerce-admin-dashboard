@@ -3,7 +3,10 @@ import { PermissionGroup, MediaType, MediaStatus } from '../config/enums';
 
 export const PermissionGroupSchema = z.nativeEnum(PermissionGroup);
 export const MediaTypeSchema = z.nativeEnum(MediaType);
-export const MediaStatusSchema = z.nativeEnum(MediaStatus);
+export const MediaStatusSchema = z.union([
+  z.nativeEnum(MediaStatus),
+  z.enum(['PENDING', 'PROCESSING', 'READY', 'ERROR']),
+]);
 
 // Permission DTOs with proper exports
 export const CreatePermissionDto = z.object({

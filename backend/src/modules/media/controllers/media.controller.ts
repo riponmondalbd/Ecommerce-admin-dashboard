@@ -16,7 +16,7 @@ import { ListMediaDto } from '../../../validation/schemas';
 const validateInput = <T>(input: unknown, schema: any): T => {
   const parsed = schema.safeParse(input);
   if (!parsed.success) {
-    const issues = parsed.error.issues.map(i => i.message).join(', ');
+    const issues = parsed.error.issues.map((i: any) => i.message).join(', ');
     throw new AppError(`Validation failed: ${issues}`, 400);
   }
   return parsed.data;
