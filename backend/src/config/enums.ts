@@ -27,3 +27,17 @@ export enum UserStatus {
   SUSPENDED = 'SUSPENDED',
   LOCKED = 'LOCKED',
 }
+
+export enum MediaType {
+  IMAGE,
+  VIDEO,
+  DOCUMENT,
+  OTHER,
+}
+
+export enum MediaStatus {
+  PENDING,
+  PROCESSING,
+  READY,
+  ERROR,
+}

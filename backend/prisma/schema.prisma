@@ -1,5 +1,5 @@
 // =============================================================================
-// E-Commerce Admin Dashboard — Database Schema (Minimal for Auth Phase)
+// E-Commerce Admin Dashboard — Database Schema
 // =============================================================================
 
 generator client {
@@ -28,6 +28,13 @@ enum UserStatus {
   LOCKED
 }
 
+enum MediaType {
+  IMAGE
+  VIDEO
+  DOCUMENT
+  OTHER
+}
+
 // ─── User Model ───────────────────────────────────────────────────────────────
 
 model User {
@@ -44,6 +51,7 @@ model User {
   updatedAt    DateTime     @updatedAt
 
   refreshTokens RefreshToken[]
+  media       Media[]      // Inverse of Media.uploadedBy
 
   @@index([email])
   @@index([roleId])
@@ -131,4 +139,33 @@ model RolePermission {
 
   @@unique([roleId, permissionId])
   @@map("role_permissions")
+}
+
+// ─── Media Model ────────────────────────────────────────────────────────────
+
+model Media {
+  id          String           @id @default(uuid()) @db.Uuid
+  fileName    String
+  filePath    String
+  publicPath String
+  type        MediaType
+  size        Int
+  metadata    Json?
+  uploadedBy  User             @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  uploadedById String           @db.Uuid
+  status      MediaStatus      @default(PENDING)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([type])
+  @@index([status])
+  @@index([uploadedById])
+  @@map("media")
+}
+
+enum MediaStatus {
+  PENDING
+  PROCESSING
+  READY
+  ERROR
 }

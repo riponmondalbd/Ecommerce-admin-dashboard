@@ -1,7 +1,9 @@
 import { z } from 'zod';
-import { PermissionGroup } from '../config/enums';
+import { PermissionGroup, MediaType, MediaStatus } from '../config/enums';
 
 export const PermissionGroupSchema = z.nativeEnum(PermissionGroup);
+export const MediaTypeSchema = z.nativeEnum(MediaType);
+export const MediaStatusSchema = z.nativeEnum(MediaStatus);
 
 // Permission DTOs with proper exports
 export const CreatePermissionDto = z.object({
@@ -114,3 +116,49 @@ export type CreateUserInput = z.infer<typeof CreateUserDto>;
 export type UpdateUserInput = z.infer<typeof UpdateUserDto>;
 export type PartialUpdateUserInput = z.infer<typeof PartialUpdateUserDto>;
 export type ListUsersInput = z.infer<typeof ListUserDto>;
+
+// Media DTOs (Task 8: Media Library)
+export const CreateMediaDto = z.object({
+  fileName: z.string().min(1, 'File name is required'),
+  filePath: z.string().min(1, 'File path is required'),
+  publicPath: z.string().min(1, 'Public path is required'),
+  type: MediaTypeSchema,
+  size: z.number().min(0, 'Size must be non-negative'),
+  metadata: z.record(z.unknown()).optional(),
+  uploadedById: z.string().min(1, 'Uploaded by ID is required'),
+  status: MediaStatusSchema.default('PENDING'),
+});
+
+export const UpdateMediaDto = z.object({
+  fileName: z.string().min(1, 'File name is required').optional(),
+  filePath: z.string().min(1, 'File path is required').optional(),
+  publicPath: z.string().min(1, 'Public path is required').optional(),
+  type: MediaTypeSchema.optional(),
+  size: z.number().min(0, 'Size must be non-negative').optional(),
+  metadata: z.record(z.unknown()).optional(),
+  status: MediaStatusSchema.optional(),
+});
+
+export const PartialUpdateMediaDto = z.object({
+  fileName: z.string().min(1, 'File name is required').optional(),
+  filePath: z.string().min(1, 'File path is required').optional(),
+  publicPath: z.string().min(1, 'Public path is required').optional(),
+  type: MediaTypeSchema.optional(),
+  size: z.number().min(0, 'Size must be non-negative').optional(),
+  metadata: z.record(z.unknown()).optional(),
+  status: MediaStatusSchema.optional(),
+});
+
+export const ListMediaDto = z.object({
+  page: z.number().min(1).default(1).optional(),
+  limit: z.number().min(1).max(100).default(10).optional(),
+  search: z.string().optional(),
+  type: MediaTypeSchema.optional(),
+  status: MediaStatusSchema.optional(),
+  uploadedBy: z.string().optional(),
+});
+
+export type CreateMediaInput = z.infer<typeof CreateMediaDto>;
+export type UpdateMediaInput = z.infer<typeof UpdateMediaDto>;
+export type PartialUpdateMediaInput = z.infer<typeof PartialUpdateMediaDto>;
+export type ListMediaInput = z.infer<typeof ListMediaDto>;

@@ -9,6 +9,7 @@ import { authRoutes } from './modules/auth/auth.routes';
 import { permissionRoutes } from './modules/permission/permission.routes';
 import { roleRoutes } from './modules/role/role.routes';
 import { userRoutes } from './modules/user/user.routes';
+import { mediaRoutes } from './modules/media/media.routes';
 
 /**
  * Express application instance.
@@ -48,6 +49,9 @@ roleRoutes(app);
 
 // Mount user routes (requires authentication and proper permissions)
 userRoutes(app);
+
+// Mount media routes (upload, thumbnails, delete, filter)
+mediaRoutes(app);
 
 // Global error handler — must be last
 app.use(errorHandler);
