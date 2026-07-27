@@ -46,3 +46,10 @@ export enum BrandStatus {
   ACTIVE,
   INACTIVE,
 }
+
+export enum AttributeType {
+  TEXT,
+  SELECT,
+  COLOR,
+  IMAGE,
+}

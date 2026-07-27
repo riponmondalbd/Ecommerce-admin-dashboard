@@ -12,6 +12,7 @@ import { userRoutes } from './modules/user/user.routes';
 import { mediaRoutes } from './modules/media/media.routes';
 import { categoryRoutes } from './modules/category/category.routes';
 import { brandRoutes } from './modules/brand/brand.routes';
+import { attributeRoutes } from './modules/attribute/attribute.routes';
 
 /**
  * Express application instance.
@@ -60,6 +61,9 @@ categoryRoutes(app);
 
 // Mount brand routes (CRUD, status management, logo upload with media integration)
 brandRoutes(app);
+
+// Mount attribute routes (CRUD, values, color/image types)
+attributeRoutes(app);
 
 // Global error handler — must be last
 app.use(errorHandler);

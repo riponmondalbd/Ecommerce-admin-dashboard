@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PermissionGroup, MediaType, MediaStatus } from '../config/enums';
+import { PermissionGroup, MediaType, MediaStatus, AttributeType } from '../config/enums';
 
 export const PermissionGroupSchema = z.nativeEnum(PermissionGroup);
 export const MediaTypeSchema = z.nativeEnum(MediaType);
@@ -236,3 +236,62 @@ export type CreateBrandInput = z.infer<typeof CreateBrandDto>;
 export type UpdateBrandInput = z.infer<typeof UpdateBrandDto>;
 export type PartialUpdateBrandInput = z.infer<typeof PartialUpdateBrandDto>;
 export type ListBrandsInput = z.infer<typeof ListBrandDto>;
+
+// Attribute Type Schema
+export const AttributeTypeSchema = z.nativeEnum(AttributeType);
+
+// Attribute DTOs (Task 11: Attribute System)
+export const CreateAttributeDto = z.object({
+  name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters'),
+  type: AttributeTypeSchema,
+  description: z.string().max(255).optional(),
+});
+
+export const UpdateAttributeDto = z.object({
+  name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters'),
+  type: AttributeTypeSchema,
+  description: z.string().max(255).optional(),
+});
+
+export const PartialUpdateAttributeDto = z.object({
+  name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters').optional(),
+  type: AttributeTypeSchema.optional(),
+  description: z.string().max(255).optional(),
+});
+
+export const ListAttributeDto = z.object({
+  page: z.number().min(1).default(1).optional(),
+  limit: z.number().min(1).max(100).default(10).optional(),
+  search: z.string().optional(),
+  type: AttributeTypeSchema.optional(),
+});
+
+export type CreateAttributeInput = z.infer<typeof CreateAttributeDto>;
+export type UpdateAttributeInput = z.infer<typeof UpdateAttributeDto>;
+export type PartialUpdateAttributeInput = z.infer<typeof PartialUpdateAttributeDto>;
+export type ListAttributesInput = z.infer<typeof ListAttributeDto>;
+
+// Attribute Value DTOs (belong to an Attribute)
+export const CreateAttributeValueDto = z.object({
+  attributeId: z.string().min(1, 'Attribute ID is required'),
+  label: z.string().min(1, 'Label is required').max(100),
+  valueCode: z.string().max(50).optional(), // e.g., "#FF0000" for colors, "L" for sizes
+  sortOrder: z.number().min(0).default(0),
+});
+
+export const UpdateAttributeValueDto = z.object({
+  label: z.string().min(1, 'Label is required').max(100),
+  valueCode: z.string().max(50).optional(),
+  sortOrder: z.number().min(0).default(0),
+});
+
+export const PartialUpdateAttributeValueDto = z.object({
+  label: z.string().min(1, 'Label is required').max(100).optional(),
+  valueCode: z.string().max(50).optional(),
+  sortOrder: z.number().min(0).default(0).optional(),
+});
+
+export type CreateAttributeValueInput = z.infer<typeof CreateAttributeValueDto>;
+export type UpdateAttributeValueInput = z.infer<typeof UpdateAttributeValueDto>;
+export type PartialUpdateAttributeValueInput = z.infer<typeof PartialUpdateAttributeValueDto>;
+
