@@ -17,9 +17,9 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, trendVal
       <div>
         <p className="text-gray-500 text-sm font-medium mb-1">{title}</p>
         <p className="mt-1 text-3xl font-bold text-gray-900">{value.toLocaleString()}</p>
-        {trend && trendValue && (
+        {trend && trendValue !== undefined && (
           <p className={`mt-2 text-xs ${trend === 'increase' ? 'text-green-600' : trend === 'decrease' ? 'text-red-600' : 'text-gray-600'}`}>
-            {trend === 'increase' ? '↑' : trend === 'decrease' ? '↓'} {Math.abs(trendValue)}% from last month
+            {(trend === 'increase' ? '↑' : trend === 'decrease' ? '↓' : '')} {Math.abs(trendValue)}% from last month
           </p>
         )}
       </div>

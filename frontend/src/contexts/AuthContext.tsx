@@ -46,7 +46,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   // Fetch user profile from backend
   const getUser = async () => {
     try {
-      const response = await axios.get('/api/me');
+      const response = await axios.get('/api/auth/me');
       setUser(response.data);
     } catch (err) {
       console.error('Failed to fetch user:', err);
