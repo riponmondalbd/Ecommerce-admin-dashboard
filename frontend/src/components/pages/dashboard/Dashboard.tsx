@@ -1,6 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useAuth } from '../../../contexts/AuthContext';
-import api from '../../../services/api';
+// Use custom hooks for real data
+import useProducts from '../../../hooks/useProducts';
+import useCategories from '../../../hooks/useCategories';
+import useBrands from '../../../hooks/useBrands';
+import useTransactions from '../../../hooks/useTransactions';
 
 interface StatCardProps {
   title: string;
@@ -32,59 +36,43 @@ const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, trendVal
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const [stats, setStats] = useState({
-    products: 0,
-    categories: 0,
-    brands: 0,
-    transactions: 0,
-  });
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
 
-  // Fetch statistics from backend API
-  useEffect(() => {
-    const fetchStats = async () => {
-      if (!user) return;
+  // Fetch real data from backend using custom hooks
+  const { products: productData, loading: productsLoading, error: productsError } = useProducts();
+  const { categories: categoryData, loading: categoriesLoading, error: categoriesError } = useCategories();
+  const { brands: brandData, loading: brandsLoading, error: brandsError } = useBrands();
+  const { transactions: transactionData, loading: transactionsLoading, error: transactionsError } = useTransactions();
 
-      try {
-        const responses = await Promise.allSettled([
-          api.get('/products'),
-          api.get('/categories'),
-          api.get('/brands'),
-          api.get('/products/transactions'),
-        ]);
+  // Combine loading states
+  const isLoading = productsLoading || categoriesLoading || brandsLoading || transactionsLoading || (user?.isLoading || false);
+  const hasError = productsError || categoriesError || brandsError || transactionsError;
 
-        setStats({
-          products: responses[0].status === 'fulfilled' ? (responses[0].value.data?.length || 0) : 0,
-          categories: responses[1].status === 'fulfilled' ? (responses[1].value.data?.length || 0) : 0,
-          brands: responses[2].status === 'fulfilled' ? (responses[2].value.data?.length || 0) : 0,
-          transactions: responses[3].status === 'fulfilled' ? (responses[3].value.data?.length || 0) : 0,
-        });
-      } catch (err) {
-        console.error('Failed to fetch statistics:', err);
-        setError('Failed to load statistics');
-      } finally {
-        setLoading(false);
-      }
-    };
+  if (!user) return null; // AuthProvider handles loading state
+  if (isLoading) return <div className="text-center py-12"><div className="inline-animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto"></div></div>;
+  if (hasError) return <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-6 max-w-2xl mx-auto">Failed to load dashboard data. Please try again.</div>;
 
-    fetchStats();
-  }, [user]);
-
-  if (!user) return null; // AuthProvider will handle loading
-  if (loading) return <div className="text-center py-12"><div className="inline-animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div></div>;
-  if (error) return <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-6">{error}</div>;
+  // Calculate statistics from real data
+  const stats = {
+    products: productData.length,
+    categories: categoryData.length,
+    brands: brandData.length,
+    transactions: transactionData.length,
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
       {/* Header */}
       <div className="max-w-7xl mx-auto mb-8">
-        <h1 className="text-3xl font-extrabold text-gray-900">
-          Welcome back, {user.name}!
-        </h1>
-        <p className="mt-2 text-gray-600">
-          Overview of your store's performance
-        </p>
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-extrabold text-gray-900">Welcome back, {user.name}!</h1>
+            <p className="mt-2 text-gray-600">Overview of your store's performance</p>
+          </div>
+          <button className="mt-4 sm:mt-0 inline-flex items-center justify-center px-6 py-3 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <span className="mr-2">➕</span>
+            Create Product
+          </button>
+        </div>
       </div>
 
       {/* Statistics Cards */}
