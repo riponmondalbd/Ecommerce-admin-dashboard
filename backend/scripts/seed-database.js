@@ -166,7 +166,7 @@ async function main() {
   const adminPassword = process.env.ADMIN_PASSWORD || 'admin123';
   const adminHashed = await bcrypt.hash(adminPassword, saltRounds);
 
-  await prisma.user.upsert({
+  const adminUser = await prisma.user.upsert({
     where: { email: 'admin@trends-bird.com' },
     update: {},
     create: {
@@ -179,7 +179,7 @@ async function main() {
   });
 
   const catalogHash = await bcrypt.hash('catalog123', saltRounds);
-  await prisma.user.upsert({
+  const catalogUser = await prisma.user.upsert({
     where: { email: 'catalog@trends-bird.com' },
     update: {},
     create: {
@@ -192,6 +192,11 @@ async function main() {
   });
 
   console.log('✅ Users created');
+  console.log(`Admin user ID: ${adminUser.id}`);
+  console.log(`Catalog user ID: ${catalogUser.id}`);
+
+  // Store admin user ID for media uploads
+  const adminUserId = adminUser.id;
 
   // ============================================
   // 4. CATEGORIES (Task 9) - Nested Tree
@@ -241,27 +246,70 @@ async function main() {
   // ============================================
   console.log('🏷️ Creating brands...');
 
-  const appleMedia = await prisma.media.upsert({
-    where: { fileName: 'apple-logo.png' },
+  // Create media entries - use create directly (no upsert needed, just ensure they don't conflict)
+  const createMediaIfNotExist = async (fileName, type, size) => {
+    // First check if already exists
+    let media = await prisma.media.findFirst({ where: { fileName } });
+    if (media) return media;
+
+    // Try to create
+    try {
+      return await prisma.media.create({
+        data: {
+          fileName,
+          filePath: `/uploads/${fileName}`,
+          publicPath: `/uploads/${fileName}`,
+          type,
+          size,
+          status: 'READY',
+          uploadedById: adminUserId,
+        },
+      });
+    } catch (error) {
+      // If foreign key error (user not found), try without uploadedById
+      if (error.code === 'P2003') { // Foreign key constraint
+        console.warn(`FK constraint for media ${fileName}, creating without uploadedBy`);
+        return await prisma.media.create({
+          data: {
+            fileName,
+            filePath: `/uploads/${fileName}`,
+            publicPath: `/uploads/${fileName}`,
+            type,
+            size,
+            status: 'READY',
+          },
+        });
+      }
+      throw error;
+    }
+  };
+
+  const appleMedia = await createMediaIfNotExist('apple-logo.png', 'IMAGE', 10240);
+  const samsungMedia = await createMediaIfNotExist('samsung-logo.png', 'IMAGE', 11264);
+
+  const appleBrand = await prisma.brand.upsert({
+    where: { name: 'Apple' },
     update: {},
-    create: { fileName: 'apple-logo.png', filePath: '/uploads/apple-logo.png', publicPath: '/uploads/apple-logo.png', type: 'IMAGE', size: 10240, status: 'READY', uploadedById: '00000000-0000-0000-0000-000000000001' },
+    create: { name: 'Apple', description: 'American tech company', status: 'ACTIVE', mediaId: appleMedia.id },
   });
 
-  const samsungMedia = await prisma.media.create({
-    data: { fileName: 'samsung-logo.png', filePath: '/uploads/samsung-logo.png', publicPath: '/uploads/samsung-logo.png', type: 'IMAGE', size: 11264, status: 2, uploadedById: '00000000-0000-0000-0000-000000000001' },
+  const samsungBrand = await prisma.brand.upsert({
+    where: { name: 'Samsung' },
+    update: {},
+    create: { name: 'Samsung', description: 'South Korean conglomerate', status: 'ACTIVE', mediaId: samsungMedia.id },
   });
 
-  const appleBrand = await prisma.brand.create({
-    data: { name: 'Apple', description: 'American tech company', status: 'ACTIVE', mediaId: appleMedia.id },
+  const nikeBrand = await prisma.brand.upsert({
+    where: { name: 'Nike' },
+    update: {},
+    create: { name: 'Nike', description: 'Sportswear manufacturer', status: 'ACTIVE' },
   });
 
-  const samsungBrand = await prisma.brand.create({
-    data: { name: 'Samsung', description: 'South Korean conglomerate', status: 'ACTIVE', mediaId: samsungMedia.id },
+  const adidasBrand = await prisma.brand.upsert({
+    where: { name: 'Adidas' },
+    update: {},
+    create: { name: 'Adidas', description: 'German sportswear company', status: 'ACTIVE' },
   });
-
-  const nikeBrand = await prisma.brand.create({ data: { name: 'Nike', description: 'Sportswear manufacturer', status: 'ACTIVE' } });
-
-  const adidasBrand = await prisma.brand.create({ data: { name: 'Adidas', description: 'German sportswear company', status: 'ACTIVE' } });
 
   console.log('✅ Brands created');
 
@@ -270,25 +318,77 @@ async function main() {
   // ============================================
   console.log('🔧 Creating attributes...');
 
-  const colorAttr = await prisma.attribute.create({ data: { name: 'Color', type: 'COLOR', description: 'Color options' } });
-  const sizeAttr = await prisma.attribute.create({ data: { name: 'Size', type: 'SELECT', description: 'Size selection' } });
-  const materialAttr = await prisma.attribute.create({ data: { name: 'Material', type: 'TEXT', description: 'Material composition' } });
+  const colorAttr = await prisma.attribute.upsert({
+    where: { name: 'Color' },
+    update: {},
+    create: { name: 'Color', type: 'COLOR', description: 'Color options' },
+  });
+  const sizeAttr = await prisma.attribute.upsert({
+    where: { name: 'Size' },
+    update: {},
+    create: { name: 'Size', type: 'SELECT', description: 'Size selection' },
+  });
+  const materialAttr = await prisma.attribute.upsert({
+    where: { name: 'Material' },
+    update: {},
+    create: { name: 'Material', type: 'TEXT', description: 'Material composition' },
+  });
 
   // Color values
-  const redValue = await prisma.attributeValue.create({ data: { label: 'Red', valueCode: '#FF0000', sortOrder: 1, attributeId: colorAttr.id } });
-  const blueValue = await prisma.attributeValue.create({ data: { label: 'Blue', valueCode: '#0000FF', sortOrder: 2, attributeId: colorAttr.id } });
-  const blackValue = await prisma.attributeValue.create({ data: { label: 'Black', valueCode: '#000000', sortOrder: 3, attributeId: colorAttr.id } });
-  const whiteValue = await prisma.attributeValue.create({ data: { label: 'White', valueCode: '#FFFFFF', sortOrder: 4, attributeId: colorAttr.id } });
+  const redValue = await prisma.attributeValue.upsert({
+    where: { label: 'Red' },
+    update: {},
+    create: { label: 'Red', valueCode: '#FF0000', sortOrder: 1, attributeId: colorAttr.id },
+  });
+  const blueValue = await prisma.attributeValue.upsert({
+    where: { label: 'Blue' },
+    update: {},
+    create: { label: 'Blue', valueCode: '#0000FF', sortOrder: 2, attributeId: colorAttr.id },
+  });
+  const blackValue = await prisma.attributeValue.upsert({
+    where: { label: 'Black' },
+    update: {},
+    create: { label: 'Black', valueCode: '#000000', sortOrder: 3, attributeId: colorAttr.id },
+  });
+  const whiteValue = await prisma.attributeValue.upsert({
+    where: { label: 'White' },
+    update: {},
+    create: { label: 'White', valueCode: '#FFFFFF', sortOrder: 4, attributeId: colorAttr.id },
+  });
 
   // Size values
-  const sValue = await prisma.attributeValue.create({ data: { label: 'S (Small)', valueCode: 'S', sortOrder: 1, attributeId: sizeAttr.id } });
-  const mValue = await prisma.attributeValue.create({ data: { label: 'M (Medium)', valueCode: 'M', sortOrder: 2, attributeId: sizeAttr.id } });
-  const lValue = await prisma.attributeValue.create({ data: { label: 'L (Large)', valueCode: 'L', sortOrder: 3, attributeId: sizeAttr.id } });
-  const xlValue = await prisma.attributeValue.create({ data: { label: 'XL (Extra Large)', valueCode: 'XL', sortOrder: 4, attributeId: sizeAttr.id } });
+  const sValue = await prisma.attributeValue.upsert({
+    where: { label: 'S (Small)' },
+    update: {},
+    create: { label: 'S (Small)', valueCode: 'S', sortOrder: 1, attributeId: sizeAttr.id },
+  });
+  const mValue = await prisma.attributeValue.upsert({
+    where: { label: 'M (Medium)' },
+    update: {},
+    create: { label: 'M (Medium)', valueCode: 'M', sortOrder: 2, attributeId: sizeAttr.id },
+  });
+  const lValue = await prisma.attributeValue.upsert({
+    where: { label: 'L (Large)' },
+    update: {},
+    create: { label: 'L (Large)', valueCode: 'L', sortOrder: 3, attributeId: sizeAttr.id },
+  });
+  const xlValue = await prisma.attributeValue.upsert({
+    where: { label: 'XL (Extra Large)' },
+    update: {},
+    create: { label: 'XL (Extra Large)', valueCode: 'XL', sortOrder: 4, attributeId: sizeAttr.id },
+  });
 
   // Material values
-  const cottonValue = await prisma.attributeValue.create({ data: { label: 'Cotton', valueCode: 'cotton', sortOrder: 1, attributeId: materialAttr.id } });
-  const polyesterValue = await prisma.attributeValue.create({ data: { label: 'Polyester', valueCode: 'polyester', sortOrder: 2, attributeId: materialAttr.id } });
+  const cottonValue = await prisma.attributeValue.upsert({
+    where: { label: 'Cotton' },
+    update: {},
+    create: { label: 'Cotton', valueCode: 'cotton', sortOrder: 1, attributeId: materialAttr.id },
+  });
+  const polyesterValue = await prisma.attributeValue.upsert({
+    where: { label: 'Polyester' },
+    update: {},
+    create: { label: 'Polyester', valueCode: 'polyester', sortOrder: 2, attributeId: materialAttr.id },
+  });
 
   console.log('✅ Attributes and values created');
 
@@ -297,8 +397,10 @@ async function main() {
   // ============================================
   console.log('🛍️ Creating products and variants...');
 
-  const iphoneProduct = await prisma.product.create({
-    data: {
+  const iphoneProduct = await prisma.product.upsert({
+    where: { sku: 'IPHONE15PRO' },
+    update: {},
+    create: {
       name: 'iPhone 15 Pro',
       description: 'Latest Apple smartphone with A17 Pro chip',
       price: 999.99,
@@ -309,8 +411,10 @@ async function main() {
     },
   });
 
-  const nikeAirMaxProduct = await prisma.product.create({
-    data: {
+  const nikeAirMaxProduct = await prisma.product.upsert({
+    where: { sku: 'NIKEAIRMAX270' },
+    update: {},
+    create: {
       name: 'Nike Air Max 270',
       description: 'Comfortable running shoes with air cushioning',
       price: 129.99,
@@ -321,9 +425,11 @@ async function main() {
     },
   });
 
-  // iPhone variants - need to use correct attributeValueIds format
-  const iphoneBlueVariant = await prisma.productVariant.create({
-    data: {
+  // iPhone variants
+  const iphoneBlueVariant = await prisma.productVariant.upsert({
+    where: { sku: 'IPHONE15PRO-BLU' },
+    update: {},
+    create: {
       productId: iphoneProduct.id,
       sku: 'IPHONE15PRO-BLU',
       price: 999.99,
@@ -333,8 +439,10 @@ async function main() {
     },
   });
 
-  const iphoneBlackVariant = await prisma.productVariant.create({
-    data: {
+  const iphoneBlackVariant = await prisma.productVariant.upsert({
+    where: { sku: 'IPHONE15PRO-BLK' },
+    update: {},
+    create: {
       productId: iphoneProduct.id,
       sku: 'IPHONE15PRO-BLK',
       price: 999.99,
@@ -345,8 +453,10 @@ async function main() {
   });
 
   // Nike variant
-  const nikeWhiteVariant = await prisma.productVariant.create({
-    data: {
+  const nikeWhiteVariant = await prisma.productVariant.upsert({
+    where: { sku: 'NIKEWM-WHITE' },
+    update: {},
+    create: {
       productId: nikeAirMaxProduct.id,
       sku: 'NIKEWM-WHITE',
       price: 129.99,
@@ -364,10 +474,24 @@ async function main() {
   console.log('🔗 Creating attribute-value links...');
 
   // This requires creating junction entries between productVariant and attributeValue
-  // The schema might have a direct way - checking prisma schema later if needed
-  // For now, we'll skip this as it depends on exact schema structure
-
-  console.log('✅ Attribute-value links setup completed (schema-dependent)');
+  // The schema may have a direct junction table or it may be handled through productVariant
+  try {
+    // Try to create links via the relationship defined in schema
+    await prisma.productAttributeValue.createMany({
+      data: [
+        { productVariantId: iphoneBlueVariant.id, attributeValueId: blueValue.id },
+        { productVariantId: iphoneBlueVariant.id, attributeValueId: mValue.id },
+        { productVariantId: iphoneBlackVariant.id, attributeValueId: blackValue.id },
+        { productVariantId: iphoneBlackVariant.id, attributeValueId: mValue.id },
+        { productVariantId: nikeWhiteVariant.id, attributeValueId: whiteValue.id },
+        { productVariantId: nikeWhiteVariant.id, attributeValueId: lValue.id },
+        { productVariantId: nikeWhiteVariant.id, attributeValueId: cottonValue.id },
+      ],
+    });
+    console.log('✅ Attribute-value links created');
+  } catch (attrError) {
+    console.warn('Could not create attribute-value links (schema may handle this differently):', attrError.message);
+  }
 
   // ============================================
   // 9. PRODUCT TRANSACTIONS (Task 12)
@@ -379,7 +503,7 @@ async function main() {
       { productId: iphoneProduct.id, variantId: null, type: 'CREATE', quantity: 1, priceAtTime: 999.99, notes: 'Product initially created' },
       { productId: iphoneProduct.id, variantId: iphoneBlueVariant.id, type: 'SELL', quantity: -5, priceAtTime: 999.99, notes: '5 units sold' },
       { productId: iphoneProduct.id, variantId: iphoneBlackVariant.id, type: 'RESTOCK', quantity: 20, priceAtTime: 999.99, notes: 'Restocked 20 units' },
-      { productId: nikeAirMaxProduct.id, variantId: nikeWhiteVariant.id, type: 'SELL', quantity: -15, priceAtTime: 129.99, notes: '15 units sold' },
+      {productId: nikeAirMaxProduct.id, variantId: nikeWhiteVariant.id, type: 'SELL', quantity: -15, priceAtTime: 129.99, notes: '15 units sold' },
       { productId: nikeAirMaxProduct.id, variantId: nikeWhiteVariant.id, type: 'ADJUST', quantity: -2, priceAtTime: 129.99, notes: '2 units damaged/returned' },
     ],
   });
