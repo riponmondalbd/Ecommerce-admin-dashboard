@@ -8,21 +8,22 @@ interface StatCardProps {
   icon: string;
   trend?: string;
   trendValue?: number;
+  className?: string;
 }
 
-const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, trendValue }) => (
-  <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow">
+const StatCard: React.FC<StatCardProps> = ({ title, value, icon, trend, trendValue, className = '' }) => (
+  <div className={`bg-white rounded-xl shadow-sm p-6 border border-gray-100 hover:shadow-md transition-shadow ${className}`}>
     <div className="flex items-center justify-between">
       <div>
-        <p className="text-gray-500 text-sm font-medium">{title}</p>
-        <p className="mt-2 text-3xl font-bold text-gray-900">{value.toLocaleString()}</p>
+        <p className="text-gray-500 text-sm font-medium mb-1">{title}</p>
+        <p className="mt-1 text-3xl font-bold text-gray-900">{value.toLocaleString()}</p>
         {trend && trendValue && (
-          <p className={`mt-1 text-sm ${trend === 'increase' ? 'text-green-600' : trend === 'decrease' ? 'text-red-600' : 'text-gray-600'}`}>
-            {trend === 'increase' ? '↑' : '↓'} {Math.abs(trendValue)}% from last month
+          <p className={`mt-2 text-xs ${trend === 'increase' ? 'text-green-600' : trend === 'decrease' ? 'text-red-600' : 'text-gray-600'}`}>
+            {trend === 'increase' ? '↑' : trend === 'decrease' ? '↓'} {Math.abs(trendValue)}% from last month
           </p>
         )}
       </div>
-      <div className="p-3 bg-indigo-50 rounded-lg">
+      <div className={`p-3 rounded-lg ${trend === 'increase' ? 'bg-green-50' : trend === 'decrease' ? 'bg-red-50' : 'bg-indigo-50'}`}>
         <span className="text-2xl">{icon}</span>
       </div>
     </div>
@@ -38,12 +39,15 @@ const Dashboard = () => {
     transactions: 0,
   });
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Fetch statistics from backend API
   useEffect(() => {
     const fetchStats = async () => {
+      if (!user) return;
+
       try {
-        const [productsRes, categoriesRes, brandsRes, transactionsRes] = await Promise.all([
+        const responses = await Promise.allSettled([
           api.get('/products'),
           api.get('/categories'),
           api.get('/brands'),
@@ -51,22 +55,25 @@ const Dashboard = () => {
         ]);
 
         setStats({
-          products: productsRes.data.length,
-          categories: categoriesRes.data.length,
-          brands: brandsRes.data.length,
-          transactions: transactionsRes.data.length,
+          products: responses[0].status === 'fulfilled' ? (responses[0].value.data?.length || 0) : 0,
+          categories: responses[1].status === 'fulfilled' ? (responses[1].value.data?.length || 0) : 0,
+          brands: responses[2].status === 'fulfilled' ? (responses[2].value.data?.length || 0) : 0,
+          transactions: responses[3].status === 'fulfilled' ? (responses[3].value.data?.length || 0) : 0,
         });
       } catch (err) {
         console.error('Failed to fetch statistics:', err);
+        setError('Failed to load statistics');
       } finally {
         setLoading(false);
       }
     };
 
     fetchStats();
-  }, []);
+  }, [user]);
 
-  if (!user || loading) return <div>Loading...</div>;
+  if (!user) return null; // AuthProvider will handle loading
+  if (loading) return <div className="text-center py-12"><div className="inline-animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600"></div></div>;
+  if (error) return <div className="bg-red-50 border border-red-200 text-red-700 rounded-lg p-6">{error}</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
