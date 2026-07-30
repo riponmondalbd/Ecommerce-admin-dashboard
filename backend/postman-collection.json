@@ -1,136 +1,208 @@
 {
   "info": {
-    "_postman-id": "ecommerce-backend",
+    "_postman_id": "a9a3b2b1-6c17-4979-9be9-9c3f2d018b31",
     "name": "Trends Bird E-Commerce Admin API",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
-  "protocol": "https",
-  "authentication": {
-    "type": "bearer",
-    "bearer": {
-      "token": "{{access_token}}"
-    }
-  },
-  "request": {
-    "method": "GET",
-    "header": []
-  },
-  "event": [],
-  "response": [],
-  "folder": [
+  "variable": [
     {
-      "name": "Authentication",
+      "key": "base_url",
+      "value": "http://localhost:5000/api",
+      "type": "string"
+    },
+    {
+      "key": "access_token",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. Authentication",
       "item": [
         {
-          "name": "Register New User",
+          "name": "Login (Get JWT)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "var jsonData = pm.response.json();",
+                  "if (jsonData.success && jsonData.data && jsonData.data.accessToken) {",
+                  "    pm.collectionVariables.set(\"access_token\", jsonData.data.accessToken);",
+                  "}"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ],
           "request": {
-            "url": "${{base_url}}/api/register",
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"name\": \"John Doe\",\n  \"email\": \"john@example.com\",\n  \"password\": \"SecurePass123\"\n}"
+              "raw": "{\n  \"email\": \"admin@trends-bird.com\",\n  \"password\": \"admin123\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/login",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "login"]
             }
           }
         },
         {
-          "name": "Login (Get JWT)",
+          "name": "Get Current User (Me)",
           "request": {
-            "url": "${{base_url}}/api/login",
-            "method": "POST",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
             "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@trends-bird.com\",\n  \"password\": \"{{admin_password}}\"\n}"
+            "url": {
+              "raw": "{{base_url}}/auth/me",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "me"]
             }
           }
         },
         {
           "name": "Refresh Token",
           "request": {
-            "url": "${{base_url}}/api/refresh",
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
             "body": {
               "mode": "raw",
-              "raw": "{\n  \"refresh_token\": \"{{refresh_token}}\"\n}"
+              "raw": "{\n  \"refreshToken\": \"paste_refresh_token_here\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
             }
           }
         },
         {
-          "name": "Logout (Revoke Token)",
+          "name": "Logout",
           "request": {
-            "url": "${{base_url}}/api/logout",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
             "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{}"
+            "url": {
+              "raw": "{{base_url}}/auth/logout",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "logout"]
             }
-          }
-        },
-        {
-          "name": "Get Current User Info",
-          "request": {
-            "url": "${{base_url}}/api/me",
-            "method": "GET",
-            "header": [],
-            "body": {}
           }
         }
       ]
     },
     {
-      "name": "User Management",
+      "name": "2. Categories",
       "item": [
         {
-          "name": "List Users (Paginated)",
+          "name": "List Categories",
           "request": {
-            "url": "${{base_url}}/api/users?page=1&limit=10",
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
             "method": "GET",
             "header": [],
-            "body": {}
+            "url": { "raw": "{{base_url}}/categories", "host": ["{{base_url}}"], "path": ["categories"] }
           }
         },
         {
-          "name": "Create User",
+          "name": "Get Category Tree",
           "request": {
-            "url": "${{base_url}}/api/users",
-            "method": "POST",
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "method": "GET",
             "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"New User\",\n  \"email\": \"newuser@trends-bird.com\",\n  \"password\": \"UserPassword456\",\n  \"role\": \"CATALOG_MANAGER\",\n  \"status\": \"ACTIVE\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Activate User",
-          "request": {
-            "url": "${{base_url}}/api/users/{{user_id}}/activate",
-            "method": "PUT",
-            "header": [],
-            "body": {}
-          }
-        },
-        {
-          "name": "Deactivate User",
-          "request": {
-            "url": "${{base_url}}/api/users/{{user_id}}/deactivate",
-            "method": "PUT",
-            "header": [],
-            "body": {}
+            "url": { "raw": "{{base_url}}/categories/tree", "host": ["{{base_url}}"], "path": ["categories", "tree"] }
           }
         }
       ]
     },
     {
-      "name": "Media Library",
+      "name": "3. Brands",
       "item": [
         {
-          "name": "Upload File (Multiformal-data)",
+          "name": "List Brands",
           "request": {
-            "url": "${{base_url}}/api/media",
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/brands", "host": ["{{base_url}}"], "path": ["brands"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "4. Attributes",
+      "item": [
+        {
+          "name": "List Attributes",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/attributes", "host": ["{{base_url}}"], "path": ["attributes"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "5. Products",
+      "item": [
+        {
+          "name": "List Products",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}}"], "path": ["products"] }
+          }
+        }
+      ]
+    },
+    {
+      "name": "6. Media",
+      "item": [
+        {
+          "name": "List Media",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/media", "host": ["{{base_url}}"], "path": ["media"] }
+          }
+        },
+        {
+          "name": "Upload Media",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
             "method": "POST",
             "header": [],
             "body": {
@@ -138,240 +210,52 @@
               "formdata": [
                 {
                   "key": "file",
-                  "value": "<Choose File>",
-                  "type": "file"
+                  "type": "file",
+                  "src": []
                 }
               ]
-            }
-          }
-        },
-        {
-          "name": "List Media with Filters",
-          "request": {
-            "url": "${{base_url}}/api/media?type=IMAGE&status=READY&page=1&limit=10",
-            "method": "GET",
-            "header": [],
-            "body": {}
-          }
-        },
-        {
-          "name": "Delete Media",
-          "request": {
-            "url": "${{base_url}}/api/media/{{media_id}}",
-            "method": "DELETE",
-            "header": [],
-            "body": {}
+            },
+            "url": { "raw": "{{base_url}}/media", "host": ["{{base_url}}"], "path": ["media"] }
           }
         }
       ]
     },
     {
-      "name": "Category System",
+      "name": "7. Users",
       "item": [
         {
-          "name": "Create Root Category",
+          "name": "List Users",
           "request": {
-            "url": "${{base_url}}/api/categories",
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Electronics\",\n  \"slug\": \"electronics\",\n  \"description\": \"Electronic devices category\",\n  \"isActive\": true\n}"
-            }
-          }
-        },
-        {
-          "name": "Create Subcategory",
-          "request": {
-            "url": "${{base_url}}/api/categories",
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Phones\",\n  \"slug\": \"phones\",\n  \"parentId\": \"{{parent_category_id}}\",\n  \"isActive\": true\n}"
-            }
-          }
-        },
-        {
-          "name": "Get Category Tree",
-          "request": {
-            "url": "${{base_url}}/api/categories/tree",
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
             "method": "GET",
             "header": [],
-            "body": {}
-          }
-        },
-        {
-          "name": "Get Breadcrumbs for Category",
-          "request": {
-            "url": "${{base_url}}/api/categories/{{category_id}}/ancestors",
-            "method": "GET",
-            "header": [],
-            "body": {}
+            "url": { "raw": "{{base_url}}/users", "host": ["{{base_url}}"], "path": ["users"] }
           }
         }
       ]
     },
     {
-      "name": "Brand System",
+      "name": "8. Roles & Permissions",
       "item": [
         {
-          "name": "Create Brand",
+          "name": "List Roles",
           "request": {
-            "url": "${{base_url}}/api/brands",
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Samsung\",\n  \"description\": \"Tech brand\",\n  \"status\": \"ACTIVE\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Update Brand Status",
-          "request": {
-            "url": "${{base_url}}/api/brands/{{brand_id}}",
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"INACTIVE\"\n}"
-            }
-          }
-        },
-        {
-          "name": "List Brands",
-          "request": {
-            "url": "${{base_url}}/api/brands",
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
             "method": "GET",
             "header": [],
-            "body": {}
+            "url": { "raw": "{{base_url}}/roles", "host": ["{{base_url}}"], "path": ["roles"] }
+          }
+        },
+        {
+          "name": "List Permissions",
+          "request": {
+            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{base_url}}/permissions", "host": ["{{base_url}}"], "path": ["permissions"] }
           }
         }
       ]
-    },
-    {
-      "name": "Attribute System",
-      "item": [
-        {
-          "name": "Create Attribute (Color)",
-          "request": {
-            "url": "${{base_url}}/api/attributes",
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Color\",\n  \"type\": \"IMAGE\",\n  \"description\": \"Color options\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Add Attribute Value",
-          "request": {
-            "url": "${{base_url}}/api/attributes/{{attr_id}}/values",
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"label\": \"Red\",\n  \"valueCode\": \"#FF0000\",\n  \"sortOrder\": 1\n}"
-            }
-          }
-        },
-        {
-          "name": "Get All Values for Attribute",
-          "request": {
-            "url": "${{base_url}}/api/attributes/{{attr_id}}/values",
-            "method": "GET",
-            "header": [],
-            "body": {}
-          }
-        }
-      ]
-    },
-    {
-      "name": "Product Module (⭐)",
-      "item": [
-        {
-          "name": "Create Product",
-          "request": {
-            "url": "${{base_url}}/api/products",
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Smartphone\",\n  \"description\": \"Latest smartphone model\",\n  \"price\": 799.99,\n  \"sku\": \"SM-2024\",\n  \"categoryId\": \"{{category_id}}\",\n  \"brandId\": \"{{brand_id}}\",\n  \"status\": \"PUBLISHED\"\n}"
-            }
-          }
-        },
-        {
-          "name": "Create Product Variant",
-          "request": {
-            "url": "${{base_url}}/api/products/{{product_id}}/variants",
-            "method": "POST",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"sku\": \"SM-2024-BLUE\",\n  \"price\": 849.99,\n  \"inventory\": 50,\n  \"attributeValueIds\": [\"{{color_value_id}}\", \"{{size_value_id}}\"]\n}"
-            }
-          }
-        },
-        {
-          "name": "Restock Variant Inventory",
-          "request": {
-            "url": "${{base_url}}/api/variants/{{variant_id}}/restock",
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": \"{\\\"quantity\\\": 20}\"
-            }
-          }
-        },
-        {
-          "name": "Sell Variant (Deduct Inventory)",
-          "request": {
-            "url": "${{base_url}}/api/variants/{{variant_id}}/sell",
-            "method": "PUT",
-            "header": [],
-            "body": {
-              "mode": "raw",
-              "raw": "{\\\"quantity\\\": 2}"
-            }
-          }
-        },
-        {
-          "name": "Get Transaction History",
-          "request": {
-            "url": "${{base_url}}/api/products/{{product_id}}/transactions",
-            "method": "GET",
-            "header": [],
-            "body": {}
-          }
-        }
-      ]
-    }
-  ],
-  "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:3000",
-      "type": "string"
-    },
-    {
-      "key": "access_token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "refresh_token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "admin_password",
-      "value": "admin123",
-      "type": "string",
-      "enabled": true
     }
   ]
 }

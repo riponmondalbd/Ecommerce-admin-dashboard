@@ -138,10 +138,19 @@ export const createProduct = async (input: unknown) => {
     }
   }
 
+  // Generate slug if not provided
+  const slug = validated.slug || validated.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+  // Check if slug already exists
+  const existingSlug = await prisma.product.findUnique({ where: { slug: slug.toLowerCase() } });
+  if (existingSlug) {
+    throw new AppError('Slug must be unique', 409);
+  }
+
   const product = await prisma.product.create({
     data: {
       name: validated.name,
-      slug: validated.slug,
+      slug: slug.toLowerCase(),
       shortDescription: validated.shortDescription,
       description: validated.description,
       hasVariants: validated.hasVariants,
@@ -298,9 +307,6 @@ export const deleteProduct = async (id: string) => {
   }
 
   await prisma.product.delete({ where: { id } });
-
-  // Log deletion
-  await logProductTransaction(id, null, 'DELETE', 0, Number(product.price), 'Product deleted');
 
   return { success: true, message: 'Product deleted successfully' };
 };
@@ -462,9 +468,6 @@ export const deleteProductVariant = async (id: string) => {
   }
 
   await prisma.productVariant.delete({ where: { id } });
-
-  // Log deletion
-  await logProductTransaction(variant.productId, id, 'DELETE', 0, Number(variant.price), 'Variant deleted');
 
   return { success: true, message: 'Variant deleted successfully' };
 };

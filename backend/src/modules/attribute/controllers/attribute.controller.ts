@@ -43,8 +43,12 @@ export const listAttributes = (req: Request, res: Response) => {
     getAttributes(validated)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -60,8 +64,12 @@ export const getAttribute = (req: Request, res: Response) => {
     getAttributeById(id)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -76,8 +84,12 @@ export const createAttributeController = (req: Request, res: Response) => {
         res.status(201).json({ success: true, data: result });
       })
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -94,8 +106,12 @@ export const updateAttributeController = (req: Request, res: Response) => {
     updateAttribute(id, validated)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -112,8 +128,12 @@ export const partialUpdateAttributeController = (req: Request, res: Response) =>
     partialUpdateAttribute(id, validated)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -129,8 +149,12 @@ export const deleteAttributeController = (req: Request, res: Response) => {
     deleteAttribute(id)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -146,8 +170,12 @@ export const getAttributeValuesController = (req: Request, res: Response) => {
     getAttributeValues(attributeId)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -160,14 +188,19 @@ export const createAttributeValueController = (req: Request, res: Response) => {
     if (!attributeId || typeof attributeId !== 'string') {
       throw new AppError('Invalid attribute ID', 400);
     }
+    req.body.attributeId = attributeId;
     const validated = validateInput(req.body, CreateAttributeValueDto);
     createAttributeValue(attributeId, validated)
       .then((result) => {
         res.status(201).json({ success: true, data: result });
       })
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -184,8 +217,12 @@ export const updateAttributeValueController = (req: Request, res: Response) => {
     updateAttributeValue(id, validated)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -202,8 +239,12 @@ export const partialUpdateAttributeValueController = (req: Request, res: Respons
     partialUpdateAttributeValue(id, validated)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -219,7 +260,11 @@ export const deleteAttributeValueController = (req: Request, res: Response) => {
     deleteAttributeValue(id)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };

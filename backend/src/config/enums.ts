@@ -29,29 +29,31 @@ export enum UserStatus {
 }
 
 export enum MediaType {
-  IMAGE,
-  VIDEO,
-  DOCUMENT,
-  OTHER,
+  IMAGE = 'IMAGE',
+  VIDEO = 'VIDEO',
+  DOCUMENT = 'DOCUMENT',
+  OTHER = 'OTHER',
 }
 
 export enum MediaStatus {
-  PENDING,
-  PROCESSING,
-  READY,
-  ERROR,
+  PENDING = 'PENDING',
+  PROCESSING = 'PROCESSING',
+  READY = 'READY',
+  ERROR = 'ERROR',
 }
 
 export enum BrandStatus {
-  ACTIVE,
-  INACTIVE,
+  ACTIVE = 'ACTIVE',
+  INACTIVE = 'INACTIVE',
 }
 
 export enum AttributeType {
-  TEXT,
-  SELECT,
-  COLOR,
-  IMAGE,
+  TEXT = 'TEXT',
+  DROPDOWN = 'DROPDOWN',
+  RADIO = 'RADIO',
+  CHECKBOX = 'CHECKBOX',
+  COLOR_SWATCH = 'COLOR_SWATCH',
+  IMAGE_SWATCH = 'IMAGE_SWATCH',
 }
 
 export enum ProductStatus {

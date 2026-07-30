@@ -161,6 +161,10 @@ export const createProductVariantController = (req: Request, res: Response) => {
     if (!productId || typeof productId !== 'string') {
       throw new AppError('Invalid product ID', 400);
     }
+    
+    // Inject productId from URL into body for validation
+    req.body.productId = productId;
+    
     const validated = validateInput(req.body, CreateProductVariantDto);
     createProductVariant(productId, validated)
       .then((result) => {

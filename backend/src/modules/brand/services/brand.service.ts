@@ -105,8 +105,13 @@ export const createBrand = async (input: unknown) => {
     }
   }
 
+  // Generate slug if not provided
+  const slug = validated.slug || validated.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
   // Check if slug already exists
-  const existingSlug = await prisma.brand.findUnique({ where: { slug: validated.slug } });
+  const existingSlug = await prisma.brand.findUnique({
+    where: { slug: slug.toLowerCase() }
+  });
   if (existingSlug) {
     throw new AppError('Slug must be unique', 409);
   }
@@ -114,7 +119,7 @@ export const createBrand = async (input: unknown) => {
   const brand = await prisma.brand.create({
     data: {
       name: validated.name,
-      slug: validated.slug,
+      slug: slug.toLowerCase(),
       description: validated.description,
       status: validated.status,
       mediaId: validated.mediaId || undefined,

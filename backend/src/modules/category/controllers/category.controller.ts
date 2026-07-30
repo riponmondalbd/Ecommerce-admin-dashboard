@@ -32,8 +32,12 @@ export const listCategories = (req: Request, res: Response) => {
     getCategories(validated)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -49,8 +53,12 @@ export const getCategory = (req: Request, res: Response) => {
     getCategoryById(id)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -65,8 +73,12 @@ export const createCategoryController = (req: Request, res: Response) => {
         res.status(201).json({ success: true, data: result });
       })
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -83,8 +95,12 @@ export const updateCategoryController = (req: Request, res: Response) => {
     updateCategory(id, validated)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -101,8 +117,12 @@ export const partialUpdateCategoryController = (req: Request, res: Response) => 
     partialUpdateCategory(id, validated)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -118,8 +138,12 @@ export const deleteCategoryController = (req: Request, res: Response) => {
     deleteCategory(id)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -131,8 +155,12 @@ export const getCategoriesTreeController = (_req: Request, res: Response) => {
     getCategoriesTree()
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };
 
@@ -148,7 +176,11 @@ export const getCategoryAncestorsController = (req: Request, res: Response) => {
     getCategoryAncestors(id)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
-  } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+  } catch (error: any) {
+    if (error instanceof AppError) {
+      errorResponse(res, error.message, error.statusCode);
+    } else {
+      errorResponse(res, error.message || 'Internal server error', 500);
+    }
   }
 };

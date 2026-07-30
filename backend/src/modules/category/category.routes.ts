@@ -15,7 +15,13 @@ export const categoryRoutes = (app: Express) => {
   // GET /api/categories - List all categories (requires permission: category:read)
   app.get('/api/categories', requirePermission('category:read'), listCategories);
 
-  // GET /api/categories/:id - Get single category by ID (requires permission: category:read)
+  // GET /api/categories/tree - Get hierarchical tree structure
+  app.get('/api/categories/tree', requirePermission('category:read'), getCategoriesTreeController);
+
+  // GET /api/categories/:id/ancestors - Get ancestors for breadcrumbs
+  app.get('/api/categories/:id/ancestors', requirePermission('category:read'), getCategoryAncestorsController);
+
+  // GET /api/categories/:id - Get single category by ID
   app.get('/api/categories/:id', requirePermission('category:read'), getCategory);
 
   // POST /api/categories - Create new category (requires permission: category:create)
@@ -30,9 +36,4 @@ export const categoryRoutes = (app: Express) => {
   // DELETE /api/categories/:id - Delete category (requires permission: category:delete)
   app.delete('/api/categories/:id', requirePermission('category:delete'), deleteCategoryController);
 
-  // GET /api/categories/tree - Get hierarchical tree structure (requires permission: category:read)
-  app.get('/api/categories/tree', requirePermission('category:read'), getCategoriesTreeController);
-
-  // GET /api/categories/:id/ancestors - Get ancestors for breadcrumbs (requires permission: category:read)
-  app.get('/api/categories/:id/ancestors', requirePermission('category:read'), getCategoryAncestorsController);
 };

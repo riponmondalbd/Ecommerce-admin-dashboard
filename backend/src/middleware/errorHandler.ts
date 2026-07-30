@@ -27,5 +27,5 @@ export const errorHandler = (err: Error, _req: Request, res: Response, _next: Ne
     return errorResponse(res, `Validation failed: ${issues}`, 400);
   }
 
-  return errorResponse(res, 'Internal server error.', 500);
+  return errorResponse(res, err.message || 'Internal server error.', 500);
 };

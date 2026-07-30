@@ -193,7 +193,7 @@ export type ListMediaInput = z.infer<typeof ListMediaDto>;
 // Category DTOs (Task 9: Category System)
 export const CreateCategoryDto = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
-  slug: z.string().min(1, 'Slug is required').max(100, 'Slug must be less than 100 characters').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
+  slug: z.string().min(1, 'Slug is required').max(100, 'Slug must be less than 100 characters').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens').optional(),
   description: z.string().max(255).optional(),
   parentId: z.string().optional(),
   mediaId: z.string().optional(),
@@ -237,7 +237,7 @@ export type ListCategoriesInput = z.infer<typeof ListCategoryDto>;
 // Brand DTOs (Task 10: Brand System)
 export const CreateBrandDto = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
-  slug: z.string().min(1, 'Slug is required').max(100, 'Slug must be less than 100 characters').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
+  slug: z.string().min(1, 'Slug is required').max(100, 'Slug must be less than 100 characters').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens').optional(),
   description: z.string().max(255).optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
   mediaId: z.string().optional(), // Optional reference to a Media item for logo
@@ -277,7 +277,7 @@ export const TransactionTypeEnum = z.enum(['CREATE', 'UPDATE', 'SELL', 'RESTOCK'
 
 export const CreateProductDto = z.object({
   name: z.string().min(1, 'Name is required').max(255),
-  slug: z.string().min(1, 'Slug is required').max(255),
+  slug: z.string().min(1, 'Slug is required').max(255).optional(),
   sku: z.string().max(50).optional(),
   shortDescription: z.string().max(500).optional(),
   description: z.string().max(2000).optional(),
@@ -380,7 +380,7 @@ export const AttributeTypeSchema = z.nativeEnum(AttributeType);
 // Attribute DTOs (Task 11: Attribute System)
 export const CreateAttributeDto = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters'),
-  slug: z.string().min(1, 'Slug is required').max(50),
+  slug: z.string().min(1, 'Slug is required').max(50).optional(),
   type: AttributeTypeSchema,
   description: z.string().max(255).optional(),
 });
@@ -409,7 +409,7 @@ export type ListAttributesInput = z.infer<typeof ListAttributeDto>;
 // Attribute Value DTOs (belong to an Attribute)
 export const CreateAttributeValueDto = z.object({
   attributeId: z.string().min(1, 'Attribute ID is required'),
-  slug: z.string().min(1, 'Slug is required').max(100),
+  slug: z.string().min(1, 'Slug is required').max(100).optional(),
   label: z.string().min(1, 'Label is required').max(100),
   referenceValue: z.string().max(50).optional(), // e.g., "#FF0000" for colors, "L" for sizes
   sortOrder: z.number().min(0).default(0),

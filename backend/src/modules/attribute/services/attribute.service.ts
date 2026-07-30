@@ -106,8 +106,11 @@ export const createAttribute = async (input: unknown) => {
     throw new AppError('Attribute with this name already exists', 409);
   }
 
+  // Generate slug if not provided
+  const slug = validated.slug || validated.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
   // Check if slug already exists
-  const existingSlug = await prisma.attribute.findUnique({ where: { slug: validated.slug } });
+  const existingSlug = await prisma.attribute.findUnique({ where: { slug: slug.toLowerCase() } });
   if (existingSlug) {
     throw new AppError('Slug must be unique', 409);
   }
@@ -115,7 +118,7 @@ export const createAttribute = async (input: unknown) => {
   const attribute = await prisma.attribute.create({
     data: {
       name: validated.name,
-      slug: validated.slug,
+      slug: slug.toLowerCase(),
       type: validated.type as any, // Cast to bypass type checking - Prisma handles numeric enums
       description: validated.description,
     },
@@ -260,15 +263,18 @@ export const createAttributeValue = async (attributeId: string, input: unknown) 
     throw new AppError('Attribute not found', 404);
   }
 
+  // Generate slug if not provided
+  const slug = validated.slug || validated.label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
   // Check if slug already exists
-  const existingSlug = await prisma.attributeValue.findUnique({ where: { slug: validated.slug } });
+  const existingSlug = await prisma.attributeValue.findUnique({ where: { slug: slug.toLowerCase() } });
   if (existingSlug) {
     throw new AppError('Slug must be unique', 409);
   }
 
   const attributeValue = await prisma.attributeValue.create({
     data: {
-      slug: validated.slug,
+      slug: slug.toLowerCase(),
       label: validated.label,
       referenceValue: validated.referenceValue,
       sortOrder: validated.sortOrder || 0,
