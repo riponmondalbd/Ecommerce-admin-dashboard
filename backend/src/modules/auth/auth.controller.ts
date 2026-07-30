@@ -22,7 +22,8 @@ export const authController = {
   async login(req: Request, res: Response) {
     try {
       const input = req.body as LoginInput;
-      const { accessToken, refreshToken } = await authService.login(input);
+      const { accessToken, refreshToken } = await authService.login(input, req);
+      // Set httpOnly cookie if desired: res.cookie('accessToken', accessToken, { httpOnly: true, secure: true });
       return successResponse(res, { accessToken, refreshToken }, 'Login successful');
     } catch (error) {
       if (error instanceof AppError) {
@@ -38,7 +39,7 @@ export const authController = {
       if (!refreshToken) {
         return errorResponse(res, 'Missing refresh token', 400);
       }
-      const { accessToken, refreshToken: newRefreshToken } = await authService.refreshToken(refreshToken);
+      const { accessToken, refreshToken: newRefreshToken } = await authService.refreshToken(refreshToken, req);
       return successResponse(res, { accessToken, refreshToken: newRefreshToken }, 'Token refreshed');
     } catch (error) {
       if (error instanceof AppError) {
@@ -55,6 +56,7 @@ export const authController = {
         return errorResponse(res, 'Missing refresh token', 400);
       }
       await authService.logout(refreshToken);
+      // Clear cookies if used: res.clearCookie('accessToken');
       return successResponse(res, {}, 'Logout successful');
     } catch (error) {
       if (error instanceof AppError) {

@@ -26,7 +26,7 @@ export class AuthService {
     });
   }
 
-  async login(input: LoginInput) {
+  async login(input: LoginInput, req?: any) {
     const user = await prisma.user.findUnique({ where: { email: input.email }, include: { role: true } });
     if (!user) throw new AppError('Invalid credentials', 401);
 
@@ -40,41 +40,45 @@ export class AuthService {
       { expiresIn: env.jwtAccessExpiresIn } as SignOptions
     );
 
-    const refreshTokenObj = await this.getOrCreateRefreshToken(user);
-    const rotated = await this.rotateRefreshToken(user.id, refreshTokenObj.id);
+    const refreshTokenObj = await this.getOrCreateRefreshToken(user, req);
+    const rotated = await this.rotateRefreshToken(user.id, refreshTokenObj.id, req);
 
     return { accessToken, refreshToken: rotated.token };
   }
 
-  private async getOrCreateRefreshToken(user: any) {
+  private async getOrCreateRefreshToken(user: any, req?: any) {
     const tokenRec = await prisma.refreshToken.findFirst({
       where: { userId: user.id, revoked: false },
     });
     if (tokenRec) return tokenRec;
 
+    const userAgent = req?.headers['user-agent'] || '';
+    const ipAddress = req?.ip || req?.socket?.remoteAddress || '';
     const tok = require('crypto').randomBytes(64).toString('hex');
     const exp = new Date();
     exp.setDate(exp.getDate() + parseInt(env.jwtRefreshExpiresIn));
     return prisma.refreshToken.create({
-      data: { token: tok, userId: user.id, expiresAt: exp, userAgent: '', ipAddress: '' },
+      data: { token: tok, userId: user.id, expiresAt: exp, userAgent, ipAddress },
     });
   }
 
-  private async rotateRefreshToken(userId: string, tokenId: string) {
+  private async rotateRefreshToken(userId: string, tokenId: string, req?: any) {
     await prisma.refreshToken.update({
       where: { id: tokenId },
       data: { revoked: true, revokedAt: new Date() },
     });
 
+    const userAgent = req?.headers['user-agent'] || '';
+    const ipAddress = req?.ip || req?.socket?.remoteAddress || '';
     const tok = require('crypto').randomBytes(64).toString('hex');
     const exp = new Date();
     exp.setDate(exp.getDate() + parseInt(env.jwtRefreshExpiresIn));
     return prisma.refreshToken.create({
-      data: { token: tok, userId, expiresAt: exp, userAgent: '', ipAddress: '' },
+      data: { token: tok, userId, expiresAt: exp, userAgent, ipAddress },
     });
   }
 
-  async refreshToken(refreshToken: string) {
+  async refreshToken(refreshToken: string, req?: any) {
     const db = await prisma.refreshToken.findUnique({
       where: { token: refreshToken },
       include: { user: { include: { role: true } } },
@@ -88,7 +92,7 @@ export class AuthService {
       { expiresIn: env.jwtAccessExpiresIn } as SignOptions
     );
 
-    const rotated = await this.rotateRefreshToken(db.userId, db.id);
+    const rotated = await this.rotateRefreshToken(db.userId, db.id, req);
     return { accessToken, refreshToken: rotated.token };
   }
 
@@ -101,9 +105,9 @@ export class AuthService {
   }
 
   getUserById(userId: string) {
-    return prisma.user.findUnique({ 
-      where: { id: userId }, 
-      include: { 
+    return prisma.user.findUnique({
+      where: { id: userId },
+      include: {
         role: {
           include: {
             permissions: {
@@ -112,8 +116,8 @@ export class AuthService {
               }
             }
           }
-        } 
-      } 
+        }
+      }
     });
   }
 }
