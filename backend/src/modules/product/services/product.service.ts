@@ -24,7 +24,7 @@ const validateInput = <T>(input: unknown, schema: z.Schema<T>): T => {
  * Generate a SKU for a product or variant
  */
 const generateSKU = (prefix: string, length: number = 6): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ01234589';
   let sku = prefix;
   for (let i = 0; i < length; i++) {
     sku += chars.charAt(Math.floor(Math.random() * chars.length));
@@ -110,9 +110,9 @@ export const getProductById = async (id: string) => {
             },
           },
         },
-      },
-      mediaAttachments: {
-        include: { media: true }
+        mediaAttachments: {
+          include: { media: true }
+        }
       }
     },
   });
@@ -175,7 +175,7 @@ export const createProduct = async (input: unknown) => {
   });
 
   // Log product creation transaction
-  await logProductTransaction(product.id, null, 'CREATE', 1, validated.price, 'Product created');
+  await logProductTransaction(product.id, null, 'CREATE', 1, validated.price, 'Product created', null);
 
   return product;
 };
@@ -228,7 +228,7 @@ export const updateProduct = async (id: string, input: unknown) => {
   });
 
   // Log product update transaction
-  await logProductTransaction(updatedProduct.id, null, 'UPDATE', 1, Number(updatedProduct.price), 'Product updated');
+  await logProductTransaction(updatedProduct.id, null, 'UPDATE', 1, Number(updatedProduct.price), 'Product updated', null);
 
   return updatedProduct;
 };
@@ -282,7 +282,7 @@ export const partialUpdateProduct = async (id: string, input: unknown) => {
 
   // Log product update if fields changed
   if (Object.keys(updateData).length > 0) {
-    await logProductTransaction(updatedProduct.id, null, 'UPDATE', 1, Number(updatedProduct.price), 'Product partially updated');
+    await logProductTransaction(updatedProduct.id, null, 'UPDATE', 1, Number(updatedProduct.price), 'Product partially updated', null);
   }
 
   return updatedProduct;
@@ -392,7 +392,7 @@ export const createProductVariant = async (productId: string, input: unknown) =>
   });
 
   // Log variant creation transaction
-  await logProductTransaction(productId, variant.id, 'CREATE', validated.inventory || 0, Number(variant.price), `Variant created with SKU: ${variant.sku}`);
+  await logProductTransaction(productId, variant.id, 'CREATE', validated.inventory || 0, Number(variant.price), `Variant created with SKU: ${variant.sku}`, null);
 
   return variant;
 };
@@ -452,6 +452,11 @@ export const updateProductVariant = async (id: string, input: unknown) => {
     },
   });
 
+  // Log inventory changes separately if inventory was modified
+  if (validated.inventory !== undefined && validated.inventory !== variant.inventory) {
+    await logProductTransaction(variant.productId, id, 'UPDATE', validated.inventory - variant.inventory, Number(updatedVariant.price), `Inventory updated from ${variant.inventory} to ${validated.inventory}`, null);
+  }
+
   // Log variant update transaction
   await logProductTransaction(variant.productId, id, 'UPDATE', validated.inventory !== undefined ? validated.inventory : variant.inventory, Number(updatedVariant.price), 'Variant updated');
 
@@ -473,7 +478,7 @@ export const deleteProductVariant = async (id: string) => {
 };
 
 /**
- * Add inventory to a product variant (restock)
+ * Add inventory to a product variant (restock) - FIXED: Use atomic increment
  */
 export const restockProductVariant = async (id: string, quantity: number) => {
   const variant = await prisma.productVariant.findUnique({ where: { id } });
@@ -485,21 +490,23 @@ export const restockProductVariant = async (id: string, quantity: number) => {
     throw new AppError('Restock quantity must be positive', 400);
   }
 
-  const newInventory = variant.inventory + quantity;
-
+  // FIX: Use atomic increment instead of read-modify-write to prevent race conditions
   const updatedVariant = await prisma.productVariant.update({
     where: { id },
-    data: { inventory: newInventory },
+    data: {
+      inventory: { increment: { by: quantity } }
+    },
+    include: { inventory: true }
   });
 
   // Log restock transaction
-  await logProductTransaction(variant.productId, id, 'RESTOCK', quantity, Number(updatedVariant.price), `Restocked ${quantity} units`);
+  await logProductTransaction(variant.productId, id, 'RESTOCK', quantity, Number(updatedVariant.price), `Restocked ${quantity} units`, null);
 
   return updatedVariant;
 };
 
 /**
- * Deduct inventory from a product variant (sell)
+ * Deduct inventory from a product variant (sell) - FIXED: Use atomic decrement
  */
 export const sellProductVariant = async (id: string, quantity: number) => {
   const variant = await prisma.productVariant.findUnique({ where: { id } });
@@ -515,29 +522,32 @@ export const sellProductVariant = async (id: string, quantity: number) => {
     throw new AppError('Insufficient inventory', 400);
   }
 
-  const newInventory = variant.inventory - quantity;
-
+  // FIX: Use atomic decrement instead of read-modify-write to prevent race conditions
   const updatedVariant = await prisma.productVariant.update({
     where: { id },
-    data: { inventory: newInventory },
+    data: {
+      inventory: { decrement: { by: quantity } }
+    },
+    include: { inventory: true }
   });
 
   // Log sale transaction
-  await logProductTransaction(variant.productId, id, 'SELL', -quantity, Number(updatedVariant.price), `Sold ${quantity} units`);
+  await logProductTransaction(variant.productId, id, 'SELL', -quantity, Number(updatedVariant.price), `Sold ${quantity} units`, null);
 
   return updatedVariant;
 };
 
 /**
- * Log a product transaction
+ * Log a product transaction - FIXED: Added createdBy parameter
  */
 const logProductTransaction = async (
   productId: string,
   variantId: string | null,
-  type: any,
+  type: string,
   quantity: number,
   price: number,
   notes: string,
+  createdBy: string | null, // Added createdBy parameter
 ) => {
   await prisma.productTransaction.create({
     data: {
@@ -547,6 +557,7 @@ const logProductTransaction = async (
       quantity,
       priceAtTime: price,
       notes,
+      createdBy: createdBy || null, // Populate createdBy field
     },
   });
 };
@@ -565,8 +576,8 @@ export const getProductTransactions = async (productId?: string, variantId?: str
 
   const transactions = await prisma.productTransaction.findMany({
     where,
-    take,
-    skip,
+      take,
+      skip,
     orderBy: { createdAt: 'desc' },
     include: {
       variant: { select: { sku: true, inventory: true } },
