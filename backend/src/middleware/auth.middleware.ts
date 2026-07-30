@@ -1,9 +1,9 @@
 import { NextFunction, Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import { env } from '../../config/env';
-import { prisma } from '../../database/prisma';
-import { errorResponse } from '../../utils/apiResponse';
-import { AppError } from '../../utils/appError';
+import { env } from '../config/env';
+import { prisma } from '../database/prisma';
+import { errorResponse } from '../utils/apiResponse';
+import { AppError } from '../utils/appError';
 
 /**
  * Shared authentication middleware that extracts and verifies JWT tokens.

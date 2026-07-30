@@ -12,7 +12,7 @@ import {
   unlockUserController,
   getUsersByRoleController,
 } from './controllers/user.controller';
-import { authenticate } from '../../../middleware/auth.middleware';
+import { authenticate } from '../../middleware/auth.middleware';
 import { requirePermission } from '../permission/middleware/requirePermission.middleware';
 
 export const userRoutes = (app: Express) => {

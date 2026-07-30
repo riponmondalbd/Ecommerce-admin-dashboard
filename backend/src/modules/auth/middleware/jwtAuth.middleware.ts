@@ -1,4 +1,3 @@
-import { NextFunction, Request, Response } from 'express';
 import { authenticate } from '../../../middleware/auth.middleware';
 
 /**

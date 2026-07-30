@@ -71,8 +71,9 @@ export const getProduct = (req: Request, res: Response) => {
  */
 export const createProductController = (req: Request, res: Response) => {
   try {
+    const userId = (req as any)?.user?.id || (req as any)?.userId || null;
     const validated = validateInput(req.body, CreateProductDto);
-    createProduct(validated)
+    createProduct(validated, userId)
       .then((result) => {
         res.status(201).json({ success: true, data: result });
       })
@@ -91,8 +92,9 @@ export const updateProductController = (req: Request, res: Response) => {
     if (!id || typeof id !== 'string') {
       throw new AppError('Invalid product ID', 400);
     }
+    const userId = (req as any)?.user?.id || (req as any)?.userId || null;
     const validated = validateInput(req.body, UpdateProductDto);
-    updateProduct(id, validated)
+    updateProduct(id, validated, userId)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
@@ -109,8 +111,9 @@ export const partialUpdateProductController = (req: Request, res: Response) => {
     if (!id || typeof id !== 'string') {
       throw new AppError('Invalid product ID', 400);
     }
+    const userId = (req as any)?.user?.id || (req as any)?.userId || null;
     const validated = validateInput(req.body, PartialUpdateProductDto);
-    partialUpdateProduct(id, validated)
+    partialUpdateProduct(id, validated, userId)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
@@ -161,12 +164,13 @@ export const createProductVariantController = (req: Request, res: Response) => {
     if (!productId || typeof productId !== 'string') {
       throw new AppError('Invalid product ID', 400);
     }
-    
+    const userId = (req as any)?.user?.id || (req as any)?.userId || null;
+
     // Inject productId from URL into body for validation
     req.body.productId = productId;
-    
+
     const validated = validateInput(req.body, CreateProductVariantDto);
-    createProductVariant(productId, validated)
+    createProductVariant(productId, validated, userId)
       .then((result) => {
         res.status(201).json({ success: true, data: result });
       })
@@ -185,8 +189,9 @@ export const updateProductVariantController = (req: Request, res: Response) => {
     if (!id || typeof id !== 'string') {
       throw new AppError('Invalid variant ID', 400);
     }
+    const userId = (req as any)?.user?.id || (req as any)?.userId || null;
     const validated = validateInput(req.body, UpdateProductVariantDto);
-    updateProductVariant(id, validated)
+    updateProductVariant(id, validated, userId)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
@@ -220,11 +225,12 @@ export const restockProductVariantController = (req: Request, res: Response) => 
     if (!id || typeof id !== 'string') {
       throw new AppError('Invalid variant ID', 400);
     }
+    const userId = (req as any)?.user?.id || (req as any)?.userId || null;
     const quantity = parseInt(req.body.quantity, 10);
     if (isNaN(quantity) || quantity <= 0) {
       throw new AppError('Invalid quantity', 400);
     }
-    restockProductVariant(id, quantity)
+    restockProductVariant(id, quantity, userId)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
@@ -241,11 +247,12 @@ export const sellProductVariantController = (req: Request, res: Response) => {
     if (!id || typeof id !== 'string') {
       throw new AppError('Invalid variant ID', 400);
     }
+    const userId = (req as any)?.user?.id || (req as any)?.userId || null;
     const quantity = parseInt(req.body.quantity, 10);
     if (isNaN(quantity) || quantity <= 0) {
       throw new AppError('Invalid quantity', 400);
     }
-    sellProductVariant(id, quantity)
+    sellProductVariant(id, quantity, userId)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {

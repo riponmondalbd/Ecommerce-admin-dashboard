@@ -1,6 +1,6 @@
 import { Express } from 'express';
 import { authController } from './auth.controller';
-import { authenticate } from '../../../middleware/auth.middleware';
+import { authenticate } from '../../middleware/auth.middleware';
 
 export const authRoutes = (app: Express) => {
   // Public endpoints - no authentication required

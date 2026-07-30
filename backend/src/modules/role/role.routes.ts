@@ -11,7 +11,7 @@ import {
   getPermissionsForRole,
 } from './controllers/role.controller';
 import { requirePermission } from './middleware/requirePermission.middleware';
-import { authenticate } from '../../../middleware/auth.middleware';
+import { authenticate } from '../../middleware/auth.middleware';
 
 export const roleRoutes = (app: Express) => {
   // GET /api/roles - List all roles (requires permission: role:read)

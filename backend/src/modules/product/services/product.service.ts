@@ -1,6 +1,7 @@
 import { prisma } from '../../../database/prisma';
 import { AppError } from '../../../utils/appError';
 import * as z from 'zod';
+import { TransactionType } from '@prisma/client';
 import {
   CreateProductDto,
   UpdateProductDto,
@@ -109,10 +110,10 @@ export const getProductById = async (id: string) => {
               attributeValue: { select: { label: true, referenceValue: true } },
             },
           },
+          mediaAttachments: {
+            include: { media: true },
+          },
         },
-        mediaAttachments: {
-          include: { media: true }
-        }
       }
     },
   });
@@ -127,7 +128,7 @@ export const getProductById = async (id: string) => {
 /**
  * Create a new product
  */
-export const createProduct = async (input: unknown) => {
+export const createProduct = async (input: unknown, createdBy: string | null = null) => {
   const validated = validateInput(input, CreateProductDto);
 
   // Check if SKU already exists
@@ -175,7 +176,7 @@ export const createProduct = async (input: unknown) => {
   });
 
   // Log product creation transaction
-  await logProductTransaction(product.id, null, 'CREATE', 1, validated.price, 'Product created', null);
+  await logProductTransaction(product.id, null, TransactionType.CREATE, 1, validated.price, 'Product created', createdBy);
 
   return product;
 };
@@ -183,7 +184,7 @@ export const createProduct = async (input: unknown) => {
 /**
  * Update an existing product (PUT - full replacement)
  */
-export const updateProduct = async (id: string, input: unknown) => {
+export const updateProduct = async (id: string, input: unknown, createdBy: string | null = null) => {
   const validated = validateInput(input, UpdateProductDto);
 
   const product = await prisma.product.findUnique({ where: { id } });
@@ -228,7 +229,7 @@ export const updateProduct = async (id: string, input: unknown) => {
   });
 
   // Log product update transaction
-  await logProductTransaction(updatedProduct.id, null, 'UPDATE', 1, Number(updatedProduct.price), 'Product updated', null);
+  await logProductTransaction(updatedProduct.id, null, TransactionType.UPDATE, 1, Number(updatedProduct.price), 'Product updated', createdBy);
 
   return updatedProduct;
 };
@@ -236,7 +237,7 @@ export const updateProduct = async (id: string, input: unknown) => {
 /**
  * Partially update a product (PATCH)
  */
-export const partialUpdateProduct = async (id: string, input: unknown) => {
+export const partialUpdateProduct = async (id: string, input: unknown, createdBy: string | null = null) => {
   const validated = validateInput(input, PartialUpdateProductDto);
 
   const product = await prisma.product.findUnique({ where: { id } });
@@ -282,7 +283,7 @@ export const partialUpdateProduct = async (id: string, input: unknown) => {
 
   // Log product update if fields changed
   if (Object.keys(updateData).length > 0) {
-    await logProductTransaction(updatedProduct.id, null, 'UPDATE', 1, Number(updatedProduct.price), 'Product partially updated', null);
+    await logProductTransaction(updatedProduct.id, null, TransactionType.UPDATE, 1, Number(updatedProduct.price), 'Product partially updated', createdBy);
   }
 
   return updatedProduct;
@@ -340,7 +341,7 @@ export const getProductVariants = async (productId: string) => {
 /**
  * Create a new product variant
  */
-export const createProductVariant = async (productId: string, input: unknown) => {
+export const createProductVariant = async (productId: string, input: unknown, createdBy: string | null = null) => {
   const validated = validateInput(input, CreateProductVariantDto);
 
   // Verify product exists
@@ -392,7 +393,7 @@ export const createProductVariant = async (productId: string, input: unknown) =>
   });
 
   // Log variant creation transaction
-  await logProductTransaction(productId, variant.id, 'CREATE', validated.inventory || 0, Number(variant.price), `Variant created with SKU: ${variant.sku}`, null);
+  await logProductTransaction(productId, variant.id, TransactionType.CREATE, validated.inventory || 0, Number(variant.price), `Variant created with SKU: ${variant.sku}`, createdBy);
 
   return variant;
 };
@@ -400,7 +401,7 @@ export const createProductVariant = async (productId: string, input: unknown) =>
 /**
  * Update an existing product variant
  */
-export const updateProductVariant = async (id: string, input: unknown) => {
+export const updateProductVariant = async (id: string, input: unknown, createdBy: string | null = null) => {
   const validated = validateInput(input, UpdateProductVariantDto);
 
   const variant = await prisma.productVariant.findUnique({ where: { id } });
@@ -454,11 +455,11 @@ export const updateProductVariant = async (id: string, input: unknown) => {
 
   // Log inventory changes separately if inventory was modified
   if (validated.inventory !== undefined && validated.inventory !== variant.inventory) {
-    await logProductTransaction(variant.productId, id, 'UPDATE', validated.inventory - variant.inventory, Number(updatedVariant.price), `Inventory updated from ${variant.inventory} to ${validated.inventory}`, null);
+    await logProductTransaction(variant.productId, id, TransactionType.UPDATE, validated.inventory - variant.inventory, Number(updatedVariant.price), `Inventory updated from ${variant.inventory} to ${validated.inventory}`, createdBy);
   }
 
   // Log variant update transaction
-  await logProductTransaction(variant.productId, id, 'UPDATE', validated.inventory !== undefined ? validated.inventory : variant.inventory, Number(updatedVariant.price), 'Variant updated');
+  await logProductTransaction(variant.productId, id, TransactionType.UPDATE, validated.inventory !== undefined ? validated.inventory : variant.inventory, Number(updatedVariant.price), 'Variant updated', createdBy);
 
   return updatedVariant;
 };
@@ -480,7 +481,7 @@ export const deleteProductVariant = async (id: string) => {
 /**
  * Add inventory to a product variant (restock) - FIXED: Use atomic increment
  */
-export const restockProductVariant = async (id: string, quantity: number) => {
+export const restockProductVariant = async (id: string, quantity: number, createdBy: string | null = null) => {
   const variant = await prisma.productVariant.findUnique({ where: { id } });
   if (!variant) {
     throw new AppError('Product variant not found', 404);
@@ -494,13 +495,12 @@ export const restockProductVariant = async (id: string, quantity: number) => {
   const updatedVariant = await prisma.productVariant.update({
     where: { id },
     data: {
-      inventory: { increment: { by: quantity } }
+      inventory: { increment: quantity }
     },
-    include: { inventory: true }
   });
 
   // Log restock transaction
-  await logProductTransaction(variant.productId, id, 'RESTOCK', quantity, Number(updatedVariant.price), `Restocked ${quantity} units`, null);
+  await logProductTransaction(variant.productId, id, TransactionType.RESTOCK, quantity, Number(updatedVariant.price), `Restocked ${quantity} units`, createdBy);
 
   return updatedVariant;
 };
@@ -508,7 +508,7 @@ export const restockProductVariant = async (id: string, quantity: number) => {
 /**
  * Deduct inventory from a product variant (sell) - FIXED: Use atomic decrement
  */
-export const sellProductVariant = async (id: string, quantity: number) => {
+export const sellProductVariant = async (id: string, quantity: number, createdBy: string | null = null) => {
   const variant = await prisma.productVariant.findUnique({ where: { id } });
   if (!variant) {
     throw new AppError('Product variant not found', 404);
@@ -526,13 +526,12 @@ export const sellProductVariant = async (id: string, quantity: number) => {
   const updatedVariant = await prisma.productVariant.update({
     where: { id },
     data: {
-      inventory: { decrement: { by: quantity } }
-    },
-    include: { inventory: true }
+      inventory: { decrement: quantity }
+    }
   });
 
   // Log sale transaction
-  await logProductTransaction(variant.productId, id, 'SELL', -quantity, Number(updatedVariant.price), `Sold ${quantity} units`, null);
+  await logProductTransaction(variant.productId, id, TransactionType.SELL, -quantity, Number(updatedVariant.price), `Sold ${quantity} units`, createdBy);
 
   return updatedVariant;
 };
@@ -543,7 +542,7 @@ export const sellProductVariant = async (id: string, quantity: number) => {
 const logProductTransaction = async (
   productId: string,
   variantId: string | null,
-  type: string,
+  type: TransactionType,
   quantity: number,
   price: number,
   notes: string,

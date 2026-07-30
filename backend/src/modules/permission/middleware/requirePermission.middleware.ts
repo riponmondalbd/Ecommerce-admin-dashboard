@@ -12,10 +12,11 @@ export const requirePermission = (requiredPermission: string) => {
   return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     // Ensure authentication happened first
     if (!req.userId || typeof req.userId !== 'string') {
-      return res.status(401).json({
+      res.status(401).json({
         success: false,
         message: 'Access token is missing or invalid',
       });
+      return;
     }
 
     try {
