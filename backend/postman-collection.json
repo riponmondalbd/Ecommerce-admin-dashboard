@@ -14,6 +14,21 @@
       "key": "access_token",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "refresh_token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "product_id",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "variant_id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
@@ -28,8 +43,13 @@
               "script": {
                 "exec": [
                   "var jsonData = pm.response.json();",
-                  "if (jsonData.success && jsonData.data && jsonData.data.accessToken) {",
+                  "if (jsonData.success && jsonData.data) {",
                   "    pm.collectionVariables.set(\"access_token\", jsonData.data.accessToken);",
+                  "    pm.collectionVariables.set(\"refresh_token\", jsonData.data.refreshToken);",
+                  "    console.log('Token stored:', jsonData.data.accessToken);",
+                  "}",
+                  "else {",
+                  "    console.log('Error:', jsonData.message || pm.response.text());",
                   "}"
                 ],
                 "type": "text/javascript"
@@ -56,6 +76,27 @@
           }
         },
         {
+          "name": "Refresh Token",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/auth/refresh",
+              "host": ["{{base_url}}"],
+              "path": ["auth", "refresh"]
+            }
+          }
+        },
+        {
           "name": "Get Current User (Me)",
           "request": {
             "auth": {
@@ -78,28 +119,7 @@
           }
         },
         {
-          "name": "Refresh Token",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"paste_refresh_token_here\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/refresh",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "refresh"]
-            }
-          }
-        },
-        {
-          "name": "Logout",
+          "name": "Logout (Revoke Token)",
           "request": {
             "auth": {
               "type": "bearer",
@@ -128,19 +148,45 @@
         {
           "name": "List Categories",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/categories", "host": ["{{base_url}}"], "path": ["categories"] }
+            "url": {
+              "raw": "{{base_url}}/categories",
+              "host": ["{{base_url}}"],
+              "path": ["categories"]
+            }
           }
         },
         {
-          "name": "Get Category Tree",
+          "name": "Get Category Tree (Nested)",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/categories/tree", "host": ["{{base_url}}"], "path": ["categories", "tree"] }
+            "url": {
+              "raw": "{{base_url}}/categories/tree",
+              "host": ["{{base_url}}"],
+              "path": ["categories", "tree"]
+            }
           }
         }
       ]
@@ -151,10 +197,23 @@
         {
           "name": "List Brands",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/brands", "host": ["{{base_url}}"], "path": ["brands"] }
+            "url": {
+              "raw": "{{base_url}}/brands",
+              "host": ["{{base_url}}"],
+              "path": ["brands"]
+            }
           }
         }
       ]
@@ -165,10 +224,23 @@
         {
           "name": "List Attributes",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/attributes", "host": ["{{base_url}}"], "path": ["attributes"] }
+            "url": {
+              "raw": "{{base_url}}/attributes",
+              "host": ["{{base_url}}"],
+              "path": ["attributes"]
+            }
           }
         }
       ]
@@ -179,80 +251,515 @@
         {
           "name": "List Products",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}}"], "path": ["products"] }
+            "url": {
+              "raw": "{{base_url}}/products",
+              "host": ["{{base_url}}"],
+              "path": ["products"]
+            }
+          }
+        },
+        {
+          "name": "Get Product by ID",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["products", "{{product_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Create Product",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Headphones\",\n  \"slug\": \"premium-headphones\",\n  \"shortDescription\": \"High-fidelity audio experience\",\n  \"description\": \"Professional-grade headphones with noise cancellation\",\n  \"price\": 299.99,\n  \"salePrice\": 249.99,\n  \"stock\": 50,\n  \"stockStatus\": \"IN_STOCK\",\n  \"isActive\": true,\n  \"isFeatured\": true,\n  \"sku\": \"PHD2024\",\n  \"status\": \"PUBLISHED\",\n  \"brandId\": \"\",\n  \"categories\": [\"\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/products",
+              "host": ["{{base_url}}"],
+              "path": ["products"]
+            }
+          }
+        },
+        {
+          "name": "Update Product (Full PUT)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Premium Headphones Pro\",\n  \"slug\": \"premium-headphones-pro\",\n  \"shortDescription\": \"Enhanced audio experience\",\n  \"description\": \"Advanced noise cancellation with premium sound\",\n  \"price\": 349.99,\n  \"salePrice\": 299.99,\n  \"stock\": 45,\n  \"stockStatus\": \"LOW_STOCK\",\n  \"isActive\": true,\n  \"isFeatured\": false,\n  \"sku\": \"PHD2024\",\n  \"status\": \"PUBLISHED\"\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["products", "{{product_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Partial Update Product (PATCH)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"salePrice\": 279.99,\n  \"stock\": 60\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["products", "{{product_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Product",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["products", "{{product_id}}"]
+            }
           }
         }
       ]
     },
     {
-      "name": "6. Media",
+      "name": "6. Product Variants",
+      "item": [
+        {
+          "name": "Get Product Variants",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}/variants",
+              "host": ["{{base_url}}"],
+              "path": ["products", "{{product_id}}", "variants"]
+            }
+          }
+        },
+        {
+          "name": "Create Product Variant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"sku\": \"PHD2024-BLUE\",\n  \"price\": 329.99,\n  \"inventory\": 20,\n  \"stockStatus\": \"IN_STOCK\",\n  \"lowStockThreshold\": 5,\n  \"weight\": 0.3,\n  \"dimensions\": {\n    \"width\": 15,\n    \"depth\": 12,\n    \"height\": 5\n  },\n  \"attributeValueIds\": [\"\"],\n  \"mediaIds\": [\"\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}/variants",
+              "host": ["{{base_url}}"],
+              "path": ["products", "{{product_id}}", "variants"]
+            }
+          }
+        },
+        {
+          "name": "Update Product Variant (Full PUT)",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"sku\": \"PHD2024-RED\",\n  \"price\": 329.99,\n  \"inventory\": 15,\n  \"stockStatus\": \"LOW_STOCK\",\n  \"lowStockThreshold\": 5,\n  \"weight\": 0.3,\n  \"dimensions\": {\n    \"width\": 15,\n    \"depth\": 12,\n    \"height\": 5\n  },\n  \"isActive\": true,\n  \"attributeValueIds\": [\"\"],\n  \"mediaIds\": [\"\"]\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/variants/{{variant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["variants", "{{variant_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Delete Product Variant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/variants/{{variant_id}}",
+              "host": ["{{base_url}}"],
+              "path": ["variants", "{{variant_id}}"]
+            }
+          }
+        },
+        {
+          "name": "Restock Product Variant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 10\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/variants/{{variant_id}}/restock",
+              "host": ["{{base_url}}"],
+              "path": ["variants", "{{variant_id}}", "restock"]
+            }
+          }
+        },
+        {
+          "name": "Sell Product Variant",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"quantity\": 5\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/variants/{{variant_id}}/sell",
+              "host": ["{{base_url}}"],
+              "path": ["variants", "{{variant_id}}", "sell"]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "7. Product Transactions",
+      "item": [
+        {
+          "name": "Get Product Transaction History",
+          "request": {
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{base_url}}/products/{{product_id}}/transactions",
+              "host": ["{{base_url}}"],
+              "path": ["products", "{{product_id}}", "transactions"],
+              "query": [
+                {
+                  "key": "limit",
+                  "value": "10"
+                },
+                {
+                  "key": "page",
+                  "value": "1"
+                }
+              ]
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "8. Media Library",
       "item": [
         {
           "name": "List Media",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/media", "host": ["{{base_url}}"], "path": ["media"] }
+            "url": {
+              "raw": "{{base_url}}/media",
+              "host": ["{{base_url}}"],
+              "path": ["media"]
+            }
           }
         },
         {
           "name": "Upload Media",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "POST",
-            "header": [],
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "multipart/form-data"
+              }
+            ],
             "body": {
               "mode": "formdata",
               "formdata": [
                 {
                   "key": "file",
                   "type": "file",
-                  "src": []
+                  "src": "/path/to/image.jpg"
+                },
+                {
+                  "key": "altText",
+                  "type": "text",
+                  "value": "Product image"
                 }
               ]
             },
-            "url": { "raw": "{{base_url}}/media", "host": ["{{base_url}}"], "path": ["media"] }
+            "url": {
+              "raw": "{{base_url}}/media",
+              "host": ["{{base_url}}"],
+              "path": ["media"]
+            }
           }
         }
       ]
     },
     {
-      "name": "7. Users",
+      "name": "9. Users",
       "item": [
         {
           "name": "List Users",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/users", "host": ["{{base_url}}"], "path": ["users"] }
+            "url": {
+              "raw": "{{base_url}}/users",
+              "host": ["{{base_url}}"],
+              "path": ["users"]
+            }
           }
         }
       ]
     },
     {
-      "name": "8. Roles & Permissions",
+      "name": "10. Roles & Permissions",
       "item": [
         {
           "name": "List Roles",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/roles", "host": ["{{base_url}}"], "path": ["roles"] }
+            "url": {
+              "raw": "{{base_url}}/roles",
+              "host": ["{{base_url}}"],
+              "path": ["roles"]
+            }
           }
         },
         {
           "name": "List Permissions",
           "request": {
-            "auth": { "type": "bearer", "bearer": [ { "key": "token", "value": "{{access_token}}", "type": "string" } ] },
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{access_token}}",
+                  "type": "string"
+                }
+              ]
+            },
             "method": "GET",
             "header": [],
-            "url": { "raw": "{{base_url}}/permissions", "host": ["{{base_url}}"], "path": ["permissions"] }
+            "url": {
+              "raw": "{{base_url}}/permissions",
+              "host": ["{{base_url}}"],
+              "path": ["permissions"]
+            }
           }
         }
       ]
