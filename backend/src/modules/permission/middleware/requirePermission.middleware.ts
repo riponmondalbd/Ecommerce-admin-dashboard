@@ -11,7 +11,7 @@ import { checkPermission } from '../services/permission.service';
  * @param requiredPermission - The permission key to check (e.g., "product:create")
  */
 export const requirePermission = (requiredPermission: string) => {
-  return async (req: Request, res: Response, next: NextFunction) => {
+  return async (req: Request, res: Response, next: NextFunction): Promise<void> => {
     try {
       // Verify JWT if not already present in request
       if (!req.userId || typeof req.userId !== 'string') {
@@ -19,16 +19,17 @@ export const requirePermission = (requiredPermission: string) => {
         let token: string | null = null;
 
         if (authHeader && typeof authHeader === 'string' && authHeader.startsWith('Bearer ')) {
-          token = authHeader.split(' ')[1];
+          token = authHeader.split(' ')[1] ?? null;
         } else if ((req as any).cookies && (req as any).cookies.accessToken) {
           token = (req as any).cookies.accessToken;
         }
 
         if (!token) {
-          return res.status(401).json({
+          res.status(401).json({
             success: false,
             message: 'Access token is missing or invalid',
           });
+          return;
         }
 
         try {
@@ -42,20 +43,22 @@ export const requirePermission = (requiredPermission: string) => {
           (req as any).role = verified.role;
           (req as any).user = user;
         } catch (err) {
-          return res.status(401).json({
+          res.status(401).json({
             success: false,
             message: 'Invalid or expired token',
           });
+          return;
         }
       }
 
       const hasPermission = await checkPermission(req.userId as string, requiredPermission);
 
       if (!hasPermission) {
-        return res.status(403).json({
+        res.status(403).json({
           success: false,
           message: `Insufficient permissions. Required: ${requiredPermission}`,
         });
+        return;
       }
 
       next();

@@ -35,7 +35,7 @@ export const listRoles = (req: Request, res: Response) => {
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -44,12 +44,12 @@ export const listRoles = (req: Request, res: Response) => {
  */
 export const getRole = (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     getRoleById(id)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -63,7 +63,7 @@ export const createRoleController = (req: Request, res: Response) => {
       .then((result) => successResponse(res, result, 201))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -72,13 +72,13 @@ export const createRoleController = (req: Request, res: Response) => {
  */
 export const updateRoleController = (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const validated = validateInput(req.body, UpdateRoleDto);
     updateRole(id, validated)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -87,13 +87,13 @@ export const updateRoleController = (req: Request, res: Response) => {
  */
 export const partialUpdateRoleController = (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const validated = validateInput(req.body, PartialUpdateRoleDto);
     partialUpdateRole(id, validated)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -102,12 +102,12 @@ export const partialUpdateRoleController = (req: Request, res: Response) => {
  */
 export const deleteRoleController = (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     deleteRole(id)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -116,12 +116,13 @@ export const deleteRoleController = (req: Request, res: Response) => {
  */
 export const assignPermissionToRoleController = (req: Request, res: Response) => {
   try {
-    const { roleId, permissionId } = req.params;
+    const roleId = req.params.roleId as string;
+    const permissionId = req.params.permissionId as string;
     assignPermissionToRole(roleId, permissionId)
       .then((result) => successResponse(res, result, 201))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -130,12 +131,13 @@ export const assignPermissionToRoleController = (req: Request, res: Response) =>
  */
 export const removePermissionFromRoleController = (req: Request, res: Response) => {
   try {
-    const { roleId, permissionId } = req.params;
+    const roleId = req.params.roleId as string;
+    const permissionId = req.params.permissionId as string;
     removePermissionFromRole(roleId, permissionId)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -144,11 +146,11 @@ export const removePermissionFromRoleController = (req: Request, res: Response) 
  */
 export const getPermissionsForRole = (req: Request, res: Response) => {
   try {
-    const { roleId } = req.params;
+    const roleId = req.params.roleId as string;
     getPermissionsByRole(roleId)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };

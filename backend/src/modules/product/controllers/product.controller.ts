@@ -45,7 +45,7 @@ export const listProducts = (req: Request, res: Response) => {
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -62,7 +62,7 @@ export const getProduct = (req: Request, res: Response) => {
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -78,7 +78,7 @@ export const createProductController = (req: Request, res: Response) => {
       })
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -96,7 +96,7 @@ export const updateProductController = (req: Request, res: Response) => {
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -114,7 +114,7 @@ export const partialUpdateProductController = (req: Request, res: Response) => {
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -131,7 +131,7 @@ export const deleteProductController = (req: Request, res: Response) => {
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -148,7 +148,7 @@ export const getProductVariantsController = (req: Request, res: Response) => {
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -168,7 +168,7 @@ export const createProductVariantController = (req: Request, res: Response) => {
       })
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -186,7 +186,7 @@ export const updateProductVariantController = (req: Request, res: Response) => {
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -203,7 +203,7 @@ export const deleteProductVariantController = (req: Request, res: Response) => {
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -224,7 +224,7 @@ export const restockProductVariantController = (req: Request, res: Response) => 
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -245,7 +245,7 @@ export const sellProductVariantController = (req: Request, res: Response) => {
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };
 
@@ -264,6 +264,6 @@ export const getProductTransactionsController = (req: Request, res: Response) =>
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
-    errorResponse(res, 'Internal server error', 500);
+    errorResponse(res, error instanceof AppError ? error.message : 'Internal server error', error instanceof AppError ? error.statusCode : 500);
   }
 };

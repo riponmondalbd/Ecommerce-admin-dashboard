@@ -1,4 +1,4 @@
-import { Response, NextFunction } from 'express';
+import { Response } from 'express';
 
 /**
  * Standard API response helper.
@@ -25,12 +25,21 @@ export const sendResponse = (res: Response, options: {
 export const successResponse = (
   res: Response,
   data: unknown,
-  message?: string,
+  messageOrCode?: string | number,
   statusCode: number = 200,
 ) => {
+  let message: string | undefined = undefined;
+  let code = statusCode;
+
+  if (typeof messageOrCode === 'number') {
+    code = messageOrCode;
+  } else if (typeof messageOrCode === 'string') {
+    message = messageOrCode;
+  }
+
   return sendResponse(res, {
     success: true,
-    statusCode,
+    statusCode: code,
     data,
     message,
   });

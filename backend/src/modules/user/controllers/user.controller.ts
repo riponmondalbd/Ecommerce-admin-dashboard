@@ -46,7 +46,7 @@ export const listUsers = (req: Request, res: Response) => {
  */
 export const getUser = (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     getUserById(id)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
@@ -75,7 +75,7 @@ export const createUserController = (req: Request, res: Response) => {
  */
 export const updateUserController = (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const requestingUserId = (req as any)?.userId;
     const validated = validateInput(req.body, UpdateUserDto);
     updateUser(id, validated, requestingUserId)
@@ -91,7 +91,7 @@ export const updateUserController = (req: Request, res: Response) => {
  */
 export const partialUpdateUserController = (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const requestingUserId = (req as any)?.userId;
     const validated = validateInput(req.body, PartialUpdateUserDto);
     partialUpdateUser(id, validated, requestingUserId)
@@ -107,7 +107,7 @@ export const partialUpdateUserController = (req: Request, res: Response) => {
  */
 export const deleteUserController = (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     const requestingUserId = (req as any)?.userId;
     deleteUser(id, requestingUserId)
       .then((result) => successResponse(res, result))
@@ -122,7 +122,7 @@ export const deleteUserController = (req: Request, res: Response) => {
  */
 export const activateUserController = (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     activateUser(id)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
@@ -136,7 +136,7 @@ export const activateUserController = (req: Request, res: Response) => {
  */
 export const deactivateUserController = (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     deactivateUser(id)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
@@ -150,7 +150,7 @@ export const deactivateUserController = (req: Request, res: Response) => {
  */
 export const lockUserController = (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     lockUser(id)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
@@ -164,7 +164,7 @@ export const lockUserController = (req: Request, res: Response) => {
  */
 export const unlockUserController = (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
     unlockUser(id)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
@@ -178,7 +178,7 @@ export const unlockUserController = (req: Request, res: Response) => {
  */
 export const getUsersByRoleController = (req: Request, res: Response) => {
   try {
-    const { roleId } = req.params;
+    const roleId = req.params.roleId as string;
     getUsersByRole(roleId)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));

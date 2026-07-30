@@ -86,7 +86,7 @@ export const getUserById = async (id: string) => {
 /**
  * Create a new user with password hashing and role assignment
  */
-export const createUser = async (input: unknown, requestingUserId?: string) => {
+export const createUser = async (input: unknown, _requestingUserId?: string) => {
   const validated = validateInput(input, CreateUserDto);
 
   // Check if user already exists
@@ -98,10 +98,12 @@ export const createUser = async (input: unknown, requestingUserId?: string) => {
   // Hash the password
   const hashedPassword = await bcrypt.hash(validated.password, 10);
 
+  const roleName = validated.role || 'CATALOG_MANAGER';
+
   // Find or create the role
-  let role = await prisma.role.findUnique({ where: { name: validated.role } });
+  let role = await prisma.role.findUnique({ where: { name: roleName } });
   if (!role) {
-    role = await prisma.role.create({ data: { name: validated.role } });
+    role = await prisma.role.create({ data: { name: roleName } });
   }
 
   const user = await prisma.user.create({
@@ -124,7 +126,7 @@ export const createUser = async (input: unknown, requestingUserId?: string) => {
 export const updateUser = async (id: string, input: unknown, requestingUserId?: string) => {
   const validated = validateInput(input, UpdateUserDto);
 
-  const user = await prisma.user.findUnique({ where: { id } });
+  const user = await prisma.user.findUnique({ where: { id }, include: { role: true } });
   if (!user) {
     throw new AppError('User not found', 404);
   }
@@ -150,8 +152,8 @@ export const updateUser = async (id: string, input: unknown, requestingUserId?: 
     const newRoleName = validated.role;
     const currentRoleName = user.role?.name;
 
-    if (newRoleName && currentRoleName) {
-      if (roleOrder[newRoleName] >= roleOrder[currentRoleName]) {
+    if (newRoleName && currentRoleName && roleOrder[newRoleName] !== undefined && roleOrder[currentRoleName] !== undefined) {
+      if (roleOrder[newRoleName]! >= roleOrder[currentRoleName]!) {
         throw new AppError('Self-role escalation is not permitted', 403);
       }
     }
@@ -182,7 +184,7 @@ export const updateUser = async (id: string, input: unknown, requestingUserId?: 
 export const partialUpdateUser = async (id: string, input: unknown, requestingUserId?: string) => {
   const validated = validateInput(input, PartialUpdateUserDto);
 
-  const user = await prisma.user.findUnique({ where: { id } });
+  const user = await prisma.user.findUnique({ where: { id }, include: { role: true } });
   if (!user) {
     throw new AppError('User not found', 404);
   }
@@ -223,8 +225,8 @@ export const partialUpdateUser = async (id: string, input: unknown, requestingUs
       const newRoleName = validated.role;
       const currentRoleName = user.role?.name;
 
-      if (newRoleName && currentRoleName) {
-        if (roleOrder[newRoleName] >= roleOrder[currentRoleName]) {
+      if (newRoleName && currentRoleName && roleOrder[newRoleName] !== undefined && roleOrder[currentRoleName] !== undefined) {
+        if (roleOrder[newRoleName]! >= roleOrder[currentRoleName]!) {
           throw new AppError('Self-role escalation is not permitted', 403);
         }
       }
@@ -246,8 +248,8 @@ export const partialUpdateUser = async (id: string, input: unknown, requestingUs
 /**
  * Delete a user with safety guards
  */
-export const deleteUser = async (id: string, requestingUserId?: string) => {
-  const user = await prisma.user.findUnique({ where: { id } });
+export const deleteUser = async (id: string, _requestingUserId?: string) => {
+  const user = await prisma.user.findUnique({ where: { id }, include: { role: true } });
   if (!user) {
     throw new AppError('User not found', 404);
   }

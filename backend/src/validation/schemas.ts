@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { PermissionGroup, MediaType, MediaStatus, AttributeType, BrandStatus } from '../config/enums';
+import { PermissionGroup, MediaType, MediaStatus, AttributeType } from '../config/enums';
 
 export const PermissionGroupSchema = z.nativeEnum(PermissionGroup);
 export const MediaTypeSchema = z.nativeEnum(MediaType);

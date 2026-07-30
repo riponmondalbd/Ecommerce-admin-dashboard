@@ -2,7 +2,7 @@ import { prisma } from '../../../database/prisma';
 import { AppError } from '../../../utils/appError';
 import * as z from 'zod';
 import { CreateMediaDto, UpdateMediaDto, PartialUpdateMediaDto, ListMediaDto } from '../../../validation/schemas';
-import { MediaType } from '../../../config/enums';
+import { MediaType } from '@prisma/client';
 import multer from 'multer';
 import sharp from 'sharp';
 import fs from 'fs/promises';
@@ -10,27 +10,27 @@ import path from 'path';
 
 // Configure storage - use disk storage for file uploads
 const storage = multer.diskStorage({
-  destination: (_, cb) => {
+  destination: (_req, _file, cb) => {
     const uploadDir = path.join(process.cwd(), 'uploads');
     // Ensure directory exists
     fs.mkdir(uploadDir, { recursive: true })
       .then(() => cb(null, uploadDir))
       .catch(err => {
         if (err?.code !== 'EEXIST') {
-          cb(err);
+          cb(err, uploadDir);
           return;
         }
         cb(null, uploadDir);
       });
   },
-  filename: (_, file, cb) => {
+  filename: (_req, file, cb) => {
     const uniqueName = `${file.originalname}-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
     cb(null, uniqueName);
   },
 });
 
 // File size limit (10MB matching app.ts config)
-const fileFilter = (req: any, file: any, cb: any) => {
+const fileFilter = (_req: any, file: any, cb: any) => {
   // Accept common image, video, and document types
   const acceptedTypes = [
     'image/jpeg', 'image/png', 'image/gif', 'image/webp',

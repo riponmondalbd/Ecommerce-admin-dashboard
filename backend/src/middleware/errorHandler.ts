@@ -3,7 +3,7 @@ import { AppError } from '../utils/appError';
 import { errorResponse } from '../utils/apiResponse';
 import { logger } from '../utils/logger';
 
-export const errorHandler = (err: Error, req: Request, res: Response, next: NextFunction) => {
+export const errorHandler = (err: Error, _req: Request, res: Response, _next: NextFunction) => {
   if (process.env.NODE_ENV === 'development') {
     logger.error(err.stack);
   }
@@ -23,7 +23,7 @@ export const errorHandler = (err: Error, req: Request, res: Response, next: Next
   }
 
   if ((err as any).name === 'ZodError') {
-    const issues = (err as any).issues?.map(issue => `${issue.path.join('.')}: ${issue.message}`).join(', ');
+    const issues = (err as any).issues?.map((issue: any) => `${issue.path.join('.')}: ${issue.message}`).join(', ');
     return errorResponse(res, `Validation failed: ${issues}`, 400);
   }
 

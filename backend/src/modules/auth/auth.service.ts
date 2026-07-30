@@ -1,5 +1,5 @@
 import bcrypt from 'bcrypt';
-import jwt, { JsonWebTokenError, SignOptions } from 'jsonwebtoken';
+import jwt, { SignOptions } from 'jsonwebtoken';
 import { prisma } from '../../database/prisma';
 import { env } from '../../config/env';
 import { AppError } from '../../utils/appError';

@@ -24,7 +24,7 @@ export const permissionController = {
         isActive: req.query.isActive === 'true'
       };
       const result = await getPermissions(queryParams);
-      return successResponse(res, result.data, 'Permissions retrieved successfully', 200, result.pagination);
+      return successResponse(res, result, 'Permissions retrieved successfully');
     } catch (error) {
       if (error instanceof AppError) {
         return errorResponse(res, error.message, error.statusCode);
@@ -105,7 +105,7 @@ export const permissionController = {
         return res.status(400).json({ success: false, message: 'Invalid permission ID' });
       }
       const result = await deletePermission(id);
-      return successResponse(res, {}, 'Permission deleted successfully');
+      return successResponse(res, result, 'Permission deleted successfully');
     } catch (error) {
       if (error instanceof AppError) {
         return errorResponse(res, error.message, error.statusCode);

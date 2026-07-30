@@ -22,10 +22,11 @@ export const authRoutes = (app: Express) => {
   app.get('/api/auth/me', jwtAuthMiddleware, async (req, res) => {
     try {
       const { authService } = await import('./auth.service');
-      if (!req.userId || typeof req.userId !== 'string') {
+      const userId = (req as any).userId;
+      if (!userId || typeof userId !== 'string') {
         return res.status(500).json({ success: false, message: 'User ID not available' });
       }
-      const user = await authService.getUserById(req.userId);
+      const user = await authService.getUserById(userId);
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
