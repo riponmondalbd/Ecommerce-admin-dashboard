@@ -187,17 +187,20 @@ export enum TransactionType {
 }
 
 // Category types (nested tree structure)
-export interface Category {
+export interface CategoryNode {
   id: string;
   name: string;
   slug: string;
-  parentId?: string;
-  parent?: Category | null;
-  children?: Category[];
+  parentId?: string | null;
+  parent?: CategoryNode | null;
+  children?: CategoryNode[];
   level: number;
   createdAt: string;
   updatedAt: string;
 }
+
+// Alias for the tree node used in frontend
+export type CategoryTreeItem = CategoryNode;
 
 interface CreateCategoryDto {
   name: string;
