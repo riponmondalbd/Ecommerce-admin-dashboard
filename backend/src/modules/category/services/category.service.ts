@@ -181,6 +181,9 @@ export const createCategory = async (input: unknown) => {
       slug,
       description: validated.description,
       parentId: validated.parentId || undefined,
+      mediaId: validated.mediaId || null,
+      sortOrder: validated.sortOrder,
+      isActive: validated.isActive,
     },
     include: {
       children: {
@@ -258,10 +261,14 @@ export const updateCategory = async (id: string, input: unknown) => {
     slug: slug,
     description: validated.description !== undefined ? validated.description : category.description,
     isActive: validated.isActive !== undefined ? validated.isActive : category.isActive,
+    sortOrder: validated.sortOrder !== undefined ? validated.sortOrder : category.sortOrder,
   };
 
   if (validated.parentId !== undefined) {
     updateData.parentId = validated.parentId || null;
+  }
+  if (validated.mediaId !== undefined) {
+    updateData.mediaId = validated.mediaId || null;
   }
 
   return await prisma.category.update({
@@ -292,6 +299,8 @@ export const partialUpdateCategory = async (id: string, input: unknown) => {
   if (validated.slug !== undefined) updateData.slug = validated.slug;
   if (validated.description !== undefined) updateData.description = validated.description;
   if (validated.parentId !== undefined) updateData.parentId = validated.parentId || null;
+  if (validated.mediaId !== undefined) updateData.mediaId = validated.mediaId || null;
+  if (validated.sortOrder !== undefined) updateData.sortOrder = validated.sortOrder;
   if (validated.isActive !== undefined) updateData.isActive = validated.isActive;
 
   // Special handling for slug uniqueness

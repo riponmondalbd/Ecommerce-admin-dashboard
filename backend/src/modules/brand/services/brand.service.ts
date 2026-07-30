@@ -48,7 +48,7 @@ export const getBrands = async (input: unknown) => {
       skip,
       orderBy: { name: 'asc' },
       include: {
-        media: { select: { id: true, fileName: true, publicPath: true } },
+        media: { select: { id: true, fileName: true, publicUrl: true } },
       },
     }),
     prisma.brand.count({ where }),
@@ -74,7 +74,7 @@ export const getBrandById = async (id: string) => {
   const brand = await prisma.brand.findUnique({
     where: { id },
     include: {
-      media: { select: { id: true, fileName: true, publicPath: true } },
+      media: { select: { id: true, fileName: true, publicUrl: true } },
     },
   });
 
@@ -105,9 +105,16 @@ export const createBrand = async (input: unknown) => {
     }
   }
 
+  // Check if slug already exists
+  const existingSlug = await prisma.brand.findUnique({ where: { slug: validated.slug } });
+  if (existingSlug) {
+    throw new AppError('Slug must be unique', 409);
+  }
+
   const brand = await prisma.brand.create({
     data: {
       name: validated.name,
+      slug: validated.slug,
       description: validated.description,
       status: validated.status,
       mediaId: validated.mediaId || undefined,
@@ -145,10 +152,19 @@ export const updateBrand = async (id: string, input: unknown) => {
     }
   }
 
+  // Check if slug conflicts
+  if (validated.slug && validated.slug !== brand.slug) {
+    const existingSlug = await prisma.brand.findUnique({ where: { slug: validated.slug } });
+    if (existingSlug) {
+      throw new AppError('Slug must be unique', 409);
+    }
+  }
+
   return await prisma.brand.update({
     where: { id },
     data: {
       name: validated.name,
+      slug: validated.slug,
       description: validated.description,
       status: validated.status,
       mediaId: validated.mediaId || undefined,
@@ -176,6 +192,14 @@ export const partialUpdateBrand = async (id: string, input: unknown) => {
       if (existing) throw new AppError('Brand with this name already exists', 409);
     }
     updateData.name = validated.name;
+  }
+
+  if (validated.slug !== undefined) {
+    if (validated.slug !== brand.slug) {
+      const existing = await prisma.brand.findUnique({ where: { slug: validated.slug } });
+      if (existing) throw new AppError('Slug must be unique', 409);
+    }
+    updateData.slug = validated.slug;
   }
 
   if (validated.description !== undefined) updateData.description = validated.description;

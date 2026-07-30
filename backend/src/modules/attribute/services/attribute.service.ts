@@ -53,7 +53,7 @@ export const getAttributes = async (input: unknown) => {
       include: {
         attributeValues: {
           orderBy: { sortOrder: 'asc' },
-          select: { id: true, label: true, valueCode: true, sortOrder: true },
+          select: { id: true, slug: true, label: true, referenceValue: true, sortOrder: true },
         },
       },
     }),
@@ -82,7 +82,7 @@ export const getAttributeById = async (id: string) => {
     include: {
       attributeValues: {
         orderBy: { sortOrder: 'asc' },
-        select: { id: true, label: true, valueCode: true, sortOrder: true },
+        select: { id: true, slug: true, label: true, referenceValue: true, sortOrder: true },
       },
     },
   });
@@ -106,9 +106,16 @@ export const createAttribute = async (input: unknown) => {
     throw new AppError('Attribute with this name already exists', 409);
   }
 
+  // Check if slug already exists
+  const existingSlug = await prisma.attribute.findUnique({ where: { slug: validated.slug } });
+  if (existingSlug) {
+    throw new AppError('Slug must be unique', 409);
+  }
+
   const attribute = await prisma.attribute.create({
     data: {
       name: validated.name,
+      slug: validated.slug,
       type: validated.type as any, // Cast to bypass type checking - Prisma handles numeric enums
       description: validated.description,
     },
@@ -139,10 +146,19 @@ export const updateAttribute = async (id: string, input: unknown) => {
     }
   }
 
+  // Check if slug conflicts
+  if (validated.slug && validated.slug !== attribute.slug) {
+    const existingSlug = await prisma.attribute.findUnique({ where: { slug: validated.slug } });
+    if (existingSlug) {
+      throw new AppError('Slug must be unique', 409);
+    }
+  }
+
   return await prisma.attribute.update({
     where: { id },
     data: {
       name: validated.name,
+      slug: validated.slug,
       type: validated.type as any, // Cast to bypass type checking
       description: validated.description,
     },
@@ -171,6 +187,14 @@ export const partialUpdateAttribute = async (id: string, input: unknown) => {
       if (existing) throw new AppError('Attribute with this name already exists', 409);
     }
     updateData.name = validated.name;
+  }
+
+  if (validated.slug !== undefined) {
+    if (validated.slug !== attribute.slug) {
+      const existing = await prisma.attribute.findUnique({ where: { slug: validated.slug } });
+      if (existing) throw new AppError('Slug must be unique', 409);
+    }
+    updateData.slug = validated.slug;
   }
 
   if (validated.type !== undefined) updateData.type = validated.type;
@@ -236,10 +260,17 @@ export const createAttributeValue = async (attributeId: string, input: unknown) 
     throw new AppError('Attribute not found', 404);
   }
 
+  // Check if slug already exists
+  const existingSlug = await prisma.attributeValue.findUnique({ where: { slug: validated.slug } });
+  if (existingSlug) {
+    throw new AppError('Slug must be unique', 409);
+  }
+
   const attributeValue = await prisma.attributeValue.create({
     data: {
+      slug: validated.slug,
       label: validated.label,
-      valueCode: validated.valueCode,
+      referenceValue: validated.referenceValue,
       sortOrder: validated.sortOrder || 0,
       attributeId,
     },
@@ -259,11 +290,20 @@ export const updateAttributeValue = async (id: string, input: unknown) => {
     throw new AppError('Attribute value not found', 404);
   }
 
+  // Check if slug conflicts
+  if (validated.slug && validated.slug !== attributeValue.slug) {
+    const existingSlug = await prisma.attributeValue.findUnique({ where: { slug: validated.slug } });
+    if (existingSlug) {
+      throw new AppError('Slug must be unique', 409);
+    }
+  }
+
   return await prisma.attributeValue.update({
     where: { id },
     data: {
+      slug: validated.slug,
       label: validated.label,
-      valueCode: validated.valueCode,
+      referenceValue: validated.referenceValue,
       sortOrder: validated.sortOrder,
     },
   });
@@ -282,8 +322,16 @@ export const partialUpdateAttributeValue = async (id: string, input: unknown) =>
 
   const updateData: any = {};
 
+  if (validated.slug !== undefined) {
+    if (validated.slug !== attributeValue.slug) {
+      const existing = await prisma.attributeValue.findUnique({ where: { slug: validated.slug } });
+      if (existing) throw new AppError('Slug must be unique', 409);
+    }
+    updateData.slug = validated.slug;
+  }
+
   if (validated.label !== undefined) updateData.label = validated.label;
-  if (validated.valueCode !== undefined) updateData.valueCode = validated.valueCode;
+  if (validated.referenceValue !== undefined) updateData.referenceValue = validated.referenceValue;
   if (validated.sortOrder !== undefined) updateData.sortOrder = validated.sortOrder;
 
   return await prisma.attributeValue.update({

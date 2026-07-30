@@ -48,7 +48,7 @@ export const getProducts = async (input: unknown) => {
   }
 
   if (validated.categoryId) {
-    where.categoryId = validated.categoryId;
+    where.categories = { some: { id: validated.categoryId } };
   }
 
   if (validated.brandId) {
@@ -70,7 +70,7 @@ export const getProducts = async (input: unknown) => {
       skip,
       orderBy: { name: 'asc' },
       include: {
-        category: { select: { name: true } },
+        categories: { select: { name: true } },
         brand: { select: { name: true } },
         variants: {
           select: { id: true, sku: true, inventory: true },
@@ -100,17 +100,20 @@ export const getProductById = async (id: string) => {
   const product = await prisma.product.findUnique({
     where: { id },
     include: {
-      category: { select: { name: true, slug: true } },
+      categories: { select: { name: true, slug: true } },
       brand: { select: { name: true } },
       variants: {
         include: {
           attributeValues: {
             include: {
-              attributeValue: { select: { label: true, valueCode: true } },
+              attributeValue: { select: { label: true, referenceValue: true } },
             },
           },
         },
       },
+      mediaAttachments: {
+        include: { media: true }
+      }
     },
   });
 
@@ -135,34 +138,29 @@ export const createProduct = async (input: unknown) => {
     }
   }
 
-  // Verify category exists if provided
-  if (validated.categoryId) {
-    const category = await prisma.category.findUnique({ where: { id: validated.categoryId } });
-    if (!category) {
-      throw new AppError('Category not found', 404);
-    }
-  }
-
-  // Verify brand exists if provided
-  if (validated.brandId) {
-    const brand = await prisma.brand.findUnique({ where: { id: validated.brandId } });
-    if (!brand) {
-      throw new AppError('Brand not found', 404);
-    }
-  }
-
   const product = await prisma.product.create({
     data: {
       name: validated.name,
+      slug: validated.slug,
+      shortDescription: validated.shortDescription,
       description: validated.description,
+      hasVariants: validated.hasVariants,
       price: Number(validated.price),
+      salePrice: validated.salePrice !== undefined ? Number(validated.salePrice) : undefined,
+      stock: validated.stock,
+      stockStatus: validated.stockStatus,
+      weight: validated.weight !== undefined ? Number(validated.weight) : undefined,
+      isActive: validated.isActive,
+      isFeatured: validated.isFeatured,
+      sortOrder: validated.sortOrder,
       sku: validated.sku || generateSKU('PROD'),
       status: validated.status || 'DRAFT',
-      categoryId: validated.categoryId || null,
+      categories: validated.categories ? { connect: validated.categories.map(id => ({ id })) } : undefined,
       brandId: validated.brandId || null,
+      mediaAttachments: validated.mediaIds ? { create: validated.mediaIds.map((id, idx) => ({ mediaId: id, sortOrder: idx })) } : undefined,
     },
     include: {
-      category: { select: { name: true } },
+      categories: { select: { name: true } },
       brand: { select: { name: true } },
     },
   });
@@ -192,35 +190,30 @@ export const updateProduct = async (id: string, input: unknown) => {
     }
   }
 
-  // Verify category exists if provided and changed
-  if (validated.categoryId && validated.categoryId !== product.categoryId) {
-    const category = await prisma.category.findUnique({ where: { id: validated.categoryId } });
-    if (!category) {
-      throw new AppError('Category not found', 404);
-    }
-  }
-
-  // Verify brand exists if provided and changed
-  if (validated.brandId && validated.brandId !== product.brandId) {
-    const brand = await prisma.brand.findUnique({ where: { id: validated.brandId } });
-    if (!brand) {
-      throw new AppError('Brand not found', 404);
-    }
-  }
-
   const updatedProduct = await prisma.product.update({
     where: { id },
     data: {
       name: validated.name,
+      slug: validated.slug,
+      shortDescription: validated.shortDescription,
       description: validated.description,
+      hasVariants: validated.hasVariants,
       price: Number(validated.price),
+      salePrice: validated.salePrice !== undefined ? Number(validated.salePrice) : null,
+      stock: validated.stock,
+      stockStatus: validated.stockStatus,
+      weight: validated.weight !== undefined ? Number(validated.weight) : null,
+      isActive: validated.isActive,
+      isFeatured: validated.isFeatured,
+      sortOrder: validated.sortOrder,
       sku: validated.sku,
       status: validated.status,
-      categoryId: validated.categoryId || null,
+      categories: validated.categories ? { set: validated.categories.map(id => ({ id })) } : undefined,
       brandId: validated.brandId || null,
+      mediaAttachments: validated.mediaIds ? { deleteMany: {}, create: validated.mediaIds.map((id, idx) => ({ mediaId: id, sortOrder: idx })) } : undefined,
     },
     include: {
-      category: { select: { name: true } },
+      categories: { select: { name: true } },
       brand: { select: { name: true } },
     },
   });
@@ -245,30 +238,35 @@ export const partialUpdateProduct = async (id: string, input: unknown) => {
   const updateData: any = {};
 
   if (validated.name !== undefined) updateData.name = validated.name;
+  if (validated.slug !== undefined) updateData.slug = validated.slug;
+  if (validated.shortDescription !== undefined) updateData.shortDescription = validated.shortDescription;
   if (validated.description !== undefined) updateData.description = validated.description;
+  if (validated.hasVariants !== undefined) updateData.hasVariants = validated.hasVariants;
   if (validated.price !== undefined) updateData.price = Number(validated.price);
+  if (validated.salePrice !== undefined) updateData.salePrice = Number(validated.salePrice);
+  if (validated.stock !== undefined) updateData.stock = validated.stock;
+  if (validated.stockStatus !== undefined) updateData.stockStatus = validated.stockStatus;
+  if (validated.weight !== undefined) updateData.weight = Number(validated.weight);
+  if (validated.isActive !== undefined) updateData.isActive = validated.isActive;
+  if (validated.isFeatured !== undefined) updateData.isFeatured = validated.isFeatured;
+  if (validated.sortOrder !== undefined) updateData.sortOrder = validated.sortOrder;
   if (validated.sku !== undefined) updateData.sku = validated.sku;
   if (validated.status !== undefined) updateData.status = validated.status;
-  if (validated.categoryId !== undefined) {
-    if (validated.categoryId) {
-      const category = await prisma.category.findUnique({ where: { id: validated.categoryId } });
-      if (!category) throw new AppError('Category not found', 404);
-    }
-    updateData.categoryId = validated.categoryId || null;
+  if (validated.categories !== undefined) {
+    updateData.categories = { set: validated.categories.map(id => ({ id })) };
   }
   if (validated.brandId !== undefined) {
-    if (validated.brandId) {
-      const brand = await prisma.brand.findUnique({ where: { id: validated.brandId } });
-      if (!brand) throw new AppError('Brand not found', 404);
-    }
     updateData.brandId = validated.brandId || null;
+  }
+  if (validated.mediaIds !== undefined) {
+    updateData.mediaAttachments = { deleteMany: {}, create: validated.mediaIds.map((id, idx) => ({ mediaId: id, sortOrder: idx })) };
   }
 
   const updatedProduct = await prisma.product.update({
     where: { id },
     data: updateData,
     include: {
-      category: { select: { name: true } },
+      categories: { select: { name: true } },
       brand: { select: { name: true } },
     },
   });
@@ -321,8 +319,11 @@ export const getProductVariants = async (productId: string) => {
     include: {
       attributeValues: {
         include: {
-          attributeValue: { select: { label: true, valueCode: true } },
+          attributeValue: { select: { label: true, referenceValue: true } },
         },
+      },
+      mediaAttachments: {
+        include: { media: true }
       },
     },
   });
@@ -356,20 +357,30 @@ export const createProductVariant = async (productId: string, input: unknown) =>
       productId,
       sku: validated.sku || generateSKU('VAR'),
       price: validated.price !== undefined ? Number(validated.price) : Number(product.price),
+      salePrice: validated.salePrice !== undefined ? Number(validated.salePrice) : undefined,
       inventory: validated.inventory !== undefined ? validated.inventory : 0,
-      weight: validated.weight,
+      stockStatus: validated.stockStatus,
+      lowStockThreshold: validated.lowStockThreshold !== undefined ? validated.lowStockThreshold : 5,
+      weight: validated.weight !== undefined ? Number(validated.weight) : undefined,
       dimensions: (validated.dimensions as any) || undefined,
+      isActive: validated.isActive !== undefined ? validated.isActive : true,
       attributeValues: {
         create: validated.attributeValueIds?.map(attrValId => ({
           attributeValueId: attrValId,
         })) || [],
       },
+      mediaAttachments: validated.mediaIds ? {
+        create: validated.mediaIds.map((id, idx) => ({ mediaId: id, sortOrder: idx }))
+      } : undefined,
     },
     include: {
       attributeValues: {
         include: {
-          attributeValue: { select: { label: true, valueCode: true } },
+          attributeValue: { select: { label: true, referenceValue: true } },
         },
+      },
+      mediaAttachments: {
+        include: { media: true }
       },
     },
   });
@@ -405,21 +416,32 @@ export const updateProductVariant = async (id: string, input: unknown) => {
     data: {
       sku: validated.sku || variant.sku,
       price: validated.price !== undefined ? Number(validated.price) : Number(variant.price),
+      salePrice: validated.salePrice !== undefined ? Number(validated.salePrice) : variant.salePrice,
       inventory: validated.inventory !== undefined ? validated.inventory : variant.inventory,
-      weight: validated.weight,
-      dimensions: (validated.dimensions as any) || undefined,
-      attributeValues: {
-        deleteMany: {}, // Remove existing associations
-        create: validated.attributeValueIds?.map(attrValId => ({
+      stockStatus: validated.stockStatus !== undefined ? validated.stockStatus : variant.stockStatus,
+      lowStockThreshold: validated.lowStockThreshold !== undefined ? validated.lowStockThreshold : variant.lowStockThreshold,
+      weight: validated.weight !== undefined ? Number(validated.weight) : variant.weight,
+      dimensions: validated.dimensions !== undefined ? (validated.dimensions as any) : variant.dimensions,
+      isActive: validated.isActive !== undefined ? validated.isActive : variant.isActive,
+      attributeValues: validated.attributeValueIds ? {
+        deleteMany: {},
+        create: validated.attributeValueIds.map(attrValId => ({
           attributeValueId: attrValId,
-        })) || [],
-      },
+        }))
+      } : undefined,
+      mediaAttachments: validated.mediaIds ? {
+        deleteMany: {},
+        create: validated.mediaIds.map((id, idx) => ({ mediaId: id, sortOrder: idx }))
+      } : undefined,
     },
     include: {
       attributeValues: {
         include: {
-          attributeValue: { select: { label: true, valueCode: true } },
+          attributeValue: { select: { label: true, referenceValue: true } },
         },
+      },
+      mediaAttachments: {
+        include: { media: true }
       },
     },
   });

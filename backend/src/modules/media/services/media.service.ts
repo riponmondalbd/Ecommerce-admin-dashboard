@@ -163,7 +163,6 @@ export const createMedia = async (uploadedFile: any, requestBody: unknown) => {
   // Extract file details from uploaded multer file
   const fileName = uploadedFile.filename;
   const filePath = uploadedFile.path;
-  const publicPath = `/uploads/${fileName}`;
   const size = uploadedFile.size;
 
   // Determine media type based on file extension
@@ -194,7 +193,7 @@ export const createMedia = async (uploadedFile: any, requestBody: unknown) => {
     data: {
       fileName,
       filePath,
-      publicPath,
+      publicUrl: `${process.env.BASE_URL || 'http://localhost:3001'}/uploads/${fileName}`,
       type,
       size,
       metadata: { originalName: uploadedFile.originalname, size } as any,
@@ -231,7 +230,7 @@ export const updateMedia = async (id: string, input: unknown) => {
 
   if (validated.fileName !== undefined) updateData.fileName = validated.fileName;
   if (validated.filePath !== undefined) updateData.filePath = validated.filePath;
-  if (validated.publicPath !== undefined) updateData.publicPath = validated.publicPath;
+  if (validated.publicUrl !== undefined) updateData.publicUrl = validated.publicUrl;
   if (validated.type !== undefined) updateData.type = validated.type;
   if (validated.size !== undefined) updateData.size = validated.size;
   if (validated.metadata !== undefined) updateData.metadata = validated.metadata;
@@ -259,7 +258,7 @@ export const partialUpdateMedia = async (id: string, input: unknown) => {
 
   if (validated.fileName !== undefined) updateData.fileName = validated.fileName;
   if (validated.filePath !== undefined) updateData.filePath = validated.filePath;
-  if (validated.publicPath !== undefined) updateData.publicPath = validated.publicPath;
+  if (validated.publicUrl !== undefined) updateData.publicUrl = validated.publicUrl;
   if (validated.type !== undefined) updateData.type = validated.type;
   if (validated.size !== undefined) updateData.size = validated.size;
   if (validated.metadata !== undefined) updateData.metadata = validated.metadata;

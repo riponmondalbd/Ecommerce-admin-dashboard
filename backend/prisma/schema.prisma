@@ -247,7 +247,7 @@ model Attribute {
 
 model AttributeValue {
   id             String           @id @default(uuid()) @db.Uuid
-  slug           String           // unique within attribute? typically we just generate a slug
+  slug           String           @unique
   label          String           // Display value like "Red", "L"
   referenceValue String?          // Internal code like "#FF0000", "L"
   sortOrder      Int              @default(0)

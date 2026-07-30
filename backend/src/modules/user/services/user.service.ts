@@ -110,6 +110,7 @@ export const createUser = async (input: unknown, _requestingUserId?: string) => 
     data: {
       name: validated.name,
       email: validated.email,
+      phone: validated.phone,
       password: hashedPassword,
       roleId: role.id,
       status: validated.status || 'ACTIVE',
@@ -163,6 +164,7 @@ export const updateUser = async (id: string, input: unknown, requestingUserId?: 
   const updateData: any = {
     email: validated.email,
     name: validated.name,
+    phone: validated.phone,
     roleId: validated.role,
     status: validated.status,
   };
@@ -193,6 +195,10 @@ export const partialUpdateUser = async (id: string, input: unknown, requestingUs
 
   if (validated.name !== undefined) {
     updateData.name = validated.name;
+  }
+
+  if (validated.phone !== undefined) {
+    updateData.phone = validated.phone;
   }
 
   if (validated.email !== undefined && validated.email !== user.email) {
