@@ -13,40 +13,64 @@ async function main() {
   // ============================================
   console.log('⚡ Creating permissions...');
   const permissions = [
-    { key: 'authentication:read', name: 'Read Authentication Info', group: 'AUTHENTICATION', isActive: true },
-    { key: 'user_management:read', name: 'Read Users', group: 'USER_MANAGEMENT', isActive: true },
-    { key: 'user_management:create', name: 'Create User', group: 'USER_MANAGEMENT', isActive: true },
-    { key: 'user_management:update', name: 'Update User', group: 'USER_MANAGEMENT', isActive: true },
-    { key: 'user_management:delete', name: 'Delete User', group: 'USER_MANAGEMENT', isActive: true },
-    { key: 'role_management:read', name: 'Read Roles', group: 'ROLE_MANAGEMENT', isActive: true },
-    { key: 'role_management:create', name: 'Create Role', group: 'ROLE_MANAGEMENT', isActive: true },
-    { key: 'role_management:update', name: 'Update Role', group: 'ROLE_MANAGEMENT', isActive: true },
-    { key: 'role_management:delete', name: 'Delete Role', group: 'ROLE_MANAGEMENT', isActive: true },
-    { key: 'permission_management:read', name: 'Read Permissions', group: 'PERMISSION_MANAGEMENT', isActive: true },
-    { key: 'permission_management:create', name: 'Create Permission', group: 'PERMISSION_MANAGEMENT', isActive: true },
+    // DASHBOARD
+    { key: 'dashboard:watch', name: 'Watch Dashboard', group: 'DASHBOARD', isActive: true },
+
+    // PERMISSION
+    { key: 'permission:watch', name: 'Watch Permissions', group: 'PERMISSION_MANAGEMENT', isActive: true },
+    { key: 'permission:create', name: 'Create Permission', group: 'PERMISSION_MANAGEMENT', isActive: true },
+    { key: 'permission:read', name: 'Read Permissions', group: 'PERMISSION_MANAGEMENT', isActive: true },
+    { key: 'permission:update', name: 'Update Permission', group: 'PERMISSION_MANAGEMENT', isActive: true },
+    { key: 'permission:delete', name: 'Delete Permission', group: 'PERMISSION_MANAGEMENT', isActive: true },
+
+    // ROLE
+    { key: 'role:watch', name: 'Watch Roles', group: 'ROLE_MANAGEMENT', isActive: true },
+    { key: 'role:create', name: 'Create Role', group: 'ROLE_MANAGEMENT', isActive: true },
+    { key: 'role:read', name: 'Read Roles', group: 'ROLE_MANAGEMENT', isActive: true },
+    { key: 'role:update', name: 'Update Role', group: 'ROLE_MANAGEMENT', isActive: true },
+    { key: 'role:delete', name: 'Delete Role', group: 'ROLE_MANAGEMENT', isActive: true },
+
+    // USER
+    { key: 'user:watch', name: 'Watch Users', group: 'USER_MANAGEMENT', isActive: true },
+    { key: 'user:create', name: 'Create User', group: 'USER_MANAGEMENT', isActive: true },
+    { key: 'user:read', name: 'Read Users', group: 'USER_MANAGEMENT', isActive: true },
+    { key: 'user:update', name: 'Update User', group: 'USER_MANAGEMENT', isActive: true },
+    { key: 'user:delete', name: 'Delete User', group: 'USER_MANAGEMENT', isActive: true },
+
+    // MEDIA
+    { key: 'media:watch', name: 'Watch Media', group: 'MEDIA', isActive: true },
     { key: 'media:read', name: 'Read Media', group: 'MEDIA', isActive: true },
-    { key: 'media:create', name: 'Upload Media', group: 'MEDIA', isActive: true },
-    { key: 'media:update', name: 'Update Media', group: 'MEDIA', isActive: true },
+    { key: 'media:upload', name: 'Upload Media', group: 'MEDIA', isActive: true },
+    { key: 'media:write', name: 'Write Media', group: 'MEDIA', isActive: true },
     { key: 'media:delete', name: 'Delete Media', group: 'MEDIA', isActive: true },
-    { key: 'category:read', name: 'Read Categories', group: 'CATEGORY', isActive: true },
+
+    // CATEGORY
+    { key: 'category:watch', name: 'Watch Categories', group: 'CATEGORY', isActive: true },
     { key: 'category:create', name: 'Create Category', group: 'CATEGORY', isActive: true },
+    { key: 'category:read', name: 'Read Categories', group: 'CATEGORY', isActive: true },
     { key: 'category:update', name: 'Update Category', group: 'CATEGORY', isActive: true },
     { key: 'category:delete', name: 'Delete Category', group: 'CATEGORY', isActive: true },
-    { key: 'brand:read', name: 'Read Brands', group: 'BRAND', isActive: true },
+
+    // BRAND
+    { key: 'brand:watch', name: 'Watch Brands', group: 'BRAND', isActive: true },
     { key: 'brand:create', name: 'Create Brand', group: 'BRAND', isActive: true },
+    { key: 'brand:read', name: 'Read Brands', group: 'BRAND', isActive: true },
     { key: 'brand:update', name: 'Update Brand', group: 'BRAND', isActive: true },
     { key: 'brand:delete', name: 'Delete Brand', group: 'BRAND', isActive: true },
-    { key: 'attribute:read', name: 'Read Attributes', group: 'ATTRIBUTE', isActive: true },
+
+    // ATTRIBUTE
+    { key: 'attribute:watch', name: 'Watch Attributes', group: 'ATTRIBUTE', isActive: true },
     { key: 'attribute:create', name: 'Create Attribute', group: 'ATTRIBUTE', isActive: true },
+    { key: 'attribute:read', name: 'Read Attributes', group: 'ATTRIBUTE', isActive: true },
     { key: 'attribute:update', name: 'Update Attribute', group: 'ATTRIBUTE', isActive: true },
     { key: 'attribute:delete', name: 'Delete Attribute', group: 'ATTRIBUTE', isActive: true },
-    { key: 'product:read', name: 'Read Products', group: 'PRODUCT', isActive: true },
+
+    // PRODUCT
+    { key: 'product:watch', name: 'Watch Products', group: 'PRODUCT', isActive: true },
     { key: 'product:create', name: 'Create Product', group: 'PRODUCT', isActive: true },
+    { key: 'product:read', name: 'Read Products', group: 'PRODUCT', isActive: true },
     { key: 'product:update', name: 'Update Product', group: 'PRODUCT', isActive: true },
     { key: 'product:delete', name: 'Delete Product', group: 'PRODUCT', isActive: true },
-    { key: 'product_variant:read', name: 'Read Variants', group: 'PRODUCT', isActive: true },
-    { key: 'product_variant:create', name: 'Create Variant', group: 'PRODUCT', isActive: true },
-    { key: 'transaction:read', name: 'Read Transactions', group: 'PRODUCT',isActive: true },
   ];
 
   for (const perm of permissions) {
@@ -133,27 +157,30 @@ async function main() {
   assignPermissions(roleMap.superAdmin, Object.keys(permMap));
 
   // Admin: Most permissions except authentication & permission management
-  const adminPerms = Object.keys(permMap).filter(k => !k.startsWith('authentication:') && !k.startsWith('permission_management:'));
+  const adminPerms = Object.keys(permMap).filter(k =>
+    k.startsWith('user:') || k.startsWith('role:') || k.startsWith('permission:') ||
+    k.startsWith('product:') || k.startsWith('category:') || k.startsWith('brand:') ||
+    k.startsWith('attribute:') || k.startsWith('media:') || k.startsWith('dashboard:')
+  );
   assignPermissions(roleMap.admin, adminPerms);
 
   // Catalog Manager: Product, Category, Brand, Attribute, Media permissions
   const catalogPerms = Object.keys(permMap).filter(k =>
-    k.startsWith('product:') || k.startsWith('category:') ||
-    k.startsWith('brand:') || k.startsWith('attribute:') || k.startsWith('media:')
+    k.startsWith('product:') || k.startsWith('category:') || k.startsWith('brand:') ||
+    k.startsWith('attribute:') || k.startsWith('media:')
   );
   assignPermissions(roleMap.catalog, catalogPerms);
 
   // Support Agent: Read-only product and media
   const supportPerms = Object.keys(permMap).filter(k =>
-    (k.includes('read') && (k.startsWith('product:') || k.startsWith('media:')))
+    k === 'product:watch' || k === 'product:read' || k === 'product:create' ||
+    k === 'category:watch' || k === 'category:read' || 
+    k.startsWith('brand:') || k.startsWith('attribute:') || k.startsWith('media:') || k === 'dashboard:watch'
   );
   assignPermissions(roleMap.support, supportPerms);
 
   // Viewer: Very limited read access
-  const viewerPerms = Object.keys(permMap).filter(k =>
-    k.startsWith('category:') && k.includes('read') ||
-    k.startsWith('brand:') && k.includes('read')
-  );
+  const viewerPerms = Object.keys(permMap).filter(k => k.endsWith(':watch') || k.endsWith(':read'));
   assignPermissions(roleMap.viewer, viewerPerms);
 
   console.log('✅ Roles and permissions assigned');
@@ -258,7 +285,7 @@ async function main() {
         data: {
           fileName,
           filePath: `/uploads/${fileName}`,
-          publicPath: `/uploads/${fileName}`,
+          publicUrl: `/uploads/${fileName}`,
           type,
           size,
           status: 'READY',
@@ -273,7 +300,7 @@ async function main() {
           data: {
             fileName,
             filePath: `/uploads/${fileName}`,
-            publicPath: `/uploads/${fileName}`,
+            publicUrl: `/uploads/${fileName}`,
             type,
             size,
             status: 'READY',
@@ -290,25 +317,25 @@ async function main() {
   const appleBrand = await prisma.brand.upsert({
     where: { name: 'Apple' },
     update: {},
-    create: { name: 'Apple', description: 'American tech company', status: 'ACTIVE', mediaId: appleMedia.id },
+    create: { name: 'Apple', slug: 'apple', description: 'American tech company', status: 'ACTIVE', mediaId: appleMedia.id },
   });
 
   const samsungBrand = await prisma.brand.upsert({
     where: { name: 'Samsung' },
     update: {},
-    create: { name: 'Samsung', description: 'South Korean conglomerate', status: 'ACTIVE', mediaId: samsungMedia.id },
+    create: { name: 'Samsung', slug: 'samsung', description: 'South Korean conglomerate', status: 'ACTIVE', mediaId: samsungMedia.id },
   });
 
   const nikeBrand = await prisma.brand.upsert({
     where: { name: 'Nike' },
     update: {},
-    create: { name: 'Nike', description: 'Sportswear manufacturer', status: 'ACTIVE' },
+    create: { name: 'Nike', slug: 'nike', description: 'Sportswear manufacturer', status: 'ACTIVE' },
   });
 
   const adidasBrand = await prisma.brand.upsert({
     where: { name: 'Adidas' },
     update: {},
-    create: { name: 'Adidas', description: 'German sportswear company', status: 'ACTIVE' },
+    create: { name: 'Adidas', slug: 'adidas', description: 'German sportswear company', status: 'ACTIVE' },
   });
 
   console.log('✅ Brands created');
@@ -321,73 +348,73 @@ async function main() {
   const colorAttr = await prisma.attribute.upsert({
     where: { name: 'Color' },
     update: {},
-    create: { name: 'Color', type: 'COLOR', description: 'Color options' },
+    create: { name: 'Color', slug: 'color', type: 'COLOR_SWATCH', description: 'Color options' },
   });
   const sizeAttr = await prisma.attribute.upsert({
     where: { name: 'Size' },
     update: {},
-    create: { name: 'Size', type: 'SELECT', description: 'Size selection' },
+    create: { name: 'Size', slug: 'size', type: 'DROPDOWN', description: 'Size selection' },
   });
   const materialAttr = await prisma.attribute.upsert({
     where: { name: 'Material' },
     update: {},
-    create: { name: 'Material', type: 'TEXT', description: 'Material composition' },
+    create: { name: 'Material', slug: 'material', type: 'TEXT', description: 'Material composition' },
   });
 
   // Color values
   const redValue = await prisma.attributeValue.upsert({
-    where: { label: 'Red' },
+    where: { id: '00000000-0000-0000-0000-000000000001' },
     update: {},
-    create: { label: 'Red', valueCode: '#FF0000', sortOrder: 1, attributeId: colorAttr.id },
+    create: { id: '00000000-0000-0000-0000-000000000001', slug: 'red', label: 'Red', referenceValue: '#FF0000', sortOrder: 1, attributeId: colorAttr.id },
   });
   const blueValue = await prisma.attributeValue.upsert({
-    where: { label: 'Blue' },
+    where: { id: '00000000-0000-0000-0000-000000000002' },
     update: {},
-    create: { label: 'Blue', valueCode: '#0000FF', sortOrder: 2, attributeId: colorAttr.id },
+    create: { id: '00000000-0000-0000-0000-000000000002', slug: 'blue', label: 'Blue', referenceValue: '#0000FF', sortOrder: 2, attributeId: colorAttr.id },
   });
   const blackValue = await prisma.attributeValue.upsert({
-    where: { label: 'Black' },
+    where: { id: '00000000-0000-0000-0000-000000000003' },
     update: {},
-    create: { label: 'Black', valueCode: '#000000', sortOrder: 3, attributeId: colorAttr.id },
+    create: { id: '00000000-0000-0000-0000-000000000003', slug: 'black', label: 'Black', referenceValue: '#000000', sortOrder: 3, attributeId: colorAttr.id },
   });
   const whiteValue = await prisma.attributeValue.upsert({
-    where: { label: 'White' },
+    where: { id: '00000000-0000-0000-0000-000000000004' },
     update: {},
-    create: { label: 'White', valueCode: '#FFFFFF', sortOrder: 4, attributeId: colorAttr.id },
+    create: { id: '00000000-0000-0000-0000-000000000004', slug: 'white', label: 'White', referenceValue: '#FFFFFF', sortOrder: 4, attributeId: colorAttr.id },
   });
 
   // Size values
   const sValue = await prisma.attributeValue.upsert({
-    where: { label: 'S (Small)' },
+    where: { id: '00000000-0000-0000-0000-000000000005' },
     update: {},
-    create: { label: 'S (Small)', valueCode: 'S', sortOrder: 1, attributeId: sizeAttr.id },
+    create: { id: '00000000-0000-0000-0000-000000000005', slug: 'small', label: 'S (Small)', referenceValue: 'S', sortOrder: 1, attributeId: sizeAttr.id },
   });
   const mValue = await prisma.attributeValue.upsert({
-    where: { label: 'M (Medium)' },
+    where: { id: '00000000-0000-0000-0000-000000000006' },
     update: {},
-    create: { label: 'M (Medium)', valueCode: 'M', sortOrder: 2, attributeId: sizeAttr.id },
+    create: { id: '00000000-0000-0000-0000-000000000006', slug: 'medium', label: 'M (Medium)', referenceValue: 'M', sortOrder: 2, attributeId: sizeAttr.id },
   });
   const lValue = await prisma.attributeValue.upsert({
-    where: { label: 'L (Large)' },
+    where: { id: '00000000-0000-0000-0000-000000000007' },
     update: {},
-    create: { label: 'L (Large)', valueCode: 'L', sortOrder: 3, attributeId: sizeAttr.id },
+    create: { id: '00000000-0000-0000-0000-000000000007', slug: 'large', label: 'L (Large)', referenceValue: 'L', sortOrder: 3, attributeId: sizeAttr.id },
   });
   const xlValue = await prisma.attributeValue.upsert({
-    where: { label: 'XL (Extra Large)' },
+    where: { id: '00000000-0000-0000-0000-000000000008' },
     update: {},
-    create: { label: 'XL (Extra Large)', valueCode: 'XL', sortOrder: 4, attributeId: sizeAttr.id },
+    create: { id: '00000000-0000-0000-0000-000000000008', slug: 'extra-large', label: 'XL (Extra Large)', referenceValue: 'XL', sortOrder: 4, attributeId: sizeAttr.id },
   });
 
   // Material values
   const cottonValue = await prisma.attributeValue.upsert({
-    where: { label: 'Cotton' },
+    where: { id: '00000000-0000-0000-0000-000000000009' },
     update: {},
-    create: { label: 'Cotton', valueCode: 'cotton', sortOrder: 1, attributeId: materialAttr.id },
+    create: { id: '00000000-0000-0000-0000-000000000009', slug: 'cotton', label: 'Cotton', referenceValue: 'cotton', sortOrder: 1, attributeId: materialAttr.id },
   });
   const polyesterValue = await prisma.attributeValue.upsert({
-    where: { label: 'Polyester' },
+    where: { id: '00000000-0000-0000-0000-000000000010' },
     update: {},
-    create: { label: 'Polyester', valueCode: 'polyester', sortOrder: 2, attributeId: materialAttr.id },
+    create: { id: '00000000-0000-0000-0000-000000000010', slug: 'polyester', label: 'Polyester', referenceValue: 'polyester', sortOrder: 2, attributeId: materialAttr.id },
   });
 
   console.log('✅ Attributes and values created');
@@ -402,10 +429,11 @@ async function main() {
     update: {},
     create: {
       name: 'iPhone 15 Pro',
+      slug: 'iphone-15-pro',
       description: 'Latest Apple smartphone with A17 Pro chip',
       price: 999.99,
       sku: 'IPHONE15PRO',
-      categoryId: rootElectronics.id,
+      categories: { connect: { id: rootElectronics.id } },
       brandId: appleBrand.id,
       status: 'PUBLISHED',
     },
@@ -416,10 +444,11 @@ async function main() {
     update: {},
     create: {
       name: 'Nike Air Max 270',
+      slug: 'nike-air-max-270',
       description: 'Comfortable running shoes with air cushioning',
       price: 129.99,
       sku: 'NIKEAIRMAX270',
-      categoryId: womensClothing.id,
+      categories: { connect: { id: womensClothing.id } },
       brandId: nikeBrand.id,
       status: 'PUBLISHED',
     },

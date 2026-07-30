@@ -3,9 +3,6 @@ import { authController } from './auth.controller';
 import { jwtAuthMiddleware } from './middleware/jwtAuth.middleware';
 
 export const authRoutes = (app: Express) => {
-  app.post('/api/auth/register', (req, res) => {
-    authController.register(req, res);
-  });
 
   app.post('/api/auth/login', (req, res) => {
     authController.login(req, res);
@@ -30,8 +27,16 @@ export const authRoutes = (app: Express) => {
       if (!user) {
         return res.status(404).json({ success: false, message: 'User not found' });
       }
-      const { password, ...safeUser } = user;
-      return res.json({ success: true, data: safeUser });
+      const { password, role, ...safeUser } = user;
+      const permissions = role?.permissions?.map((rp: any) => rp.permission.key) || [];
+      return res.json({ 
+        success: true, 
+        data: { 
+          ...safeUser, 
+          role: role ? { id: role.id, name: role.name } : null,
+          permissions 
+        } 
+      });
     } catch (error) {
       return res.status(500).json({ success: false, message: 'Failed to fetch user' });
     }

@@ -42,6 +42,8 @@ model User {
   name         String
   email        String       @unique
   password     String       // bcrypt hashed
+  phone        String?
+  gender       String?
   role         Role         @relation(fields: [roleId], references: [id], onDelete: Cascade)
   roleId       String      @db.Uuid
   status       UserStatus   @default(ACTIVE)
@@ -95,27 +97,12 @@ model RefreshToken {
 
 // ─── Permission & Role (RBAC) ────────────────────────────────────────────────
 
-enum PermissionGroup {
-  AUTHENTICATION
-  USER_MANAGEMENT
-  ROLE_MANAGEMENT
-  PERMISSION_MANAGEMENT
-  PRODUCT
-  CATEGORY
-  BRAND
-  ATTRIBUTE
-  MEDIA
-  ORDER
-  DASHBOARD
-  SETTINGS
-}
-
 model Permission {
   id          String           @id @default(uuid()) @db.Uuid
   key         String           @unique // e.g. "product:create"
   name        String           // e.g. "Create Product"
   description String?
-  group       PermissionGroup
+  group       String           // Group name dynamically created
   isActive    Boolean          @default(true)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
@@ -144,19 +131,30 @@ model RolePermission {
 // ─── Media Model ────────────────────────────────────────────────────────────
 
 model Media {
-  id          String           @id @default(uuid()) @db.Uuid
-  fileName    String
-  filePath    String
-  publicPath String
-  type        MediaType
-  size        Int
-  metadata    Json?
-  uploadedBy  User             @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
-  uploadedById String           @db.Uuid
-  status      MediaStatus      @default(PENDING)
-  brands      Brand[]          // Inverse of Brand.media
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id            String           @id @default(uuid()) @db.Uuid
+  fileName      String
+  filePath      String
+  publicUrl     String
+  type          MediaType
+  mimeType      String?
+  size          Int
+  width         Int?
+  height        Int?
+  thumbnailPath String?
+  altText       String?
+  title         String?
+  metadata      Json?
+  uploadedBy    User             @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  uploadedById  String           @db.Uuid
+  status        MediaStatus      @default(PENDING)
+  
+  brands        Brand[]          // Inverse of Brand.media
+  categories    Category[]       // Inverse of Category.media
+  products      ProductMedia[]
+  variants      VariantMedia[]
+  
+  createdAt     DateTime         @default(now())
+  updatedAt     DateTime         @updatedAt
 
   @@index([type])
   @@index([status])
@@ -178,11 +176,14 @@ model Category {
   name        String
   slug        String           @unique
   description String?
+  mediaId     String?          @db.Uuid
+  media       Media?           @relation(fields: [mediaId], references: [id], onDelete: SetNull)
   parentId    String?          @db.Uuid
   parent      Category?        @relation("CategoryParents", fields: [parentId], references: [id], onDelete: SetNull)
   children    Category[]       @relation("CategoryParents")
-  products    Product[]        // Inverse of Product.category
+  products    Product[]        @relation("ProductToCategory")
   isActive    Boolean          @default(true)
+  sortOrder   Int              @default(0)
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
@@ -196,6 +197,7 @@ model Category {
 model Brand {
   id          String           @id @default(uuid()) @db.Uuid
   name        String           @unique
+  slug        String           @unique
   description String?
   status      BrandStatus      @default(ACTIVE)
   mediaId     String?          @db.Uuid
@@ -218,9 +220,11 @@ enum BrandStatus {
 
 enum AttributeType {
   TEXT
-  SELECT
-  COLOR
-  IMAGE
+  DROPDOWN
+  RADIO
+  CHECKBOX
+  COLOR_SWATCH
+  IMAGE_SWATCH
 }
 
 // ─── Attribute Model ────────────────────────────────────────────────────────────
@@ -228,6 +232,7 @@ enum AttributeType {
 model Attribute {
   id          String           @id @default(uuid()) @db.Uuid
   name        String           @unique // e.g. "Color", "Size"
+  slug        String           @unique
   type        AttributeType    @default(TEXT)
   description String?
   attributeValues AttributeValue[] // Inverse of AttributeValue.attribute
@@ -241,44 +246,54 @@ model Attribute {
 // ─── Attribute Value Model ───────────────────────────────────────────────────────
 
 model AttributeValue {
-  id          String           @id @default(uuid()) @db.Uuid
-  label       String           // Display value like "Red", "L"
-  valueCode   String?          // Internal code like "#FF0000", "L"
-  sortOrder   Int              @default(0)
-  attribute   Attribute        @relation(fields: [attributeId], references: [id], onDelete: Cascade)
-  attributeId String           @db.Uuid
+  id             String           @id @default(uuid()) @db.Uuid
+  slug           String           // unique within attribute? typically we just generate a slug
+  label          String           // Display value like "Red", "L"
+  referenceValue String?          // Internal code like "#FF0000", "L"
+  sortOrder      Int              @default(0)
+  attribute      Attribute        @relation(fields: [attributeId], references: [id], onDelete: Cascade)
+  attributeId    String           @db.Uuid
   productAttributeValues ProductAttributeValue[] // Inverse of ProductAttributeValue.attributeValue
 
   createdAt   DateTime         @default(now())
   updatedAt   DateTime         @updatedAt
 
   @@index([attributeId])
-  @@index([valueCode])
   @@map("attribute_values")
 }
 
 // ─── Product Model ───────────────────────────────────────────────────────────────
 
 model Product {
-  id          String           @id @default(uuid()) @db.Uuid
-  name        String
-  description String?
-  price       Decimal
-  sku         String?          // Unique stock keeping unit (may be auto-generated)
-  category    Category?        @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-  categoryId  String?          @db.Uuid
-  brand       Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
-  brandId     String?          @db.Uuid
-  status      ProductStatus    @default(DRAFT)
-  variants    ProductVariant[] // Inverse of ProductVariant.product
-  transactions ProductTransaction[] // Inverse of ProductTransaction.product
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  id               String           @id @default(uuid()) @db.Uuid
+  name             String
+  slug             String           @unique
+  sku              String?          @unique // Unique stock keeping unit (may be auto-generated)
+  shortDescription String?
+  description      String?
+  hasVariants      Boolean          @default(false)
+  price            Decimal
+  salePrice        Decimal?
+  stock            Int              @default(0)
+  stockStatus      String?
+  weight           Decimal?
+  isActive         Boolean          @default(true)
+  isFeatured       Boolean          @default(false)
+  sortOrder        Int              @default(0)
+  
+  brand            Brand?           @relation(fields: [brandId], references: [id], onDelete: SetNull)
+  brandId          String?          @db.Uuid
+  categories       Category[]       @relation("ProductToCategory")
+  
+  status           ProductStatus    @default(DRAFT)
+  variants         ProductVariant[] // Inverse of ProductVariant.product
+  mediaAttachments ProductMedia[]
+  transactions     ProductTransaction[] // Inverse of ProductTransaction.product
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
 
   @@index([status])
-  @@index([categoryId])
   @@index([brandId])
-  @@unique([sku])
   @@map("products")
 }
 
@@ -288,31 +303,63 @@ enum ProductStatus {
   ARCHIVED
 }
 
+model ProductMedia {
+  id          String   @id @default(uuid()) @db.Uuid
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  productId   String   @db.Uuid
+  media       Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  mediaId     String   @db.Uuid
+  isThumbnail Boolean  @default(false)
+  isGallery   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  
+  @@map("product_media")
+}
+
 // ─── Product Variant Model ──────────────────────────────────────────────────────
 
 model ProductVariant {
-  id          String           @id @default(uuid()) @db.Uuid
-  productId   String           @db.Uuid
-  product     Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
-  sku         String?          // Unique variant SKU
-  price       Decimal?          // Variant-specific price (overrides product base price)
-  inventory   Int               @default(0) // Stock quantity
-  weight      Decimal?          // Optional weight for shipping
-  dimensions  Json?             // Optional width, height, depth
-  attributeValues ProductAttributeValue[] // Inverse of ProductAttributeValue.productVariant
-  transactions ProductTransaction[] // Inverse of ProductTransaction.variant
+  id                String           @id @default(uuid()) @db.Uuid
+  productId         String           @db.Uuid
+  product           Product          @relation(fields: [productId], references: [id], onDelete: Cascade)
+  sku               String?          @unique // Unique variant SKU
+  price             Decimal?         // Variant-specific price (overrides product base price)
+  salePrice         Decimal?
+  inventory         Int              @default(0) // Stock quantity
+  stockStatus       String?
+  lowStockThreshold Int              @default(5)
+  weight            Decimal?          // Optional weight for shipping
+  dimensions        Json?             // Optional width, height, depth
+  isActive          Boolean          @default(true)
 
-  createdAt   DateTime         @default(now())
-  updatedAt   DateTime         @updatedAt
+  attributeValues   ProductAttributeValue[] // Inverse of ProductAttributeValue.productVariant
+  mediaAttachments  VariantMedia[]
+  transactions      ProductTransaction[] // Inverse of ProductTransaction.variant
+
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
 
   @@index([productId])
-  @@unique([sku])
   @@map("product_variants")
+}
+
+model VariantMedia {
+  id          String   @id @default(uuid()) @db.Uuid
+  variant     ProductVariant  @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  variantId   String   @db.Uuid
+  media       Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+  mediaId     String   @db.Uuid
+  isThumbnail Boolean  @default(false)
+  isGallery   Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  
+  @@map("variant_media")
 }
 
 // ─── Product Attribute Value Pair (junction table for many-to-many) ───────────
 
-// Keeping this simplified - no inverse relations for now
 model ProductAttributeValue {
   id            String             @id @default(uuid()) @db.Uuid
   productVariantId String         @db.Uuid
@@ -339,7 +386,7 @@ model ProductTransaction {
   quantity    Int              // Number of units affected
   priceAtTime Decimal          // Price at time of transaction
   notes       String?          // Optional description
-  createdBy  String?          @db.Uuid // User ID who initiated
+  createdBy   String?          @db.Uuid // User ID who initiated
   createdAt   DateTime         @default(now())
 
   @@index([productId, variantId, type])
@@ -356,6 +403,3 @@ enum TransactionType {
   ADJUST
   TRANSFER
 }
-
-
-

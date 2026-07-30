@@ -81,6 +81,8 @@ export const CreateUserDto = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  phone: z.string().max(20).optional(),
+  gender: z.string().max(20).optional(),
   role: z.string().refine(val => ['SUPER_ADMIN', 'ADMIN', 'CATALOG_MANAGER', 'SUPPORT_AGENT', 'VIEWER'].includes(val as any), {
     message: 'Invalid role assigned',
   }).default('CATALOG_MANAGER'),
@@ -91,6 +93,8 @@ export const UpdateUserDto = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters').optional(),
+  phone: z.string().max(20).optional(),
+  gender: z.string().max(20).optional(),
   role: z.string().refine(val => ['SUPER_ADMIN', 'ADMIN', 'CATALOG_MANAGER', 'SUPPORT_AGENT', 'VIEWER'].includes(val as any), {
     message: 'Invalid role assigned',
   }),
@@ -101,6 +105,8 @@ export const PartialUpdateUserDto = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters').optional(),
   email: z.string().email('Invalid email address').optional(),
   password: z.string().min(6, 'Password must be at least 6 characters').optional(),
+  phone: z.string().max(20).optional(),
+  gender: z.string().max(20).optional(),
   role: z.string().refine(val => ['SUPER_ADMIN', 'ADMIN', 'CATALOG_MANAGER', 'SUPPORT_AGENT', 'VIEWER'].includes(val as any), {
     message: 'Invalid role assigned',
   }).optional(),
@@ -124,9 +130,15 @@ export type ListUsersInput = z.infer<typeof ListUserDto>;
 export const CreateMediaDto = z.object({
   fileName: z.string().min(1, 'File name is required'),
   filePath: z.string().min(1, 'File path is required'),
-  publicPath: z.string().min(1, 'Public path is required'),
+  publicUrl: z.string().min(1, 'Public url is required'),
   type: MediaTypeSchema,
+  mimeType: z.string().optional(),
   size: z.number().min(0, 'Size must be non-negative'),
+  width: z.number().optional(),
+  height: z.number().optional(),
+  thumbnailPath: z.string().optional(),
+  altText: z.string().optional(),
+  title: z.string().optional(),
   metadata: z.record(z.unknown()).optional(),
   uploadedById: z.string().min(1, 'Uploaded by ID is required'),
   status: MediaStatusSchema.default('PENDING'),
@@ -135,9 +147,15 @@ export const CreateMediaDto = z.object({
 export const UpdateMediaDto = z.object({
   fileName: z.string().min(1, 'File name is required').optional(),
   filePath: z.string().min(1, 'File path is required').optional(),
-  publicPath: z.string().min(1, 'Public path is required').optional(),
+  publicUrl: z.string().min(1, 'Public url is required').optional(),
   type: MediaTypeSchema.optional(),
+  mimeType: z.string().optional(),
   size: z.number().min(0, 'Size must be non-negative').optional(),
+  width: z.number().optional(),
+  height: z.number().optional(),
+  thumbnailPath: z.string().optional(),
+  altText: z.string().optional(),
+  title: z.string().optional(),
   metadata: z.record(z.unknown()).optional(),
   status: MediaStatusSchema.optional(),
 });
@@ -145,9 +163,15 @@ export const UpdateMediaDto = z.object({
 export const PartialUpdateMediaDto = z.object({
   fileName: z.string().min(1, 'File name is required').optional(),
   filePath: z.string().min(1, 'File path is required').optional(),
-  publicPath: z.string().min(1, 'Public path is required').optional(),
+  publicUrl: z.string().min(1, 'Public url is required').optional(),
   type: MediaTypeSchema.optional(),
+  mimeType: z.string().optional(),
   size: z.number().min(0, 'Size must be non-negative').optional(),
+  width: z.number().optional(),
+  height: z.number().optional(),
+  thumbnailPath: z.string().optional(),
+  altText: z.string().optional(),
+  title: z.string().optional(),
   metadata: z.record(z.unknown()).optional(),
   status: MediaStatusSchema.optional(),
 });
@@ -171,7 +195,10 @@ export const CreateCategoryDto = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
   slug: z.string().min(1, 'Slug is required').max(100, 'Slug must be less than 100 characters').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
   description: z.string().max(255).optional(),
-  parentId: z.string().optional(), // Reference to parent category ID
+  parentId: z.string().optional(),
+  mediaId: z.string().optional(),
+  sortOrder: z.number().optional().default(0),
+  isActive: z.boolean().optional().default(true),
 });
 
 export const UpdateCategoryDto = z.object({
@@ -179,6 +206,8 @@ export const UpdateCategoryDto = z.object({
   slug: z.string().min(1, 'Slug is required').max(100, 'Slug must be less than 100 characters').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens').optional(),
   description: z.string().max(255).optional(),
   parentId: z.string().optional(),
+  mediaId: z.string().optional(),
+  sortOrder: z.number().optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -187,6 +216,8 @@ export const PartialUpdateCategoryDto = z.object({
   slug: z.string().min(1, 'Slug is required').max(100, 'Slug must be less than 100 characters').optional(),
   description: z.string().max(255).optional(),
   parentId: z.string().optional(),
+  mediaId: z.string().optional(),
+  sortOrder: z.number().optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -206,13 +237,15 @@ export type ListCategoriesInput = z.infer<typeof ListCategoryDto>;
 // Brand DTOs (Task 10: Brand System)
 export const CreateBrandDto = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  slug: z.string().min(1, 'Slug is required').max(100, 'Slug must be less than 100 characters').regex(/^[a-z0-9-]+$/, 'Slug can only contain lowercase letters, numbers, and hyphens'),
   description: z.string().max(255).optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).default('ACTIVE'),
   mediaId: z.string().optional(), // Optional reference to a Media item for logo
 });
 
 export const UpdateBrandDto = z.object({
-  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
+  name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters').optional(),
+  slug: z.string().min(1, 'Slug is required').max(100).optional(),
   description: z.string().max(255).optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
   mediaId: z.string().optional(),
@@ -220,6 +253,7 @@ export const UpdateBrandDto = z.object({
 
 export const PartialUpdateBrandDto = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters').optional(),
+  slug: z.string().min(1, 'Slug is required').max(100).optional(),
   description: z.string().max(255).optional(),
   status: z.enum(['ACTIVE', 'INACTIVE']).optional(),
   mediaId: z.string().optional(),
@@ -243,33 +277,47 @@ export const TransactionTypeEnum = z.enum(['CREATE', 'UPDATE', 'SELL', 'RESTOCK'
 
 export const CreateProductDto = z.object({
   name: z.string().min(1, 'Name is required').max(255),
-  description: z.string().max(1000).optional(),
-  price: z.number().min(0, 'Price must be non-negative'),
+  slug: z.string().min(1, 'Slug is required').max(255),
   sku: z.string().max(50).optional(),
-  categoryId: z.string().optional(),
+  shortDescription: z.string().max(500).optional(),
+  description: z.string().max(2000).optional(),
+  hasVariants: z.boolean().optional().default(false),
+  price: z.number().min(0, 'Price must be non-negative'),
+  salePrice: z.number().min(0).optional(),
+  stock: z.number().min(0).optional().default(0),
+  stockStatus: z.string().optional(),
+  weight: z.number().min(0).optional(),
+  isActive: z.boolean().optional().default(true),
+  isFeatured: z.boolean().optional().default(false),
+  sortOrder: z.number().optional().default(0),
   brandId: z.string().optional(),
   status: ProductStatusEnum.default('DRAFT'),
+  categories: z.array(z.string()).optional(),
+  mediaIds: z.array(z.string()).optional(),
 });
 
 export const UpdateProductDto = z.object({
-  name: z.string().min(1, 'Name is required').max(255),
-  description: z.string().max(1000).optional(),
-  price: z.number().min(0, 'Price must be non-negative'),
+  name: z.string().min(1, 'Name is required').max(255).optional(),
+  slug: z.string().min(1, 'Slug is required').max(255).optional(),
   sku: z.string().max(50).optional(),
-  categoryId: z.string().optional(),
+  shortDescription: z.string().max(500).optional(),
+  description: z.string().max(2000).optional(),
+  hasVariants: z.boolean().optional(),
+  price: z.number().min(0, 'Price must be non-negative').optional(),
+  salePrice: z.number().min(0).optional(),
+  stock: z.number().min(0).optional(),
+  stockStatus: z.string().optional(),
+  weight: z.number().min(0).optional(),
+  isActive: z.boolean().optional(),
+  isFeatured: z.boolean().optional(),
+  sortOrder: z.number().optional(),
   brandId: z.string().optional(),
   status: ProductStatusEnum.optional(),
+  categories: z.array(z.string()).optional(),
+  mediaIds: z.array(z.string()).optional(),
 });
 
-export const PartialUpdateProductDto = z.object({
-  name: z.string().min(1, 'Name is required').max(255).optional(),
-  description: z.string().max(1000).optional(),
-  price: z.number().min(0, 'Price must be non-negative').optional(),
-  sku: z.string().max(50).optional(),
-  categoryId: z.string().optional(),
-  brandId: z.string().optional(),
-  status: ProductStatusEnum.optional(),
-});
+export const PartialUpdateProductDto = UpdateProductDto;
 
 export const ListProductDto = z.object({
   page: z.number().min(1).default(1).optional(),
@@ -289,19 +337,29 @@ export const CreateProductVariantDto = z.object({
   productId: z.string(),
   sku: z.string().max(50).optional(),
   price: z.number().min(0, 'Price must be non-negative').optional(),
+  salePrice: z.number().min(0).optional(),
   inventory: z.number().min(0, 'Inventory must be non-negative').default(0),
+  stockStatus: z.string().optional(),
+  lowStockThreshold: z.number().optional().default(5),
   weight: z.number().min(0).optional(),
   dimensions: z.record(z.unknown()).optional(),
+  isActive: z.boolean().optional().default(true),
   attributeValueIds: z.array(z.string()).optional(), // Array of attribute value IDs for this variant
+  mediaIds: z.array(z.string()).optional(),
 });
 
 export const UpdateProductVariantDto = z.object({
   sku: z.string().max(50).optional(),
   price: z.number().min(0, 'Price must be non-negative').optional(),
+  salePrice: z.number().min(0).optional(),
   inventory: z.number().min(0, 'Inventory must be non-negative').optional(),
+  stockStatus: z.string().optional(),
+  lowStockThreshold: z.number().optional(),
   weight: z.number().min(0).optional(),
   dimensions: z.record(z.unknown()).optional(),
+  isActive: z.boolean().optional(),
   attributeValueIds: z.array(z.string()).optional(),
+  mediaIds: z.array(z.string()).optional(),
 });
 
 export type CreateProductVariantInput = z.infer<typeof CreateProductVariantDto>;
@@ -322,21 +380,19 @@ export const AttributeTypeSchema = z.nativeEnum(AttributeType);
 // Attribute DTOs (Task 11: Attribute System)
 export const CreateAttributeDto = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters'),
+  slug: z.string().min(1, 'Slug is required').max(50),
   type: AttributeTypeSchema,
   description: z.string().max(255).optional(),
 });
 
 export const UpdateAttributeDto = z.object({
-  name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters'),
-  type: AttributeTypeSchema,
-  description: z.string().max(255).optional(),
-});
-
-export const PartialUpdateAttributeDto = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters').optional(),
+  slug: z.string().min(1, 'Slug is required').max(50).optional(),
   type: AttributeTypeSchema.optional(),
   description: z.string().max(255).optional(),
 });
+
+export const PartialUpdateAttributeDto = UpdateAttributeDto;
 
 export const ListAttributeDto = z.object({
   page: z.number().min(1).default(1).optional(),
@@ -353,22 +409,20 @@ export type ListAttributesInput = z.infer<typeof ListAttributeDto>;
 // Attribute Value DTOs (belong to an Attribute)
 export const CreateAttributeValueDto = z.object({
   attributeId: z.string().min(1, 'Attribute ID is required'),
+  slug: z.string().min(1, 'Slug is required').max(100),
   label: z.string().min(1, 'Label is required').max(100),
-  valueCode: z.string().max(50).optional(), // e.g., "#FF0000" for colors, "L" for sizes
+  referenceValue: z.string().max(50).optional(), // e.g., "#FF0000" for colors, "L" for sizes
   sortOrder: z.number().min(0).default(0),
 });
 
 export const UpdateAttributeValueDto = z.object({
-  label: z.string().min(1, 'Label is required').max(100),
-  valueCode: z.string().max(50).optional(),
-  sortOrder: z.number().min(0).default(0),
+  slug: z.string().min(1, 'Slug is required').max(100).optional(),
+  label: z.string().min(1, 'Label is required').max(100).optional(),
+  referenceValue: z.string().max(50).optional(),
+  sortOrder: z.number().min(0).optional(),
 });
 
-export const PartialUpdateAttributeValueDto = z.object({
-  label: z.string().min(1, 'Label is required').max(100).optional(),
-  valueCode: z.string().max(50).optional(),
-  sortOrder: z.number().min(0).default(0).optional(),
-});
+export const PartialUpdateAttributeValueDto = UpdateAttributeValueDto;
 
 export type CreateAttributeValueInput = z.infer<typeof CreateAttributeValueDto>;
 export type UpdateAttributeValueInput = z.infer<typeof UpdateAttributeValueDto>;

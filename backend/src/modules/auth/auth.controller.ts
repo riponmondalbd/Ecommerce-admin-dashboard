@@ -38,8 +38,8 @@ export const authController = {
       if (!refreshToken) {
         return errorResponse(res, 'Missing refresh token', 400);
       }
-      const { accessToken } = await authService.refreshToken(refreshToken);
-      return successResponse(res, { accessToken }, 'Token refreshed');
+      const { accessToken, refreshToken: newRefreshToken } = await authService.refreshToken(refreshToken);
+      return successResponse(res, { accessToken, refreshToken: newRefreshToken }, 'Token refreshed');
     } catch (error) {
       if (error instanceof AppError) {
         return errorResponse(res, error.message, error.statusCode);

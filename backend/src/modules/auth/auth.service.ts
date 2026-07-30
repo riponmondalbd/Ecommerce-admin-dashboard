@@ -80,6 +80,7 @@ export class AuthService {
       include: { user: { include: { role: true } } },
     });
     if (!db || db.revoked || db.expiresAt < new Date()) throw new AppError('Invalid or expired refresh token', 401);
+    if (db.user.status !== 'ACTIVE') throw new AppError('Account is not active', 403);
 
     const accessToken = jwt.sign(
       { userId: db.user.id, email: db.user.email, role: db.user.role.name },
@@ -87,8 +88,8 @@ export class AuthService {
       { expiresIn: env.jwtAccessExpiresIn } as SignOptions
     );
 
-    await this.rotateRefreshToken(db.userId, db.id);
-    return { accessToken };
+    const rotated = await this.rotateRefreshToken(db.userId, db.id);
+    return { accessToken, refreshToken: rotated.token };
   }
 
   async logout(refreshToken: string) {
@@ -100,7 +101,20 @@ export class AuthService {
   }
 
   getUserById(userId: string) {
-    return prisma.user.findUnique({ where: { id: userId }, include: { role: true } });
+    return prisma.user.findUnique({ 
+      where: { id: userId }, 
+      include: { 
+        role: {
+          include: {
+            permissions: {
+              include: {
+                permission: true
+              }
+            }
+          }
+        } 
+      } 
+    });
   }
 }
 
