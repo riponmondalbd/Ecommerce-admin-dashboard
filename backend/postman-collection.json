@@ -5,31 +5,18 @@
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
-    {
-      "key": "base_url",
-      "value": "http://localhost:5000/api",
-      "type": "string"
-    },
-    {
-      "key": "access_token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "refresh_token",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "product_id",
-      "value": "",
-      "type": "string"
-    },
-    {
-      "key": "variant_id",
-      "value": "",
-      "type": "string"
-    }
+    { "key": "base_url", "value": "http://localhost:5000/api", "type": "string" },
+    { "key": "access_token", "value": "", "type": "string" },
+    { "key": "refresh_token", "value": "", "type": "string" },
+    { "key": "product_id", "value": "", "type": "string" },
+    { "key": "variant_id", "value": "", "type": "string" },
+    { "key": "category_id", "value": "", "type": "string" },
+    { "key": "brand_id", "value": "", "type": "string" },
+    { "key": "attribute_id", "value": "", "type": "string" },
+    { "key": "attribute_value_id", "value": "", "type": "string" },
+    { "key": "user_id", "value": "", "type": "string" },
+    { "key": "role_id", "value": "", "type": "string" },
+    { "key": "permission_id", "value": "", "type": "string" }
   ],
   "item": [
     {
@@ -58,86 +45,36 @@
           ],
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"admin@trends-bird.com\",\n  \"password\": \"admin123\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/login",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "login"]
-            }
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"email\": \"admin@trends-bird.com\", \"password\": \"admin123\" }" },
+            "url": { "raw": "{{base_url}}/auth/login", "host": ["{{base_url}"], "path": ["auth", "login"] }
           }
         },
         {
           "name": "Refresh Token",
           "request": {
             "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"refreshToken\": \"{{refresh_token}}\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/auth/refresh",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "refresh"]
-            }
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": { "mode": "raw", "raw": "{ \"refreshToken\": \"{{refresh_token}}\" }" },
+            "url": { "raw": "{{base_url}}/auth/refresh", "host": ["{{base_url}"], "path": ["auth", "refresh"] }
           }
         },
         {
           "name": "Get Current User (Me)",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
             "method": "GET",
             "header": [],
-            "url": {
-              "raw": "{{base_url}}/auth/me",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "me"]
-            }
+            "url": { "raw": "{{base_url}}/auth/me", "host": ["{{base_url}"], "path": ["auth", "me"] }
           }
         },
         {
           "name": "Logout (Revoke Token)",
           "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
+            "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] },
             "method": "POST",
             "header": [],
-            "url": {
-              "raw": "{{base_url}}/auth/logout",
-              "host": ["{{base_url}}"],
-              "path": ["auth", "logout"]
-            }
+            "url": { "raw": "{{base_url}}/auth/logout", "host": ["{{base_url}"], "path": ["auth", "logout"] }
           }
         }
       ]
@@ -145,440 +82,121 @@
     {
       "name": "2. Categories",
       "item": [
+        { "name": "List Categories", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/categories", "host": ["{{base_url}"], "path": ["categories"] } } },
+        { "name": "Get Category by ID", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/categories/{{category_id}}", "host": ["{{base_url}"], "path": ["categories", "{{category_id}}"] } } },
+        { "name": "Get Category Tree", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/categories/tree", "host": ["{{base_url}"], "path": ["categories", "tree"] } } },
+        { "name": "Get Category Ancestors", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/categories/{{category_id}}/ancestors", "host": ["{{base_url}"], "path": ["categories", "{{category_id}}", "ancestors"] } } },
         {
-          "name": "List Categories",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/categories",
-              "host": ["{{base_url}}"],
-              "path": ["categories"]
-            }
-          }
+          "name": "Create Category",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"Electronics\", \"slug\": \"electronics\", \"parentId\": null }" }, "url": { "raw": "{{base_url}}/categories", "host": ["{{base_url}"], "path": ["categories"] } }
         },
         {
-          "name": "Get Category Tree (Nested)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/categories/tree",
-              "host": ["{{base_url}}"],
-              "path": ["categories", "tree"]
-            }
-          }
-        }
+          "name": "Update Category (Full PUT)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"Consumer Electronics\", \"slug\": \"consumer-electronics\", \"parentId\": null }" }, "url": { "raw": "{{base_url}}/categories/{{category_id}}", "host": ["{{base_url}"], "path": ["categories", "{{category_id}}"] } }
+        },
+        {
+          "name": "Partial Update Category (PATCH)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"Updated Electronics\" }" }, "url": { "raw": "{{base_url}}/categories/{{category_id}}", "host": ["{{base_url}"], "path": ["categories", "{{category_id}}"] } }
+        },
+        { "name": "Delete Category", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/categories/{{category_id}}", "host": ["{{base_url}"], "path": ["categories", "{{category_id}}"] } } }
       ]
     },
     {
       "name": "3. Brands",
       "item": [
+        { "name": "List Brands", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/brands", "host": ["{{base_url}"], "path": ["brands"] } } },
+        { "name": "Get Brand by ID", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/brands/{{brand_id}}", "host": ["{{base_url}"], "path": ["brands", "{{brand_id}}"] } } },
         {
-          "name": "List Brands",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/brands",
-              "host": ["{{base_url}}"],
-              "path": ["brands"]
-            }
-          }
-        }
+          "name": "Create Brand",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"TechWave\", \"slug\": \"techwave\", \"status\": \"ACTIVE\" }" }, "url": { "raw": "{{base_url}}/brands", "host": ["{{base_url}"], "path": ["brands"] } }
+        },
+        {
+          "name": "Update Brand (Full PUT)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"TechWave Pro\", \"slug\": \"techwave-pro\", \"status\": \"ACTIVE\" }" }, "url": { "raw": "{{base_url}}/brands/{{brand_id}}", "host": ["{{base_url}"], "path": ["brands", "{{brand_id}}"] } }
+        },
+        {
+          "name": "Partial Update Brand (PATCH)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"Updated Brand\" }" }, "url": { "raw": "{{base_url}}/brands/{{brand_id}}", "host": ["{{base_url}"], "path": ["brands", "{{brand_id}}"] } }
+        },
+        { "name": "Delete Brand", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/brands/{{brand_id}}", "host": ["{{base_url}"], "path": ["brands", "{{brand_id}}"] } } },
+        { "name": "Assign Brand Media (Logo)", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [], "url": { "raw": "{{base_url}}/brands/{{brand_id}}/media", "host": ["{{base_url}"], "path": ["brands", "{{brand_id}}", "media"] } } },
+        { "name": "Remove Brand Media", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/brands/{{brand_id}}/media", "host": ["{{base_url}"], "path": ["brands", "{{brand_id}}", "media"] } } }
       ]
     },
     {
       "name": "4. Attributes",
       "item": [
+        { "name": "List Attributes", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/attributes", "host": ["{{base_url}"], "path": ["attributes"] } } },
+        { "name": "Get Attribute by ID", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/attributes/{{attribute_id}}", "host": ["{{base_url}"], "path": ["attributes", "{{attribute_id}}"] } } },
         {
-          "name": "List Attributes",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/attributes",
-              "host": ["{{base_url}}"],
-              "path": ["attributes"]
-            }
-          }
-        }
+          "name": "Create Attribute",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"Color\", \"type\": \"TEXT\" }" }, "url": { "raw": "{{base_url}}/attributes", "host": ["{{base_url}"], "path": ["attributes"] } }
+        },
+        {
+          "name": "Update Attribute (Full PUT)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"Color Scheme\", \"type\": \"TEXT\" }" }, "url": { "raw": "{{base_url}}/attributes/{{attribute_id}}", "host": ["{{base_url}"], "path": ["attributes", "{{attribute_id}}"] } }
+        },
+        {
+          "name": "Partial Update Attribute (PATCH)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"Updated Attribute\" }" }, "url": { "raw": "{{base_url}}/attributes/{{attribute_id}}", "host": ["{{base_url}"], "path": ["attributes", "{{attribute_id}}"] } }
+        },
+        { "name": "Delete Attribute", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/attributes/{{attribute_id}}", "host": ["{{base_url}"], "path": ["attributes", "{{attribute_id}}"] } } },
+        { "name": "Get Attribute Values", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/attributes/{{attribute_id}}/values", "host": ["{{base_url}"], "path": ["attributes", "{{attribute_id}}", "values"] } } },
+        {
+          "name": "Create Attribute Value",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"label\": \"Red\", \"referenceValue\": \"#FF0000\", \"type\": \"COLOR\" }" }, "url": { "raw": "{{base_url}}/attributes/{{attribute_id}}/values", "host": ["{{base_url}"], "path": ["attributes", "{{attribute_id}}", "values"] } }
+        },
+        {
+          "name": "Update Attribute Value (Full PUT)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"label\": \"Dark Red\", \"referenceValue\": \"#8B0000\", \"type\": \"COLOR\" }" }, "url": { "raw": "{{base_url}}/attribute-values/{{attribute_value_id}}", "host": ["{{base_url}"], "path": ["attribute-values", "{{attribute_value_id}}"] } }
+        },
+        {
+          "name": "Partial Update Attribute Value (PATCH)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"label\": \"Updated Value\" }" }, "url": { "raw": "{{base_url}}/attribute-values/{{attribute_value_id}}", "host": ["{{base_url}"], "path": ["attribute-values", "{{attribute_value_id}}"] } }
+        },
+        { "name": "Delete Attribute Value", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/attribute-values/{{attribute_value_id}}", "host": ["{{base_url}"], "path": ["attribute-values", "{{attribute_value_id}}"] } } }
       ]
     },
     {
       "name": "5. Products",
       "item": [
-        {
-          "name": "List Products",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/products",
-              "host": ["{{base_url}}"],
-              "path": ["products"]
-            }
-          }
-        },
-        {
-          "name": "Get Product by ID",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/products/{{product_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["products", "{{product_id}}"]
-            }
-          }
-        },
+        { "name": "List Products", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}"], "path": ["products"] } } },
+        { "name": "Get Product by ID", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}"], "path": ["products", "{{product_id}}"] } } },
         {
           "name": "Create Product",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Premium Headphones\",\n  \"slug\": \"premium-headphones\",\n  \"shortDescription\": \"High-fidelity audio experience\",\n  \"description\": \"Professional-grade headphones with noise cancellation\",\n  \"price\": 299.99,\n  \"salePrice\": 249.99,\n  \"stock\": 50,\n  \"stockStatus\": \"IN_STOCK\",\n  \"isActive\": true,\n  \"isFeatured\": true,\n  \"sku\": \"PHD2024\",\n  \"status\": \"PUBLISHED\",\n  \"brandId\": \"\",\n  \"categories\": [\"\"]\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/products",
-              "host": ["{{base_url}}"],
-              "path": ["products"]
-            }
-          }
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"Premium Headphones\", \"slug\": \"premium-headphones\", \"shortDescription\": \"High-fidelity audio\", \"description\": \"Professional headphones with noise cancellation\", \"price\": 299.99, \"salePrice\": 249.99, \"stock\": 50, \"stockStatus\": \"IN_STOCK\", \"isActive\": true, \"isFeatured\": true, \"sku\": \"PHD2024\", \"status\": \"PUBLISHED\", \"brandId\": \"{{brand_id}}\", \"categories\": [\"{{category_id}}\"] }" }, "url": { "raw": "{{base_url}}/products", "host": ["{{base_url}"], "path": ["products"] } }
         },
         {
           "name": "Update Product (Full PUT)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Premium Headphones Pro\",\n  \"slug\": \"premium-headphones-pro\",\n  \"shortDescription\": \"Enhanced audio experience\",\n  \"description\": \"Advanced noise cancellation with premium sound\",\n  \"price\": 349.99,\n  \"salePrice\": 299.99,\n  \"stock\": 45,\n  \"stockStatus\": \"LOW_STOCK\",\n  \"isActive\": true,\n  \"isFeatured\": false,\n  \"sku\": \"PHD2024\",\n  \"status\": \"PUBLISHED\"\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/products/{{product_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["products", "{{product_id}}"]
-            }
-          }
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"Premium Headphones Pro\", \"slug\": \"premium-headphones-pro\", \"shortDescription\": \"Enhanced audio\", \"description\": \"Advanced noise cancellation\", \"price\": 349.99, \"salePrice\": 299.99, \"stock\": 45, \"stockStatus\": \"LOW_STOCK\", \"isActive\": true, \"isFeatured\": false, \"sku\": \"PHD2024\", \"status\": \"PUBLISHED\" }" }, "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}"], "path": ["products", "{{product_id}}"] } }
         },
         {
           "name": "Partial Update Product (PATCH)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"salePrice\": 279.99,\n  \"stock\": 60\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/products/{{product_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["products", "{{product_id}}"]
-            }
-          }
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"salePrice\": 279.99, \"stock\": 60 }" }, "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}"], "path": ["products", "{{product_id}}"] } }
         },
-        {
-          "name": "Delete Product",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/products/{{product_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["products", "{{product_id}}"]
-            }
-          }
-        }
+        { "name": "Delete Product", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/products/{{product_id}}", "host": ["{{base_url}"], "path": ["products", "{{product_id}}"] } } }
       ]
     },
     {
       "name": "6. Product Variants",
       "item": [
-        {
-          "name": "Get Product Variants",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/products/{{product_id}}/variants",
-              "host": ["{{base_url}}"],
-              "path": ["products", "{{product_id}}", "variants"]
-            }
-          }
-        },
+        { "name": "Get Product Variants", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/products/{{product_id}}/variants", "host": ["{{base_url}"], "path": ["products", "{{product_id}}", "variants"] } } },
         {
           "name": "Create Product Variant",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"productId\": \"{{product_id}}\",\n  \"sku\": \"PHD2024-BLUE\",\n  \"price\": 329.99,\n  \"inventory\": 20,\n  \"stockStatus\": \"IN_STOCK\",\n  \"lowStockThreshold\": 5,\n  \"weight\": 0.3,\n  \"dimensions\": {\n    \"width\": 15,\n    \"depth\": 12,\n    \"height\": 5\n  },\n  \"attributeValueIds\": [\"\"],\n  \"mediaIds\": [\"\"]\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/products/{{product_id}}/variants",
-              "host": ["{{base_url}}"],
-              "path": ["products", "{{product_id}}", "variants"]
-            }
-          }
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"productId\": \"{{product_id}}\", \"sku\": \"PHD2024-BLUE\", \"price\": 329.99, \"inventory\": 20, \"stockStatus\": \"IN_STOCK\", \"lowStockThreshold\": 5, \"weight\": 0.3, \"dimensions\": { \"width\": 15, \"depth\": 12, \"height\": 5 }, \"attributeValueIds\": [\"{{attribute_value_id}}\"], \"mediaIds\": [\"\"] }" }, "url": { "raw": "{{base_url}}/products/{{product_id}}/variants", "host": ["{{base_url}"], "path": ["products", "{{product_id}}", "variants"] } }
         },
         {
           "name": "Update Product Variant (Full PUT)",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "PUT",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"sku\": \"PHD2024-RED\",\n  \"price\": 329.99,\n  \"inventory\": 15,\n  \"stockStatus\": \"LOW_STOCK\",\n  \"lowStockThreshold\": 5,\n  \"weight\": 0.3,\n  \"dimensions\": {\n    \"width\": 15,\n    \"depth\": 12,\n    \"height\": 5\n  },\n  \"isActive\": true,\n  \"attributeValueIds\": [\"\"],\n  \"mediaIds\": [\"\"]\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/variants/{{variant_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["variants", "{{variant_id}}"]
-            }
-          }
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"sku\": \"PHD2024-RED\", \"price\": 329.99, \"inventory\": 15, \"stockStatus\": \"LOW_STOCK\", \"lowStockThreshold\": 5, \"weight\": 0.3, \"dimensions\": { \"width\": 15, \"depth\": 12, \"height\": 5 }, \"isActive\": true, \"attributeValueIds\": [\"{{attribute_value_id}}\"], \"mediaIds\": [\"\"] }" }, "url": { "raw": "{{base_url}}/variants/{{variant_id}}", "host": ["{{base_url}"], "path": ["variants", "{{variant_id}}"] } }
         },
-        {
-          "name": "Delete Product Variant",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "DELETE",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/variants/{{variant_id}}",
-              "host": ["{{base_url}}"],
-              "path": ["variants", "{{variant_id}}"]
-            }
-          }
-        },
+        { "name": "Delete Product Variant", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/variants/{{variant_id}}", "host": ["{{base_url}"], "path": ["variants", "{{variant_id}}"] } } },
         {
           "name": "Restock Product Variant",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"quantity\": 10\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/variants/{{variant_id}}/restock",
-              "host": ["{{base_url}}"],
-              "path": ["variants", "{{variant_id}}", "restock"]
-            }
-          }
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"quantity\": 10 }" }, "url": { "raw": "{{base_url}}/variants/{{variant_id}}/restock", "host": ["{{base_url}"], "path": ["variants", "{{variant_id}}", "restock"] } }
         },
         {
           "name": "Sell Product Variant",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"quantity\": 5\n}"
-            },
-            "url": {
-              "raw": "{{base_url}}/variants/{{variant_id}}/sell",
-              "host": ["{{base_url}}"],
-              "path": ["variants", "{{variant_id}}", "sell"]
-            }
-          }
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"quantity\": 5 }" }, "url": { "raw": "{{base_url}}/variants/{{variant_id}}/sell", "host": ["{{base_url}"], "path": ["variants", "{{variant_id}}", "sell"] } }
         }
       ]
     },
@@ -587,180 +205,110 @@
       "item": [
         {
           "name": "Get Product Transaction History",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/products/{{product_id}}/transactions",
-              "host": ["{{base_url}}"],
-              "path": ["products", "{{product_id}}", "transactions"],
-              "query": [
-                {
-                  "key": "limit",
-                  "value": "10"
-                },
-                {
-                  "key": "page",
-                  "value": "1"
-                }
-              ]
-            }
-          }
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/products/{{product_id}}/transactions", "host": ["{{base_url}"], "path": ["products", "{{product_id}}", "transactions"], "query": [{ "key": "limit", "value": "10" }, { "key": "page", "value": "1" }] } }
         }
       ]
     },
     {
       "name": "8. Media Library",
       "item": [
-        {
-          "name": "List Media",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/media",
-              "host": ["{{base_url}}"],
-              "path": ["media"]
-            }
-          }
-        },
+        { "name": "List Media", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/media", "host": ["{{base_url}"], "path": ["media"] } } },
+        { "name": "Get Media by ID", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/media/{{media_id}}", "host": ["{{base_url}"], "path": ["media", "{{media_id}}"] } } },
         {
           "name": "Upload Media",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "multipart/form-data"
-              }
-            ],
-            "body": {
-              "mode": "formdata",
-              "formdata": [
-                {
-                  "key": "file",
-                  "type": "file",
-                  "src": "/path/to/image.jpg"
-                },
-                {
-                  "key": "altText",
-                  "type": "text",
-                  "value": "Product image"
-                }
-              ]
-            },
-            "url": {
-              "raw": "{{base_url}}/media",
-              "host": ["{{base_url}}"],
-              "path": ["media"]
-            }
-          }
-        }
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "multipart/form-data" }], "body": { "mode": "formdata", "formdata": [{ "key": "file", "type": "file", "src": "/path/to/image.jpg" }, { "key": "altText", "type": "text", "value": "Product image" }] }, "url": { "raw": "{{base_url}}/media", "host": ["{{base_url}"], "path": ["media"] } }
+        },
+        {
+          "name": "Update Media (Full PUT)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"altText\": \"Updated description\" }" }, "url": { "raw": "{{base_url}}/media/{{media_id}}", "host": ["{{base_url}"], "path": ["media", "{{media_id}}"] } }
+        },
+        {
+          "name": "Partial Update Media (PATCH)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"altText\": \"Partial update\" }" }, "url": { "raw": "{{base_url}}/media/{{media_id}}", "host": ["{{base_url}"], "path": ["media", "{{media_id}}"] } }
+        },
+        { "name": "Delete Media", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/media/{{media_id}}", "host": ["{{base_url}"], "path": ["media", "{{media_id}}"] } } },
+        { "name": "Get User Media", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/media/assigned-to/{{user_id}}", "host": ["{{base_url}"], "path": ["media", "assigned-to", "{{user_id}}"] } } }
       ]
     },
     {
       "name": "9. Users",
       "item": [
+        { "name": "List Users", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/users", "host": ["{{base_url}"], "path": ["users"] } } },
+        { "name": "Get User by ID", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/users/{{user_id}}", "host": ["{{base_url}"], "path": ["users", "{{user_id}}"] } } },
         {
-          "name": "List Users",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/users",
-              "host": ["{{base_url}}"],
-              "path": ["users"]
-            }
-          }
-        }
+          "name": "Create User",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"John Doe\", \"email\": \"john@example.com\", \"phone\": \"+1234567890\", \"password\": \"securePassword123\", \"roleId\": \"{{role_id}}\", \"status\": \"ACTIVE\" }" }, "url": { "raw": "{{base_url}}/users", "host": ["{{base_url}"], "path": ["users"] } }
+        },
+        {
+          "name": "Update User (Full PUT)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"John Updated\", \"email\": \"john.updated@example.com\", \"phone\": \"+1234567890\", \"roleId\": \"{{role_id}}\", \"status\": \"ACTIVE\" }" }, "url": { "raw": "{{base_url}}/users/{{user_id}}", "host": ["{{base_url}"], "path": ["users", "{{user_id}}"] } }
+        },
+        {
+          "name": "Partial Update User (PATCH)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"phone\": \"+0987654321\" }" }, "url": { "raw": "{{base_url}}/users/{{user_id}}", "host": ["{{base_url}"], "path": ["users", "{{user_id}}"] } }
+        },
+        { "name": "Delete User", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/users/{{user_id}}", "host": ["{{base_url}"], "path": ["users", "{{user_id}}"] } } },
+        { "name": "Activate User", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [], "url": { "raw": "{{base_url}}/users/{{user_id}}/activate", "host": ["{{base_url}"], "path": ["users", "{{user_id}}", "activate"] } } },
+        { "name": "Deactivate User", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [], "url": { "raw": "{{base_url}}/users/{{user_id}}/deactivate", "host": ["{{base_url}"], "path": ["users", "{{user_id}}", "deactivate"] } } },
+        { "name": "Lock User", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [], "url": { "raw": "{{base_url}}/users/{{user_id}}/lock", "host": ["{{base_url}"], "path": ["users", "{{user_id}}", "lock"] } } },
+        { "name": "Unlock User", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [], "url": { "raw": "{{base_url}}/users/{{user_id}}/unlock", "host": ["{{base_url}"], "path": ["users", "{{user_id}}", "unlock"] } } },
+        { "name": "Get Users by Role", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/users/{{role_id}}", "host": ["{{base_url}"], "path": ["users", "{{role_id}}"] } } }
       ]
     },
     {
-      "name": "10. Roles & Permissions",
+      "name": "10. Roles",
       "item": [
+        { "name": "List Roles", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/roles", "host": ["{{base_url}"], "path": ["roles"] } } },
+        { "name": "Get Role by ID", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/roles/{{role_id}}", "host": ["{{base_url}"], "path": ["roles", "{{role_id}}"] } } },
         {
-          "name": "List Roles",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/roles",
-              "host": ["{{base_url}}"],
-              "path": ["roles"]
-            }
-          }
+          "name": "Create Role",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"ADMIN\", \"permissions\": [] }" }, "url": { "raw": "{{base_url}}/roles", "host": ["{{base_url}"], "path": ["roles"] } }
         },
         {
-          "name": "List Permissions",
-          "request": {
-            "auth": {
-              "type": "bearer",
-              "bearer": [
-                {
-                  "key": "token",
-                  "value": "{{access_token}}",
-                  "type": "string"
-                }
-              ]
-            },
-            "method": "GET",
-            "header": [],
-            "url": {
-              "raw": "{{base_url}}/permissions",
-              "host": ["{{base_url}}"],
-              "path": ["permissions"]
-            }
-          }
+          "name": "Update Role (Full PUT)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"Admin Manager\", \"permissions\": [] }" }, "url": { "raw": "{{base_url}}/roles/{{role_id}}", "host": ["{{base_url}"], "path": ["roles", "{{role_id}}"] } }
+        },
+        {
+          "name": "Partial Update Role (PATCH)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"Updated Role\" }" }, "url": { "raw": "{{base_url}}/roles/{{role_id}}", "host": ["{{base_url}"], "path": ["roles", "{{role_id}}"] } }
+        },
+        { "name": "Delete Role", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/roles/{{role_id}}", "host": ["{{base_url}"], "path": ["roles", "{{role_id}}"] } } },
+        {
+          "name": "Assign Permission to Role",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [], "url": { "raw": "{{base_url}}/roles/{{role_id}}/permissions/{{permission_id}}", "host": ["{{base_url}"], "path": ["roles", "{{role_id}}", "permissions", "{{permission_id}}"] } }
+        },
+        {
+          "name": "Remove Permission from Role",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/roles/{{role_id}}/permissions/{{permission_id}}", "host": ["{{base_url}"], "path": ["roles", "{{role_id}}", "permissions", "{{permission_id}}"] } }
+        },
+        { "name": "Get Role Permissions", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/roles/{{role_id}}/permissions", "host": ["{{base_url}"], "path": ["roles", "{{role_id}}", "permissions"] } } }
+      ]
+    },
+    {
+      "name": "11. Permissions",
+      "item": [
+        { "name": "List Permissions", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/permissions", "host": ["{{base_url}"], "path": ["permissions"] } } },
+        { "name": "Get Permission by ID", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "GET", "header": [], "url": { "raw": "{{base_url}}/permissions/{{permission_id}}", "host": ["{{base_url}"], "path": ["permissions", "{{permission_id}}"] } } },
+        {
+          "name": "Create Permission",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"product:create\", \"description\": \"Can create products\" }" }, "url": { "raw": "{{base_url}}/permissions", "host": ["{{base_url}"], "path": ["permissions"] } }
+        },
+        {
+          "name": "Update Permission (Full PUT)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PUT", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"name\": \"product:update\", \"description\": \"Can update products\" }" }, "url": { "raw": "{{base_url}}/permissions/{{permission_id}}", "host": ["{{base_url}"], "path": ["permissions", "{{permission_id}}"] } }
+        },
+        {
+          "name": "Partial Update Permission (PATCH)",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "PATCH", "header": [{ "key": "Content-Type", "value": "application/json" }], "body": { "mode": "raw", "raw": "{ \"description\": \"Updated permission description\" }" }, "url": { "raw": "{{base_url}}/permissions/{{permission_id}}", "host": ["{{base_url}"], "path": ["permissions", "{{permission_id}}"] } }
+        },
+        { "name": "Delete Permission", "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/permissions/{{permission_id}}", "host": ["{{base_url}"], "path": ["permissions", "{{permission_id}}"] } } },
+        {
+          "name": "Assign Permission to Role",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "POST", "header": [], "url": { "raw": "{{base_url}}/permissions/{{permission_id}}/roles/{{role_id}}", "host": ["{{base_url}"], "path": ["permissions", "{{permission_id}}", "roles", "{{role_id}}"] } }
+        },
+        {
+          "name": "Remove Permission from Role",
+          "request": { "auth": { "type": "bearer", "bearer": [{ "key": "token", "value": "{{access_token}}" }] }, "method": "DELETE", "header": [], "url": { "raw": "{{base_url}}/permissions/{{permission_id}}/roles/{{role_id}}", "host": ["{{base_url}"], "path": ["permissions", "{{permission_id}}", "roles", "{{role_id}}"] } }
         }
       ]
     }
