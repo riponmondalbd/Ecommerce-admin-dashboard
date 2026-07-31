@@ -74,7 +74,7 @@ export default function CategoriesPage() {
 
   const { data: treeData, isLoading, refetch } = useQuery({
     queryKey: ['categories-tree'],
-    queryFn: () => api.get('/categories/tree').then(res => res.data.data),
+    queryFn: () => api.get('/categories/tree').then(res => res.data),
   });
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -162,8 +162,8 @@ export default function CategoriesPage() {
             <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
             <p className="text-gray-500">Loading categories...</p>
           </div>
-        ) : treeData && treeData.length > 0 ? (
-          treeData.map((category: any) => (
+        ) : treeData?.data && treeData.data.length > 0 ? (
+          treeData.data.map((category: any) => (
             <CategoryTreeItem
               key={category.id}
               category={category}
