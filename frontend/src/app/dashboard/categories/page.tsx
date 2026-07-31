@@ -74,7 +74,7 @@ export default function CategoriesPage() {
 
   const { data: treeData, isLoading, refetch } = useQuery({
     queryKey: ['categories-tree'],
-    queryFn: () => api.get('/categories/tree').then(res => res.data),
+    queryFn: () => api.get('/categories/tree').then(res => res.data.data),
   });
 
   const handleCreate = async (e: React.FormEvent) => {
