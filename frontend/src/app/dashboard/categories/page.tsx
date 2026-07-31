@@ -162,8 +162,8 @@ export default function CategoriesPage() {
             <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
             <p className="text-gray-500">Loading categories...</p>
           </div>
-        ) : treeData?.data && treeData.data.length > 0 ? (
-          treeData.data.map((category: any) => (
+        ) : treeData && treeData.length > 0 ? (
+          treeData.map((category: any) => (
             <CategoryTreeItem
               key={category.id}
               category={category}
