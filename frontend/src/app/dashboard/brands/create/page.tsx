@@ -65,17 +65,23 @@ export default function CreateBrandPage() {
     try {
       // Create brand first without media
       const brandRes = await api.post('/brands', data);
-      const brandId = brandRes.data.id;
+      const brandId = brandRes.data?.data?.id || brandRes.data?.id;
 
       // Upload logo if file was provided
-      if (file) {
+      if (file && brandId) {
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('brandId', brandId);
+        formData.append('altText', `${data.name} logo`);
 
-        await api.post(`/api/brands/${brandId}/media`, formData, {
+        const mediaRes = await api.post(`/media`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
+        
+        const mediaId = mediaRes.data?.data?.id || mediaRes.data?.id;
+
+        if (mediaId) {
+          await api.post(`/brands/${brandId}/media`, { mediaId });
+        }
         toast.success('Brand created with logo!');
       } else {
         toast.success('Brand created successfully!');

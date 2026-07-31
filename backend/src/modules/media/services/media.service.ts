@@ -24,7 +24,9 @@ const storage = multer.diskStorage({
       });
   },
   filename: (_req, file, cb) => {
-    const uniqueName = `${file.originalname}-${Date.now()}-${Math.round(Math.random() * 1e9)}`;
+    const ext = path.extname(file.originalname);
+    const basename = path.basename(file.originalname, ext);
+    const uniqueName = `${basename}-${Date.now()}-${Math.round(Math.random() * 1e9)}${ext}`;
     cb(null, uniqueName);
   },
 });
@@ -158,8 +160,6 @@ export const getMediaById = async (id: string) => {
  * Create a new media item (after file is uploaded)
  */
 export const createMedia = async (uploadedFile: any, requestBody: unknown) => {
-  const validated = validateInput(requestBody, CreateMediaDto);
-
   // Extract file details from uploaded multer file
   const fileName = uploadedFile.filename;
   const filePath = uploadedFile.path;
@@ -188,17 +188,31 @@ export const createMedia = async (uploadedFile: any, requestBody: unknown) => {
   } else {
     type = MediaType.OTHER;
   }
+  
+  const publicUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/uploads/${fileName}`;
+
+  const fullData = {
+    ...(typeof requestBody === 'object' && requestBody !== null ? requestBody : {}),
+    fileName,
+    filePath,
+    publicUrl,
+    type,
+    size,
+    status: 'PROCESSING',
+  };
+
+  const validated = validateInput(fullData, CreateMediaDto);
 
   const media = await prisma.media.create({
     data: {
-      fileName,
-      filePath,
-      publicUrl: `${process.env.BASE_URL || 'http://localhost:3001'}/uploads/${fileName}`,
-      type,
-      size,
+      fileName: validated.fileName,
+      filePath: validated.filePath,
+      publicUrl: validated.publicUrl,
+      type: validated.type,
+      size: validated.size,
       metadata: { originalName: uploadedFile.originalname, size } as any,
       uploadedById: validated.uploadedById,
-      status: 'PROCESSING',
+      status: validated.status,
     },
     include: { uploadedBy: { select: { name: true, email: true } } },
   });

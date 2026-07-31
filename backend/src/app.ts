@@ -3,6 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
+import path from 'path';
 import { env } from './config/env';
 import { requestLogger } from './middleware/requestLogger';
 import { errorHandler } from './middleware/errorHandler';
@@ -23,7 +24,18 @@ import { productRoutes } from './modules/product/product.routes';
 const app = express();
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: { policy: 'cross-origin' },
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      imgSrc: ["'self'", 'data:', 'http://localhost:5000', 'blob:'],
+      fontSrc: ["'self'", 'https:', 'data:'],
+      styleSrc: ["'self'", 'https:', "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+    },
+  },
+}));
 app.use(cors({ origin: true, credentials: true }));
 
 // Request parsing
@@ -32,6 +44,12 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Compression for response size reduction
 app.use(compression());
+
+// Serve static uploaded files — with cross-origin headers so browsers on other ports can load images
+app.use('/uploads', (_req, res, next) => {
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+  next();
+}, express.static(path.join(process.cwd(), 'uploads')));
 
 // Request logging (development only)
 if (env.nodeEnv === 'development') {

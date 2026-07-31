@@ -90,13 +90,22 @@ export default function EditBrandPage() {
       await api.put(`/brands/${brand.id}`, data);
       
       if (file) {
+        // Upload to media endpoint first
         const formData = new FormData();
         formData.append('file', file);
-        formData.append('brandId', brand.id);
+        formData.append('altText', `${data.name} logo`);
 
-        await api.post(`/brands/${brand.id}/media`, formData, {
+        const mediaRes = await api.post(`/media`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
+        
+        // Extract mediaId from standard API response structure
+        const mediaId = mediaRes.data?.data?.id || mediaRes.data?.id;
+
+        if (mediaId) {
+          // Link media to brand
+          await api.post(`/brands/${brand.id}/media`, { mediaId });
+        }
       }
 
       toast.success('Brand updated successfully!');
@@ -177,8 +186,6 @@ export default function EditBrandPage() {
                 <Input
                   id="name"
                   {...register('name')}
-                  value={brand.name}
-                  onChange={(e) => setValue('name', e.target.value)}
                   className={`w-full ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
                 />
                 {errors.name && (
@@ -193,8 +200,6 @@ export default function EditBrandPage() {
                 <Input
                   id="slug"
                   {...register('slug')}
-                  value={brand.slug || ''}
-                  onChange={(e) => setValue('slug', e.target.value)}
                   className="w-full border-gray-300"
                 />
               </div>
@@ -203,7 +208,7 @@ export default function EditBrandPage() {
                 <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
                   Status *
                 </label>
-                <Select value={brand.status} onValueChange={(v: 'ACTIVE' | 'INACTIVE') => setValue('status', v)}>
+                <Select value={watch('status')} onValueChange={(v: 'ACTIVE' | 'INACTIVE') => setValue('status', v)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
