@@ -7,7 +7,7 @@ import { useRouter, useParams } from 'next/navigation';
 import toast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
-import Select from '@/components/ui/select';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import api from '@/lib/axios-client';
 
 // Validation schema for brand update (matches backend UpdateBrandDto)
@@ -31,8 +31,11 @@ export default function EditBrandPage() {
       api.get(`/api/brands/${id}`)
         .then(res => {
           setBrand(res.data);
-          formMethods.reset(res.data);
-        })
+        // Reset form with fetched data - use setValue for individual fields instead of reset()
+        setValue('name', res.data.name);
+        setValue('slug', res.data.slug || '');
+        setValue('status', res.data.status);
+      })
         .catch(err => console.error('Failed to fetch brand:', err))
         .finally(() => setLoading(false));
     }
@@ -50,7 +53,7 @@ export default function EditBrandPage() {
     defaultValues: {},
   });
 
-  const formMethods = { register, handleSubmit, errors, watch, setValue };
+  // Note: reset is now included in the first useForm call on line 45-54
 
   // Auto-generate slug if not provided
   const watchName = watch('name');
@@ -159,7 +162,7 @@ export default function EditBrandPage() {
                 <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
                   Status *
                 </label>
-                <Select value={brand.status} onValueChange={(v) => setValue('status', v)}>
+                <Select value={brand.status} onValueChange={(v: 'ACTIVE' | 'INACTIVE') => setValue('status', v)}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>

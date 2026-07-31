@@ -282,7 +282,7 @@ export default function EditUserPage() {
               {user.status === 'LOCKED' && (
                 <Button variant="secondary" onClick={handleUnlock}>Unlock User</Button>
               )}
-              <Button variant="danger" size="sm" onClick={() => {
+              <Button variant="destructive" size="sm" onClick={() => {
                 if (confirm('Are you sure you want to delete this user?')) {
                   toast('Delete clicked', { type: 'warning' });
                 }

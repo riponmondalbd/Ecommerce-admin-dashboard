@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,8 +7,8 @@ import { useRouter } from 'next/navigation';
 import toast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
-import Select from '@/components/ui/select';
-import { mediaApi } from '@/lib/axios-client'; // Note: using a separate instance for media if needed
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import api from '@/lib/axios-client'; // For all API calls including media uploads
 
 // Validation schema for brand creation (matches backend CreateBrandDto)
 const brandSchema = z.object({
@@ -136,7 +136,7 @@ export default function CreateBrandPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Status *
                 </label>
-                <Select value={watch('status')} onValueChange={(v) => setValue('status', v)}>
+                <Select value={watch('status')} onValueChange={(v) => setValue('status', v as 'ACTIVE' | 'INACTIVE')}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>

@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -7,7 +7,8 @@ import { useRouter } from 'next/navigation';
 import toast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
-import Select from '@/components/ui/select';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import api from '@/lib/axios-client';
 
 // Validation schema for attribute creation (matches backend CreateAttributeDto)
 const attributeSchema = z.object({
@@ -122,7 +123,7 @@ export default function CreateAttributePage() {
                 <div className="flex flex-wrap gap-2">
                   <Select value={selectedType} onValueChange={handleTypeChange}>
                     <SelectTrigger className="w-32">
-                      <SelectValue value={selectedType} />
+                      <SelectValue placeholder="Select type" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="TEXT">Text Input</SelectItem>

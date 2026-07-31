@@ -27,16 +27,15 @@ export default function RolesPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch roles
-  const { data, isLoading, refetch } = useQuery(
-    ['roles', searchTerm],
-    async () => {
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['roles', searchTerm],
+    queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.set('search', searchTerm);
       const res = await api.get('/api/roles', { params });
       return res.data;
     },
-    { keepPreviousData: true }
-  );
+  });
 
   const handleCreate = async () => {
     alert('Redirecting to create role page...');

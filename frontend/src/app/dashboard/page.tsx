@@ -1,41 +1,54 @@
 'use client';
+import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios-client';
 import StatCard from '@/components/StatCard';
 
 export default function DashboardPage() {
-  const { data: productRes, isLoading: productLoading } = useQuery(
-    ['products'],
-    () => api.get('/products').then(res => res.data),
-    { enabled: false } // Don't fetch automatically until mounted
-  );
-
-  const { data: categoryRes, isLoading: categoryLoading } = useQuery(
-    ['categories'],
-    () => api.get('/categories').then(res => res.data),
-    { enabled: false }
-  );
-
-  const { data: brandRes, isLoading: brandLoading } = useQuery(
-    ['brands'],
-    () => api.get('/brands').then(res => res.data),
-    { enabled: false }
-  );
-
-  // Fetch data when component mounts (using useEffect since we need enabled: false for conditional fetching)
-  import('useEffect').then(({ useEffect }) => {
-    useEffect(() => {
-      if (!productRes?.refetch) productRefetch();
-      if (!categoryRefetch) categoryRefetch();
-      if (!brandRefetch) brandRefetch();
-    }, []);
+  const { data: productRes, isLoading: productLoading } = useQuery({
+    queryKey: ['products'],
+    queryFn: async () => {
+      const res = await api.get('/products');
+      return res.data;
+    },
+    enabled: false,
   });
 
-  const handleRefresh = async () => {
-    await productRes?.refetch?.();
-    await categoryRes?.refetch?.();
-    await brandRes?.refetch?.();
-  };
+  const { data: categoryRes, isLoading: categoryLoading } = useQuery({
+    queryKey: ['categories'],
+    queryFn: async () => {
+      const res = await api.get('/categories');
+      return res.data;
+    },
+    enabled: false,
+  });
+
+  const { data: brandRes, isLoading: brandLoading } = useQuery({
+    queryKey: ['brands'],
+    queryFn: async () => {
+      const res = await api.get('/brands');
+      return res.data;
+    },
+    enabled: false,
+  });
+
+  // Data fetching is handled by react-query with enabled: false
+// We'll use effect to fetch initial data on mount
+
+useEffect(() => {
+  // Initial fetch of all data
+  (async () => {
+    if (productRes?.refetch) await productRes.refetch();
+    if (categoryRes?.refetch) await categoryRes.refetch();
+    if (brandRes?.refetch) await brandRes.refetch();
+  })();
+}, [productRes, categoryRes, brandRes]);
+
+const handleRefresh = async () => {
+  await productRes?.refetch?.();
+  await categoryRes?.refetch?.();
+  await brandRes?.refetch?.();
+};
 
   if (productLoading || categoryLoading || brandLoading) {
     return (

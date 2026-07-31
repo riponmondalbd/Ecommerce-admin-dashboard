@@ -42,16 +42,15 @@ export default function BrandsPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch brands with search
-  const { data, isLoading, refetch } = useQuery(
-    ['brands', searchTerm],
-    async () => {
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['brands', searchTerm],
+    queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.set('search', searchTerm);
       const res = await api.get('/api/brands', { params });
       return res.data;
     },
-    { keepPreviousData: true }
-  );
+  });
 
   const handleCreate = async () => {
     alert('Redirecting to create brand page...');

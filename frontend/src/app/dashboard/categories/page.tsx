@@ -4,7 +4,9 @@ import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios-client';
 import toast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
-import { CategoryTreeItem } from '@/types'; // We'll define this type recursively
+import Input from '@/components/ui/input';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+// Note: CategoryTreeItem is defined below as a local component
 
 // Recursive component for rendering nested categories
 const CategoryTreeItem = ({
@@ -13,7 +15,12 @@ const CategoryTreeItem = ({
   onDelete,
   maxDepth = 0
 }: {
-  category: CategoryTreeItem;
+  category: {
+    id: string;
+    name: string;
+    slug: string;
+    children?: Array<{ id: string; name: string; slug: string }>;
+  };
   onEdit: (id: string) => void;
   onDelete: (id: string) => void;
   maxDepth?: number;
@@ -35,11 +42,11 @@ const CategoryTreeItem = ({
         </div>
         <div className="space-x-2 hidden group-hover:flex">
           <Button variant="secondary" size="sm" onClick={(e) => { e.stopPropagation(); onEdit(category.id); }}>Edit</Button>
-          <Button variant="danger" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(category.id); }}>Delete</Button>
+          <Button variant="destructive" size="sm" onClick={(e) => { e.stopPropagation(); onDelete(category.id); }}>Delete</Button>
         </div>
       </div>
 
-      {hasChildren && expanded && (
+      {hasChildren && category.children && expanded && (
         <div className="mt-1 ml-4 border-l-2 border-gray-300 pl-4">
           {category.children.map(child => (
             <CategoryTreeItem
@@ -62,17 +69,16 @@ export default function CategoriesPage() {
   const [newCategory, setNewCategory] = useState({ name: '', slug: '', parentId: '' });
 
   // Fetch categories - including the tree view endpoint
-  const { data: treeData, isLoading } = useQuery(
-    ['categories-tree'],
-    () => api.get('/api/categories/tree').then(res => res.data),
-    { keepPreviousData: true }
-  );
+  const { data: treeData, isLoading } = useQuery({
+    queryKey: ['categories-tree'],
+    queryFn: () => api.get('/api/categories/tree').then(res => res.data)
+  });
 
   // Also get flat list for create operation details
-  const { data: listData } = useQuery(
-    ['categories-list'],
-    () => api.get('/api/categories').then(res => res.data)
-  );
+  const { data: listData } = useQuery({
+    queryKey: ['categories-list'],
+    queryFn: () => api.get('/api/categories').then(res => res.data),
+  });
 
   if (isLoading) {
     return (
@@ -156,15 +162,15 @@ export default function CategoriesPage() {
                 </div>
                 <div>
                   <label htmlFor="parentId" className="block text-sm font-medium text-gray-700 mb-1">Parent Category (optional)</label>
-                  <Select value={newCategory.parentId || ''} onValueChange={(v) => setNewCategory({...newCategory, parentId: v})}>
-                    <SelectTrigger className="w-full">
-                      <SelectValue placeholder="No parent (top-level)" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="">No parent (top-level)</SelectItem>
-                      {/* Parent categories would be populated from API */}
-                    </SelectContent>
-                  </Select>
+                  <select
+                    id="parentId"
+                    value={newCategory.parentId || ''}
+                    onChange={(e) => setNewCategory({ ...newCategory, parentId: e.target.value })}
+                    className="w-full border border-gray-300 rounded-md p-2 focus:ring-primary focus:border-primary"
+                  >
+                    <option value="">No parent (top-level)</option>
+                    {/* Parent categories would be populated from API */}
+                  </select>
                 </div>
               </div>
               <div className="flex justify-end space-x-3 mt-6">
@@ -180,7 +186,7 @@ export default function CategoriesPage() {
       <div className="bg-white rounded-lg border border-gray-200 p-6">
         <h3 className="text-lg font-medium mb-4">Category Hierarchy</h3>
         {treeData?.data && treeData.data.length > 0 ? (
-          treeData.data.map(category => (
+          treeData.data.map((category: { id: string; name: string; slug: string; children?: any[] }) => (
             <CategoryTreeItem
               key={category.id}
               category={category}

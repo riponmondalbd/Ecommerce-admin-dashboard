@@ -47,7 +47,7 @@ const UserRow = ({ user, onActivate, onDeactivate, onLock, onUnlock, onDelete }:
         {user.status === 'ACTIVE' && <Button variant="secondary" size="xs" onClick={onDeactivate}>Deactivate</Button>}
         {user.status !== 'LOCKED' && <Button variant="secondary" size="xs" onClick={onLock}>Lock</Button>}
         {user.status === 'LOCKED' && <Button variant="secondary" size="xs" onClick={onUnlock}>Unlock</Button>}
-        <Button variant="danger" size="xs" onClick={onDelete}>Delete</Button>
+        <Button variant="destructive" size="xs" onClick={onDelete}>Delete</Button>
       </td>
     </tr>
   );
@@ -58,17 +58,16 @@ export default function UsersPage() {
   const [filterRole, setFilterRole] = useState<string | null>(null);
 
   // Fetch users with filters
-  const { data, isLoading, refetch } = useQuery(
-    ['users', searchTerm, filterRole],
-    async () => {
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['users', searchTerm, filterRole],
+    queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.set('search', searchTerm);
       if (filterRole) params.set('roleId', filterRole);
       const res = await api.get('/api/users', { params });
       return res.data;
     },
-    { keepPreviousData: true }
-  );
+  });
 
   const handleCreate = async () => {
     alert('Redirecting to create user page...');
@@ -140,11 +139,11 @@ export default function UsersPage() {
               <UserRow
                 key={user.id}
                 user={user}
-                onActivate={() => toast('Activate user', { type: 'info' })}
-                onDeactivate={() => toast('Deactivate user', { type: 'info' })}
-                onLock={() => toast('Lock user', { type: 'info' })}
-                onUnlock={() => toast('Unlock user', { type: 'info' })}
-                onDelete={() => toast('Delete user', { type: 'warning' })}
+                onActivate={() => toast.info('Activate user')}
+                onDeactivate={() => toast.info('Deactivate user')}
+                onLock={() => toast.info('Lock user')}
+                onUnlock={() => toast.info('Unlock user')}
+                onDelete={() => toast.warning('Delete user')}
               />
             ))}
           </tbody>

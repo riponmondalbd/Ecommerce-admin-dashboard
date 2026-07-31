@@ -5,7 +5,7 @@ import api from '@/lib/axios-client';
 import toast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
-import Select from '@/components/ui/select';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 // Attribute row component
 const AttributeRow = ({ attribute, onRefresh }: { attribute: any; onRefresh: () => void }) => {
@@ -49,17 +49,16 @@ export default function AttributesPage() {
   const [filterType, setFilterType] = useState<string | null>(null);
 
   // Fetch attributes with filtering
-  const { data, isLoading, refetch } = useQuery(
-    ['attributes', searchTerm, filterType],
-    async () => {
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['attributes', searchTerm, filterType],
+    queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.set('search', searchTerm);
       if (filterType) params.set('type', filterType);
       const res = await api.get('/api/attributes', { params });
       return res.data;
     },
-    { keepPreviousData: true }
-  );
+  });
 
   const handleCreate = async () => {
     alert('Redirecting to create attribute page...');

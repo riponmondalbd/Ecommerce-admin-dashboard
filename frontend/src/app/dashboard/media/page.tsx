@@ -5,6 +5,7 @@ import api from '@/lib/axios-client';
 import toast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Select from '@/components/ui/select';
+import Input from '@/components/ui/input';
 
 // Media grid item component
 const MediaItem = ({ media, onDelete }: { media: any; onDelete: () => void }) => (
@@ -27,7 +28,7 @@ const MediaItem = ({ media, onDelete }: { media: any; onDelete: () => void }) =>
     <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
       <div className="opacity-0 group-hover:opacity-100 transition-opacity space-x-2">
         <Button variant="secondary" size="sm">View</Button>
-        <Button variant="danger" size="sm" onClick={onDelete}>Delete</Button>
+        <Button variant="destructive" size="sm" onClick={onDelete}>Delete</Button>
       </div>
     </div>
 
@@ -54,17 +55,16 @@ export default function MediaPage() {
   const [altText, setAltText] = useState('');
 
   // Fetch media with filters
-  const { data, isLoading, refetch } = useQuery(
-    ['media', filterType, filterStatus],
-    async () => {
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['media', filterType, filterStatus],
+    queryFn: async () => {
       const params: URLSearchParams = new URLSearchParams();
       if (filterType) params.set('type', filterType);
       if (filterStatus) params.set('status', filterStatus);
       const res = await api.get('/api/media', { params });
       return res.data;
     },
-    { keepPreviousData: true }
-  );
+  });
 
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this media?')) return;
@@ -127,30 +127,28 @@ export default function MediaPage() {
 
       {/* Filters */}
       <div className="mb-6 flex flex-wrap gap-4">
-        <Select value={filterType || ''} onValueChange={setFilterType}>
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Filter by type" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">All Types</SelectItem>
-            <SelectItem value="IMAGE">Image</SelectItem>
-            <SelectItem value="VIDEO">Video</SelectItem>
-            <SelectItem value="DOCUMENT">Document</SelectItem>
-            <SelectItem value="OTHER">Other</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={filterStatus || ''} onValueChange={setFilterStatus}>
-          <SelectTrigger className="w-32">
-            <SelectValue placeholder="Filter by status" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="">All Statuses</SelectItem>
-            <SelectItem value="READY">Ready</SelectItem>
-            <SelectItem value="PROCESSING">Processing</SelectItem>
-            <SelectItem value="ERROR">Error</SelectItem>
-          </SelectContent>
-        </Select>
-        <Button variant="secondary" onClick={refetch}>Refresh</Button>
+        <select
+          value={filterType || ''}
+          onChange={(e) => setFilterType(e.target.value)}
+          className="border border-gray-300 rounded-md p-2 focus:ring-primary focus:border-primary w-32"
+        >
+          <option value="">All Types</option>
+          <option value="IMAGE">Image</option>
+          <option value="VIDEO">Video</option>
+          <option value="DOCUMENT">Document</option>
+          <option value="OTHER">Other</option>
+        </select>
+        <select
+          value={filterStatus || ''}
+          onChange={(e) => setFilterStatus(e.target.value)}
+          className="border border-gray-300 rounded-md p-2 focus:ring-primary focus:border-primary w-32"
+        >
+          <option value="">All Statuses</option>
+          <option value="READY">Ready</option>
+          <option value="PROCESSING">Processing</option>
+          <option value="ERROR">Error</option>
+        </select>
+        <Button variant="secondary" onClick={() => refetch()}>Refresh</Button>
       </div>
 
       {/* Media Grid */}

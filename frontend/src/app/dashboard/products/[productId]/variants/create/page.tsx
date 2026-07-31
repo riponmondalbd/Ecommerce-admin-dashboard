@@ -57,7 +57,7 @@ export default function CreateVariantPage() {
     api.get('/api/attributes')
       .then(res => {
         const allValues: any[] = [];
-        res.data.data.forEach(attr => {
+        res.data.data.forEach((attr: { name: string; values: Array<{ id: string; label: string; attributeId: string }> }) => {
           if (attr.values) {
             attr.values.forEach(val => {
               allValues.push({
@@ -217,16 +217,15 @@ export default function CreateVariantPage() {
                 <label htmlFor="stockStatus" className="block text-sm font-medium text-gray-700 mb-1">
                   Stock Status *
                 </label>
-                <Select value={watch('stockStatus') || 'IN_STOCK'} onValueChange={(v) => setValue('stockStatus', v)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="IN_STOCK">In Stock</SelectItem>
-                    <SelectItem value="LOW_STOCK">Low Stock</SelectItem>
-                    <SelectItem value="OUT_OF_STOCK">Out of Stock</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+  value={watch('stockStatus') || 'IN_STOCK'}
+  onChange={(e) => setValue('stockStatus', e.target.value as 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK')}
+  className="border border-gray-300 rounded-md p-2 focus:ring-primary focus:border-primary w-full"
+>
+  <option value="IN_STOCK">In Stock</option>
+  <option value="LOW_STOCK">Low Stock</option>
+  <option value="OUT_OF_STOCK">Out of Stock</option>
+</select>
                 {errors.stockStatus && (
                   <p className="mt-1 text-sm text-red-600">{errors.stockStatus.message}</p>
                 )}
@@ -278,9 +277,9 @@ export default function CreateVariantPage() {
                   <Input
                     type="number"
                     placeholder="Width"
-                    {...register('dimensions.width')}
+                    name="dimensionWidth"
                     value={watch('dimensions?.width') || ''}
-                    onChange={(e) => setValue('dimensions', { ...watch('dimensions'), width: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => setValue('dimensions', { ...(watch('dimensions') || {}), width: parseFloat(e.target.value) || 0 })}
                     className="w-full border-gray-300"
                   />
                   <Input
@@ -288,7 +287,7 @@ export default function CreateVariantPage() {
                     placeholder="Depth"
                     {...register('dimensions.depth')}
                     value={watch('dimensions?.depth') || ''}
-                    onChange={(e) => setValue('dimensions', { ...watch('dimensions'), depth: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => setValue('dimensions', { ...(watch('dimensions') || {}), depth: parseFloat(e.target.value) || 0 })}
                     className="w-full border-gray-300"
                   />
                   <Input
@@ -296,7 +295,7 @@ export default function CreateVariantPage() {
                     placeholder="Height"
                     {...register('dimensions.height')}
                     value={watch('dimensions?.height') || ''}
-                    onChange={(e) => setValue('dimensions', { ...watch('dimensions'), height: parseFloat(e.target.value) || 0 })}
+                    onChange={(e) => setValue('dimensions', { ...(watch('dimensions') || {}), height: parseFloat(e.target.value) || 0 })}
                     className="w-full border-gray-300"
                   />
                 </div>

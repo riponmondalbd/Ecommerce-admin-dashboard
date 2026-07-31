@@ -55,7 +55,7 @@ const TableRow = ({ product }: { product: Product }) => (
     <td className="px-6 py-4 whitespace-nowrap">
       <div className="flex space-x-2">
         <Button variant="secondary" size="sm">Edit</Button>
-        <Button variant="danger" size="sm">Delete</Button>
+        <Button variant="destructive" size="sm">Delete</Button>
       </div>
     </td>
   </tr>
@@ -107,9 +107,9 @@ export default function ProductsPage() {
   const LIMIT = 10;
 
   // Fetch products with query parameters
-  const { data, isLoading, refetch } = useQuery(
-    ['products', { searchTerm, selectedBrand, selectedStatus, page: currentPage, limit: LIMIT }],
-    async () => {
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['products', { searchTerm, selectedBrand, selectedStatus, page: currentPage, limit: LIMIT }],
+    queryFn: async () => {
       const params = new URLSearchParams({ page: currentPage.toString(), limit: LIMIT.toString() });
       if (searchTerm) params.set('search', searchTerm);
       if (selectedBrand) params.set('brandId', selectedBrand);
@@ -118,8 +118,7 @@ export default function ProductsPage() {
       const res = await api.get('/products', { params });
       return res.data;
     },
-    { keepPreviousData: true }
-  );
+  });
 
   // Reset pagination when filters change
   useEffect(() => {

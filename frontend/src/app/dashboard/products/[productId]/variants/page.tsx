@@ -113,14 +113,14 @@ export default function ProductVariantsPage({ params }: { params: { productId: s
   const [showSellModal, setShowSellModal] = useState<ProductVariant | null>(null);
 
   // Fetch variants for this product
-  const { data: variantsData, isLoading, refetch } = useQuery(
-    [`variants-${productId}`],
-    async () => {
+  const { data: variantsData, isLoading, refetch } = useQuery({
+    queryKey: ['variants', productId],
+    queryFn: async () => {
       const res = await api.get(`/api/products/${productId}/variants`);
       return res.data;
     },
-    { enabled: !!productId }
-  );
+    enabled: !!productId,
+  });
 
   // Handle refresh after mutation
   const handleRefresh = () => {
@@ -204,7 +204,7 @@ export default function ProductVariantsPage({ params }: { params: { productId: s
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap space-x-2">
                     <Button variant="secondary" size="sm" onClick={() => setShowRestockModal(variant)}>Restock</Button>
-                    <Button variant="danger" size="sm" onClick={() => setShowSellModal(variant)}>Sell</Button>
+                    <Button variant="destructive" size="sm" onClick={() => setShowSellModal(variant)}>Sell</Button>
                   </td>
                 </tr>
               ))

@@ -178,16 +178,15 @@ export default function EditProductPage() {
                 <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
                   Status *
                 </label>
-                <Select value={product.status} onValueChange={(v) => setValue('status', v)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="DRAFT">Draft</SelectItem>
-                    <SelectItem value="PUBLISHED">Published</SelectItem>
-                    <SelectItem value="ARCHIVED">Archived</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+  value={product.status}
+  onChange={(e) => setValue('status', e.target.value as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED')}
+  className="w-full border border-gray-300 rounded-md p-2 focus:ring-primary focus:border-primary"
+>
+  <option value="DRAFT">Draft</option>
+  <option value="PUBLISHED">Published</option>
+  <option value="ARCHIVED">Archived</option>
+</select>
                 {errors.status && (
                   <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
                 )}
@@ -260,16 +259,15 @@ export default function EditProductPage() {
                 <label htmlFor="stockStatus" className="block text-sm font-medium text-gray-700 mb-1">
                   Stock Status *
                 </label>
-                <Select value={product.stockStatus} onValueChange={(v) => setValue('stockStatus', v)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="IN_STOCK">In Stock</SelectItem>
-                    <SelectItem value="LOW_STOCK">Low Stock</SelectItem>
-                    <SelectItem value="OUT_OF_STOCK">Out of Stock</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+  value={product.stockStatus}
+  onChange={(e) => setValue('stockStatus', e.target.value as 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK')}
+  className="w-full border border-gray-300 rounded-md p-2 focus:ring-primary focus:border-primary"
+>
+  <option value="IN_STOCK">In Stock</option>
+  <option value="LOW_STOCK">Low Stock</option>
+  <option value="OUT_OF_STOCK">Out of Stock</option>
+</select>
                 {errors.stockStatus && (
                   <p className="mt-1 text-sm text-red-600">{errors.stockStatus.message}</p>
                 )}

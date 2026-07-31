@@ -20,7 +20,7 @@ const PermissionRow = ({ permission }: { permission: any }) => (
     </td>
     <td className="px-6 py-4 whitespace-nowrap space-x-2">
       <Button variant="secondary" size="sm">Edit</Button>
-      <Button variant="danger" size="sm">Delete</Button>
+      <Button variant="destructive" size="sm">Delete</Button>
     </td>
   </tr>
 );
@@ -29,16 +29,15 @@ export default function PermissionsPage() {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch permissions
-  const { data, isLoading, refetch } = useQuery(
-    ['permissions', searchTerm],
-    async () => {
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['permissions', searchTerm],
+    queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.set('search', searchTerm);
       const res = await api.get('/api/permissions', { params });
       return res.data;
     },
-    { keepPreviousData: true }
-  );
+  });
 
   const handleCreate = async () => {
     alert('Redirecting to create permission page...');

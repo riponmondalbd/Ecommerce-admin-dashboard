@@ -26,7 +26,7 @@ const AttributeValueRow = ({ value, onDelete }: { value: any; onDelete: () => vo
       <Button variant="secondary" size="sm">Edit</Button>
     </td>
     <td className="px-6 py-4 whitespace-nowrap">
-      <Button variant="danger" size="sm" onClick={onDelete}>Delete</Button>
+      <Button variant="destructive" size="sm" onClick={onDelete}>Delete</Button>
     </td>
   </tr>
 );
@@ -36,14 +36,14 @@ export default function AttributeValuesPage({ params }: { params: { attributeId:
   const [searchTerm, setSearchTerm] = useState('');
 
   // Fetch attribute values
-  const { data, isLoading, refetch } = useQuery(
-    [`attribute-values-${attributeId}`],
-    async () => {
+  const { data, isLoading, refetch } = useQuery({
+    queryKey: ['attribute-values', attributeId],
+    queryFn: async () => {
+      if (!attributeId) throw new Error('Missing attribute ID');
       const res = await api.get(`/api/attributes/${attributeId}/values`);
       return res.data;
     },
-    { enabled: !!attributeId }
-  );
+  });
 
   const handleCreate = async () => {
     alert(`Redirecting to create attribute value for attribute ${attributeId}...`);
@@ -95,7 +95,7 @@ export default function AttributeValuesPage({ params }: { params: { attributeId:
           </thead>
           <tbody className="divide-y divide-gray-200">
             {data?.data?.map((value: any) => (
-              <AttributeValueRow key={value.id} value={value} onDelete={() => toast('Deleted', { type: 'info' })} />
+              <AttributeValueRow key={value.id} value={value} onDelete={() => toast.info('Deleted')} />
             ))}
           </tbody>
         </table>

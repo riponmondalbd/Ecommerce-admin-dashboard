@@ -230,16 +230,15 @@ export default function CreateProductPage() {
                 <label htmlFor="stockStatus" className="block text-sm font-medium text-gray-700 mb-1">
                   Stock Status *
                 </label>
-                <Select value={watch('stockStatus')} onValueChange={(v) => setValue('stockStatus', v)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="IN_STOCK">In Stock</SelectItem>
-                    <SelectItem value="LOW_STOCK">Low Stock</SelectItem>
-                    <SelectItem value="OUT_OF_STOCK">Out of Stock</SelectItem>
-                  </SelectContent>
-                </Select>
+                <select
+  value={watch('stockStatus') || ''}
+  onChange={(e) => setValue('stockStatus', e.target.value as 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK')}
+  className="border border-gray-300 rounded-md p-2 focus:ring-primary focus:border-primary w-full"
+>
+  <option value="IN_STOCK">In Stock</option>
+  <option value="LOW_STOCK">Low Stock</option>
+  <option value="OUT_OF_STOCK">Out of Stock</option>
+</select>
                 {errors.stockStatus && (
                   <p className="mt-1 text-sm text-red-600">{errors.stockStatus.message}</p>
                 )}
