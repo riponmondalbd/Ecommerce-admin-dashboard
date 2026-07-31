@@ -6,6 +6,7 @@ import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import Link from 'next/link';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 const CategoryTreeItem = ({
   category,
@@ -47,7 +48,7 @@ const CategoryTreeItem = ({
           <Link href={`/dashboard/categories/create?parentId=${category.id}`}>
             <Button variant="outline" size="sm">Add Child</Button>
           </Link>
-          <Button variant="destructive" size="sm" onClick={() => onDelete(category.id, category.name)}>Delete</Button>
+          <Button variant="destructive" size="sm" onClick={() => setDeleteDialog({ id: category.id, name: category.name })}>Delete</Button>
         </div>
       </div>
 
@@ -72,6 +73,7 @@ export default function CategoriesPage() {
   const [creatingNew, setCreatingNew] = useState(false);
   const [newCategory, setNewCategory] = useState({ name: '', slug: '' });
   const [responseData, setResponseData] = useState<any>(null);
+  const [deleteDialog, setDeleteDialog] = useState<{ id: string | null; name: string } | null>(null);
 
   const { data: treeData, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['categories-tree'],
@@ -100,11 +102,12 @@ export default function CategoriesPage() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+  const handleDelete = async () => {
+    if (!deleteDialog?.id) return;
     try {
-      await api.delete(`/categories/${id}`);
+      await api.delete(`/categories/${deleteDialog.id}`);
       toast.success('Category deleted successfully!');
+      setDeleteDialog(null);
       await refetch();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to delete category');
@@ -171,6 +174,18 @@ export default function CategoriesPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteDialog}
+        title="Delete Category"
+        message={`Are you sure you want to delete "${deleteDialog?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteDialog(null)}
+      />
 
       {/* Category Tree View */}
       <div className="bg-white rounded-lg border border-gray-200 p-6">
