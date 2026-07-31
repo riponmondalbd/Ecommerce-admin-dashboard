@@ -1,4 +1,5 @@
 'use client';
+import { useEffect, useState } from 'react'
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -6,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import toast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
-import Select from '@/components/ui/select';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 // Validation schema for product creation (matches backend CreateProductDto)
 const productSchema = z.object({
@@ -134,13 +135,12 @@ export default function CreateProductPage() {
                 <label htmlFor="shortDescription" className="block text-sm font-medium text-gray-700 mb-1">
                   Short Description *
                 </label>
-                <Input
+                <textarea
                   id="shortDescription"
-                  type="textarea"
-                  rows={2}
+                  rows={4}
                   {...register('shortDescription')}
                   placeholder="Brief product description"
-                  className={`w-full border-gray-300 ${errors.shortDescription ? 'border-red-500' : ''}`}
+                  className={`w-full border-gray-300 rounded-md focus:ring-primary focus:border-primary px-3 py-2 ${errors.shortDescription ? 'border-red-500' : ''}`}
                 />
                 {errors.shortDescription && (
                   <p className="mt-1 text-sm text-red-600">{errors.shortDescription.message}</p>
@@ -151,7 +151,7 @@ export default function CreateProductPage() {
                 <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
                   Status *
                 </label>
-                <Select value={watch('status')} onValueChange={(v) => setValue('status', v)}>
+                <Select value={watch('status') as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | undefined} onValueChange={(v) => setValue('status', v as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED')}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>

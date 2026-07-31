@@ -7,7 +7,8 @@ import { useRouter } from 'next/navigation';
 import toast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
-import Select from '@/components/ui/select';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import api from '@/lib/axios-client'
 
 // Validation schema for user creation (matches backend CreateUserDto)
 const userSchema = z.object({
@@ -29,6 +30,7 @@ export default function CreateUserPage() {
     handleSubmit,
     formState: { errors },
     watch,
+    setValue,
   } = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
     defaultValues: {
@@ -40,7 +42,7 @@ export default function CreateUserPage() {
   // Handle form submission
   const onSubmit: SubmitHandler<UserFormValues> = async (data) => {
     try {
-      await api.post('/api/users', data);
+      await api.post('/users', data);
       toast.success('User created successfully!');
       router.push('/dashboard/users');
     } catch (error: any) {
@@ -158,7 +160,7 @@ export default function CreateUserPage() {
               <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
                 Initial Status *
               </label>
-              <Select value={watch('status')} onValueChange={(v) => setValue('status', v)}>
+              <Select value={watch('status') as 'ACTIVE' | 'INACTIVE' | 'LOCKED' | undefined} onValueChange={(v) => setValue('status', v as 'ACTIVE' | 'INACTIVE' | 'LOCKED')}>
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>

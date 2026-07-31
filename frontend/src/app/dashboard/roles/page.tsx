@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios-client';
 import toast from '@/components/ui/Toast';
-import Button from '@/components/ui/button';
+import Button from '@/components/ui/button'
+import Input from '@/components/ui/input'
 
 // Role row component
 const RoleRow = ({ role, onRefresh }: { role: any; onRefresh: () => void }) => (
@@ -32,7 +33,7 @@ export default function RolesPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.set('search', searchTerm);
-      const res = await api.get('/api/roles', { params });
+      const res = await api.get('/roles', { params });
       return res.data;
     },
   });

@@ -47,7 +47,7 @@ export default function BrandsPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.set('search', searchTerm);
-      const res = await api.get('/api/brands', { params });
+      const res = await api.get('/brands', { params });
       return res.data;
     },
   });

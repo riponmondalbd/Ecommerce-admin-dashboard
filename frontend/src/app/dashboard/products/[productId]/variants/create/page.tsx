@@ -54,7 +54,7 @@ export default function CreateVariantPage() {
 
   // Fetch attribute values (for dropdown selection)
   useEffect(() => {
-    api.get('/api/attributes')
+    api.get('/attributes')
       .then(res => {
         const allValues: any[] = [];
         res.data.data.forEach((attr: { name: string; values: Array<{ id: string; label: string; attributeId: string }> }) => {
@@ -278,24 +278,42 @@ export default function CreateVariantPage() {
                     type="number"
                     placeholder="Width"
                     name="dimensionWidth"
-                    value={watch('dimensions?.width') || ''}
-                    onChange={(e) => setValue('dimensions', { ...(watch('dimensions') || {}), width: parseFloat(e.target.value) || 0 })}
+                    value={(watch('dimensions')?.width ?? '') as string}
+                    onChange={(e) => {
+                      setValue('dimensions', {
+                        width: parseFloat(e.target.value) || 0,
+                        depth: watch('dimensions')?.depth || 0,
+                        height: watch('dimensions')?.height || 0,
+                      })
+                    }}
                     className="w-full border-gray-300"
                   />
                   <Input
                     type="number"
                     placeholder="Depth"
-                    {...register('dimensions.depth')}
-                    value={watch('dimensions?.depth') || ''}
-                    onChange={(e) => setValue('dimensions', { ...(watch('dimensions') || {}), depth: parseFloat(e.target.value) || 0 })}
+                    name="dimensionDepth"
+                    value={(watch('dimensions')?.depth ?? '') as string}
+                    onChange={(e) => {
+                      setValue('dimensions', {
+                        width: watch('dimensions')?.width || 0,
+                        depth: parseFloat(e.target.value) || 0,
+                        height: watch('dimensions')?.height || 0,
+                      })
+                    }}
                     className="w-full border-gray-300"
                   />
                   <Input
                     type="number"
                     placeholder="Height"
-                    {...register('dimensions.height')}
-                    value={watch('dimensions?.height') || ''}
-                    onChange={(e) => setValue('dimensions', { ...(watch('dimensions') || {}), height: parseFloat(e.target.value) || 0 })}
+                    name="dimensionHeight"
+                    value={(watch('dimensions')?.height ?? '') as string}
+                    onChange={(e) => {
+                      setValue('dimensions', {
+                        width: watch('dimensions')?.width || 0,
+                        depth: watch('dimensions')?.depth || 0,
+                        height: parseFloat(e.target.value) || 0,
+                      })
+                    }}
                     className="w-full border-gray-300"
                   />
                 </div>

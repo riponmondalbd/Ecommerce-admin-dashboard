@@ -34,7 +34,7 @@ export default function PermissionsPage() {
     queryFn: async () => {
       const params = new URLSearchParams();
       if (searchTerm) params.set('search', searchTerm);
-      const res = await api.get('/api/permissions', { params });
+      const res = await api.get('/permissions', { params });
       return res.data;
     },
   });

@@ -5,7 +5,7 @@ import api from '@/lib/axios-client';
 import toast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
-import Select from '@/components/ui/select';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 
 // User row component
 const UserRow = ({ user, onActivate, onDeactivate, onLock, onUnlock, onDelete }: { user: any; onActivate: () => void; onDeactivate: () => void; onLock: () => void; onUnlock: () => void; onDelete: () => void }) => {
@@ -43,11 +43,11 @@ const UserRow = ({ user, onActivate, onDeactivate, onLock, onUnlock, onDelete }:
         {new Date(user.createdAt).toLocaleDateString()}
       </td>
       <td className="px-6 py-4 whitespace-nowrap space-x-1">
-        {user.status === 'INACTIVE' && <Button variant="secondary" size="xs" onClick={onActivate}>Activate</Button>}
-        {user.status === 'ACTIVE' && <Button variant="secondary" size="xs" onClick={onDeactivate}>Deactivate</Button>}
-        {user.status !== 'LOCKED' && <Button variant="secondary" size="xs" onClick={onLock}>Lock</Button>}
-        {user.status === 'LOCKED' && <Button variant="secondary" size="xs" onClick={onUnlock}>Unlock</Button>}
-        <Button variant="destructive" size="xs" onClick={onDelete}>Delete</Button>
+        {user.status === 'INACTIVE' && <Button variant="secondary" size="sm" onClick={onActivate}>Activate</Button>}
+        {user.status === 'ACTIVE' && <Button variant="secondary" size="sm" onClick={onDeactivate}>Deactivate</Button>}
+        {user.status !== 'LOCKED' && <Button variant="secondary" size="sm" onClick={onLock}>Lock</Button>}
+        {user.status === 'LOCKED' && <Button variant="secondary" size="sm" onClick={onUnlock}>Unlock</Button>}
+        <Button variant="destructive" size="sm" onClick={onDelete}>Delete</Button>
       </td>
     </tr>
   );
@@ -64,7 +64,7 @@ export default function UsersPage() {
       const params = new URLSearchParams();
       if (searchTerm) params.set('search', searchTerm);
       if (filterRole) params.set('roleId', filterRole);
-      const res = await api.get('/api/users', { params });
+      const res = await api.get('/users', { params });
       return res.data;
     },
   });

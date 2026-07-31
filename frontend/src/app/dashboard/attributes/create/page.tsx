@@ -59,7 +59,7 @@ export default function CreateAttributePage() {
   // Handle form submission
   const onSubmit: SubmitHandler<AttributeFormValues> = async (data) => {
     try {
-      await api.post('/api/attributes', {
+      await api.post('/attributes', {
         ...data,
       });
       toast.success('Attribute created successfully!');

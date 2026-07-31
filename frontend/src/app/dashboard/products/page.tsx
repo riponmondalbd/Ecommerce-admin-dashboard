@@ -45,8 +45,8 @@ const TableRow = ({ product }: { product: Product }) => (
       )}
     </td>
     <td className="px-6 py-4 whitespace-nowrap">
-      <p className={product.inventory < 5 ? 'text-red-600 font-semibold' : 'text-gray-900'}>
-        {product.inventory} units
+      <p className={product.stock < 5 ? 'text-red-600 font-semibold' : 'text-gray-900'}>
+        {product.stock} units
       </p>
     </td>
     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">

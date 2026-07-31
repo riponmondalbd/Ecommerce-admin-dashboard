@@ -1,5 +1,4 @@
-import { forwardRef, useMemo } from 'react';
-import { Slot } from '@radix-ui/react-slot';
+import { forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 const inputVariants = cva(
@@ -18,15 +17,18 @@ const inputVariants = cva(
   },
 );
 
-export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement>, VariantProps<typeof inputVariants> {
+export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>, VariantProps<typeof inputVariants> {
   as?: boolean;
   asChild?: boolean;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(({ className, size, asChild = false, ...props }, ref) => {
-  const slot = asChild ? Slot : 'input';
+const Input = forwardRef<HTMLInputElement, InputProps>(({ className, size, ...props }, ref) => {
   return (
-    <slot ref={ref} className={inputVariants({ size, className })} {...props} />
+    <input
+      ref={ref}
+      className={inputVariants({ size, className })}
+      {...props}
+    />
   );
 });
 

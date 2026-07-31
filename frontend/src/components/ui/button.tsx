@@ -1,5 +1,4 @@
 import { forwardRef, useMemo } from 'react';
-import { Slot } from '@radix-ui/react-slot';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 const buttonVariants = cva(
@@ -33,14 +32,15 @@ export interface ButtonProps extends VariantProps<typeof buttonVariants>, React.
   asChild?: boolean;
 }
 
-const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ className, variant, size, asChild = false, ...props }, ref) => {
-  const children = props.children;
-  const slot = useMemo(() => asChild ? Slot : 'button', [asChild]);
-
+const Button = forwardRef<HTMLButtonElement, ButtonProps>(({ className, variant, size, ...props }, ref) => {
   return (
-    <slot ref={ref} className={buttonVariants({ variant, size, className })} {...props}>
-      {children}
-    </slot>
+    <button
+      ref={ref}
+      className={buttonVariants({ variant, size, className })}
+      {...props}
+    >
+      {props.children}
+    </button>
   );
 });
 

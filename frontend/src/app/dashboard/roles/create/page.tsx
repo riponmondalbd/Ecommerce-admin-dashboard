@@ -7,7 +7,8 @@ import { useRouter } from 'next/navigation';
 import toast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
-import Select from '@/components/ui/select';
+import Select from '@/components/ui/select'
+import api from '@/lib/axios-client'
 
 // Validation schema for role creation (matches backend CreateRole payload)
 const roleSchema = z.object({
@@ -58,7 +59,7 @@ export default function CreateRolePage() {
   // Handle form submission
   const onSubmit: SubmitHandler<RoleFormValues> = async (data) => {
     try {
-      await api.post('/api/roles', {
+      await api.post('/roles', {
         ...data,
         permissions: data.permissions,
       });

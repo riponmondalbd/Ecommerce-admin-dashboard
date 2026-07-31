@@ -9,7 +9,7 @@ import Select from '@/components/ui/select';
 import { ProductVariant } from '@/types';
 
 // Modal component for restock action
-const RestockModal = ({ variant, onClose, onRestock }) => {
+const RestockModal = ({ variant, onClose, onRestock }: { variant: any; onClose: () => void; onRestock: () => void }) => {
   const [quantity, setQuantity] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -17,7 +17,7 @@ const RestockModal = ({ variant, onClose, onRestock }) => {
     if (!variant.id || !quantity || parseInt(quantity) <= 0) return;
 
     try {
-      await api.put(`/api/variants/${variant.id}/restock`, { quantity: parseInt(quantity) });
+      await api.put(`/variants/${variant.id}/restock`, { quantity: parseInt(quantity) });
       toast.success(`Successfully restocked ${variant.sku} by ${quantity} units`);
       onRestock(); // Refresh data
       onClose();
@@ -55,7 +55,7 @@ const RestockModal = ({ variant, onClose, onRestock }) => {
 };
 
 // Modal component for sell action
-const SellModal = ({ variant, onClose, onSell }) => {
+const SellModal = ({ variant, onClose, onSell }: { variant: any; onClose: () => void; onSell: () => void }) => {
   const [quantity, setQuantity] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -68,7 +68,7 @@ const SellModal = ({ variant, onClose, onSell }) => {
         throw new Error('Insufficient inventory');
       }
 
-      await api.put(`/api/variants/${variant.id}/sell`, { quantity: parseInt(quantity) });
+      await api.put(`/variants/${variant.id}/sell`, { quantity: parseInt(quantity) });
       toast.success(`Successfully sold ${variant.sku}: ${quantity} units`);
       onSell(); // Refresh data
       onClose();
@@ -116,7 +116,7 @@ export default function ProductVariantsPage({ params }: { params: { productId: s
   const { data: variantsData, isLoading, refetch } = useQuery({
     queryKey: ['variants', productId],
     queryFn: async () => {
-      const res = await api.get(`/api/products/${productId}/variants`);
+      const res = await api.get(`/products/${productId}/variants`);
       return res.data;
     },
     enabled: !!productId,
@@ -216,9 +216,9 @@ export default function ProductVariantsPage({ params }: { params: { productId: s
       {/* Restock Modal */}
       {showRestockModal && (
         <RestockModal
-          variant={{ ...showRestockModal, productName: '-' }} // Mount component needs productName
+          variant={{ ...showRestockModal, productName: '-' }} // Modal needs productName
           onClose={() => setShowRestockModal(null)}
-          onRefresh={handleRefresh}
+          onRestock={handleRefresh}
         />
       )}
 
@@ -227,7 +227,7 @@ export default function ProductVariantsPage({ params }: { params: { productId: s
         <SellModal
           variant={{ ...showSellModal, productName: '-' }}
           onClose={() => setShowSellModal(null)}
-          onRefresh={handleRefresh}
+          onSell={handleRefresh}
         />
       )}
     </div>

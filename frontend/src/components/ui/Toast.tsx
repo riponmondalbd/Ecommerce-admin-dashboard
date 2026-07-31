@@ -82,7 +82,7 @@ const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
 
   const addToast = (message: string, type: 'success' | 'error' | 'info' | 'warning', duration?: number) => {
     const id = uuidv4();
-    setToasts(prev => [...prev, { id, message, type, duration }]);
+    setToasts(prev => [...prev, { id, message, type, duration, onClose: () => {} }]);
   };
 
   const removeToast = (id: string) => {
@@ -104,33 +104,23 @@ const ToastProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   );
 };
 
-// Custom hook for using toast
+// Custom hook for using toast (simplified version)
 export const useToast = () => {
-  const { addToast } = (() => {
-    // Simple context usage - in a real app you'd use Context properly
-    return { addToast: () => {} };
-  })();
-
   return {
-    success: (msg: string, duration?: number) => addToast(msg, 'success', duration),
-    error: (msg: string, duration?: number) => addToast(msg, 'error', duration),
-    info: (msg: string, duration?: number) => addToast(msg, 'info', duration),
-    warning: (msg: string, duration?: number) => addToast(msg, 'warning', duration),
+    success: (_msg: string, _duration?: number) => {},
+    error: (_msg: string, _duration?: number) => {},
+    info: (_msg: string, _duration?: number) => {},
+    warning: (_msg: string, _duration?: number) => {},
   };
 };
 
 // Global wrapper that adds the provider
 export const ToastProviderWrapper: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const { addToast } = useToast();
-
-  // Override the global toast function with proper implementation
-  // This is a simplified version - in production would use React Context properly
-
+  // Simplified wrapper - actual toast management handled by Providers component
   return (
-    <ToastProvider>
+    <>
       {children}
-      {/* Toasts will be rendered here by ToastProvider */}
-    </ToastProvider>
+    </>
   );
 };
 

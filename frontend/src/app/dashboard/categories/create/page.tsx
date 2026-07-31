@@ -51,7 +51,7 @@ export default function CreateCategoryPage() {
   // Handle form submission
   const onSubmit: SubmitHandler<CategoryFormValues> = async (data) => {
     try {
-      await api.post('/api/categories', {
+      await api.post('/categories', {
         ...data,
         parentId: data.parentId || null,
       });

@@ -71,13 +71,13 @@ export default function CategoriesPage() {
   // Fetch categories - including the tree view endpoint
   const { data: treeData, isLoading } = useQuery({
     queryKey: ['categories-tree'],
-    queryFn: () => api.get('/api/categories/tree').then(res => res.data)
+    queryFn: () => api.get('/categories/tree').then(res => res.data)
   });
 
   // Also get flat list for create operation details
   const { data: listData } = useQuery({
     queryKey: ['categories-list'],
-    queryFn: () => api.get('/api/categories').then(res => res.data),
+    queryFn: () => api.get('/categories').then(res => res.data),
   });
 
   if (isLoading) {
@@ -95,7 +95,7 @@ export default function CategoriesPage() {
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      await api.post('/api/categories', {
+      await api.post('/categories', {
         name: newCategory.name,
         slug: newCategory.slug || newCategory.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
         parentId: newCategory.parentId || null
@@ -115,7 +115,7 @@ export default function CategoriesPage() {
   const handleDelete = async (id: string) => {
     if (!confirm(`Are you sure you want to delete this category?`)) return;
     try {
-      await api.delete(`/api/categories/${id}`);
+      await api.delete(`/categories/${id}`);
       toast.success('Category deleted successfully!');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to delete category');

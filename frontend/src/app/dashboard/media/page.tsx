@@ -61,7 +61,7 @@ export default function MediaPage() {
       const params: URLSearchParams = new URLSearchParams();
       if (filterType) params.set('type', filterType);
       if (filterStatus) params.set('status', filterStatus);
-      const res = await api.get('/api/media', { params });
+      const res = await api.get('/media', { params });
       return res.data;
     },
   });
@@ -69,7 +69,7 @@ export default function MediaPage() {
   const handleDelete = async (id: string) => {
     if (!confirm('Are you sure you want to delete this media?')) return;
     try {
-      await api.delete(`/api/media/${id}`);
+      await api.delete(`/media/${id}`);
       toast.success('Media deleted successfully!');
       await refetch();
     } catch (error: any) {
@@ -86,7 +86,7 @@ export default function MediaPage() {
     formData.append('altText', altText);
 
     try {
-      await api.post('/api/media', formData, {
+      await api.post('/media', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       });
       toast.success('Media uploaded successfully!');

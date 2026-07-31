@@ -7,7 +7,7 @@ import { useRouter, useParams } from 'next/navigation';
 import toast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
-import Select from '@/components/ui/select';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import api from '@/lib/axios-client';
 
 // Validation schema for user update (matches backend UpdateUserDto)
@@ -47,12 +47,13 @@ export default function EditUserPage() {
     formState: { errors },
     watch,
     setValue,
+    reset,
   } = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
     defaultValues: {},
   });
 
-  const formMethods = { register, handleSubmit, errors, watch, setValue };
+  const formMethods = { register, handleSubmit, errors, watch, setValue, reset };
 
   // Handle form submission
   const onSubmit: SubmitHandler<UserFormValues> = async (data) => {
@@ -284,7 +285,7 @@ export default function EditUserPage() {
               )}
               <Button variant="destructive" size="sm" onClick={() => {
                 if (confirm('Are you sure you want to delete this user?')) {
-                  toast('Delete clicked', { type: 'warning' });
+                  toast.warning('Delete clicked');
                 }
               }}>Delete User</Button>
             </div>

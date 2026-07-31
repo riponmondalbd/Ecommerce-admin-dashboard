@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import api from '@/lib/axios-client';
-import { saveTokens, getAccessToken, clearTokens, isAuthenticated, refreshToken as refreshFn } from '@/lib/auth-utils';
+import { saveTokens, getAccessToken, getRefreshToken, clearTokens, isAuthenticated, refreshToken as refreshFn } from '@/lib/auth-utils';
 
 interface UserState {
   user: any | null;

@@ -62,7 +62,7 @@ export default function CreateBrandPage() {
   const onSubmit: SubmitHandler<BrandFormValues> = async (data) => {
     try {
       // Create brand first without media
-      const brandRes = await api.post('/api/brands', data);
+      const brandRes = await api.post('/brands', data);
       const brandId = brandRes.data.id;
 
       // Upload logo if file was provided

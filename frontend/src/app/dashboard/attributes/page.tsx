@@ -55,7 +55,7 @@ export default function AttributesPage() {
       const params = new URLSearchParams();
       if (searchTerm) params.set('search', searchTerm);
       if (filterType) params.set('type', filterType);
-      const res = await api.get('/api/attributes', { params });
+      const res = await api.get('/attributes', { params });
       return res.data;
     },
   });

@@ -6,37 +6,49 @@ import { useAuthStore } from '@/store/authStore';
 /**
  * Root redirect component - redirects to login or dashboard based on auth state
  */
-export default function RedirectPage() {
+export default function Page() {
   const { user, getUser } = useAuthStore();
   const pathname = usePathname();
   const router = useRouter();
 
   // Fetch user data on mount
   useEffect(() => {
+    let isMounted = true;
+
     const checkAuth = async () => {
       try {
         const userData = await getUser();
 
-        // If user is already authenticated and not on dashboard/login
+        if (!isMounted) return;
+
+        // If user is authenticated
         if (userData) {
-          // If on root path, redirect to dashboard
-          if (pathname === '/' || pathname === '') {
-            router.push('/dashboard');
+          // At root - redirect to dashboard
+          if ((pathname === '/' || pathname === '' || pathname === undefined)) {
+            router.replace('/dashboard');
           }
         } else {
-          // If no user and not on login, redirect to login
-          if (pathname !== '/login') {
-            router.push('/login');
+          // Not authenticated - at root, redirect to login
+          if ((pathname === '/' || pathname === '' || pathname === undefined)) {
+            setTimeout(() => {
+              if (isMounted) router.replace('/login');
+            }, 500);
           }
         }
       } catch (error) {
         console.error('Auth check error:', error);
-        router.push('/login');
+        if (isMounted && (pathname === '/' || pathname === '' || pathname === undefined)) {
+          router.replace('/login');
+        }
       }
     };
 
     checkAuth();
-  }, [user, getUser, pathname, router]);
+
+    return () => {
+      isMounted = false;
+    };
+  }, [pathname, getUser, router]);
 
   // Show loading screen while checking auth
   return (

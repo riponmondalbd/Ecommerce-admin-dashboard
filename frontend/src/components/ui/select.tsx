@@ -1,5 +1,4 @@
 import * as SelectPrimitive from '@radix-ui/react-select';
-import { CheckIcon, ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons';
 import { cva } from 'class-variance-authority';
 
 const selectTriggerVariants = cva('flex items-center justify-between rounded-md border border-input bg-background text-sm shadow-sm transition-colors hover:bg-opacity-80 focus:outline-none focus:ring-1 focus:ring-ring disabled:cursor-not-allowed disabled:opacity-50 data-[state=open]:bg-accent data-[state=open]:text-primary');

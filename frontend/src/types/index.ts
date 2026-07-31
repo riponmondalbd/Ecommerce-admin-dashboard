@@ -201,6 +201,7 @@ export interface CategoryNode {
 
 // Alias for the tree node used in frontend
 export type CategoryTreeItem = CategoryNode;
+export type Category = CategoryNode;
 
 interface CreateCategoryDto {
   name: string;
@@ -336,31 +337,3 @@ interface MeResponse {
   };
 }
 
-export type {
-  User,
-  Role,
-  Product,
-  ProductVariant,
-  ProductTransaction,
-  Category,
-  Brand,
-  Attribute,
-  AttributeValue,
-  Media,
-  Permission,
-  AuthTokens,
-  LoginResponse,
-  RefreshRequest,
-  PaginatedResponse,
-  CreateProductDto,
-  CreateProductVariantDto,
-  CreateCategoryDto,
-  UpdateCategoryDto,
-  CreateBrandDto,
-  CreateAttributeDto,
-  CreateAttributeValueDto,
-  MediaAttachment,
-  ListQuery,
-  MeResponse,
-  UserRole,
-};
