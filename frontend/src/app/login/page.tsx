@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
-import toast from '@/components/ui/Toast';
+import useToast from '@/components/ui/Toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('admin@trends-bird.com');
@@ -12,6 +12,7 @@ export default function LoginPage() {
 
   const { login } = useAuthStore();
   const router = useRouter();
+  const toast = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,12 +21,11 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      // Successful login — redirect to dashboard
       router.push('/dashboard');
     } catch (err: any) {
-      // Error already handled by toast in interceptors or store
-      setError(err?.response?.data?.message || 'Login failed. Please check credentials.');
-      toast.error(err?.response?.data?.message || 'Login failed');
+      const message = err?.response?.data?.message || 'Login failed. Please check credentials.';
+      setError(message);
+      toast.error(message);
     } finally {
       setLoading(false);
     }

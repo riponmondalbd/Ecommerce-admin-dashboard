@@ -2,34 +2,22 @@ import { forwardRef } from 'react';
 import { cva, type VariantProps } from 'class-variance-authority';
 
 const inputVariants = cva(
-  'flex border rounded-md text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
-  {
-    variants: {
-      size: {
-        sm: 'h-8 px-3 text-xs',
-        default: 'h-9 px-4',
-        lg: 'h-10 px-4',
-      },
-    },
-    defaultVariants: {
-      size: 'default',
-    },
-  },
+  'flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50',
 );
 
 export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'>, VariantProps<typeof inputVariants> {
-  as?: boolean;
   asChild?: boolean;
 }
 
-const Input = forwardRef<HTMLInputElement, InputProps>(({ className, size, ...props }, ref) => {
+const Input = forwardRef<HTMLInputElement, InputProps>(({ className, ...props }, ref) => {
   return (
     <input
       ref={ref}
-      className={inputVariants({ size, className })}
+      className={inputVariants({ className })}
       {...props}
     />
   );
 });
+Input.displayName = 'Input';
 
 export default Input;

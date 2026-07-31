@@ -1,13 +1,15 @@
+
 'use client';
 import { useEffect, useState } from 'react'
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import toast from '@/components/ui/Toast';
+import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import api from '@/lib/axios-client';
 
 // Validation schema for product creation (matches backend CreateProductDto)
 const productSchema = z.object({
@@ -33,6 +35,7 @@ const productSchema = z.object({
 type ProductFormValues = z.infer<typeof productSchema>;
 
 export default function CreateProductPage() {
+  const toast = useToast();
   const router = useRouter();
 
   // Form initialization with react-hook-form
@@ -70,10 +73,25 @@ export default function CreateProductPage() {
   // Handle form submission
   const onSubmit: SubmitHandler<ProductFormValues> = async (data) => {
     try {
-      // Simulate API call - would normally use api.post('/products', data)
-      console.log('Creating product:', data);
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
+      const payload = {
+        name: data.name,
+        slug: data.slug || undefined,
+        shortDescription: data.shortDescription,
+        description: data.description,
+        price: data.price,
+        salePrice: data.salePrice ?? undefined,
+        stock: data.stock,
+        stockStatus: data.stockStatus,
+        weight: data.weight ?? undefined,
+        isActive: data.isActive,
+        isFeatured: data.isFeatured,
+        sortOrder: data.sortOrder,
+        sku: data.sku || undefined,
+        status: data.status,
+        brandId: data.brandId || undefined,
+        categories: data.categoryIds || [],
+      };
+      await api.post('/products', payload);
       toast.success('Product created successfully!');
       router.push('/dashboard/products');
     } catch (error: any) {
@@ -231,14 +249,14 @@ export default function CreateProductPage() {
                   Stock Status *
                 </label>
                 <select
-  value={watch('stockStatus') || ''}
-  onChange={(e) => setValue('stockStatus', e.target.value as 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK')}
-  className="border border-gray-300 rounded-md p-2 focus:ring-primary focus:border-primary w-full"
->
-  <option value="IN_STOCK">In Stock</option>
-  <option value="LOW_STOCK">Low Stock</option>
-  <option value="OUT_OF_STOCK">Out of Stock</option>
-</select>
+                  value={watch('stockStatus') || ''}
+                  onChange={(e) => setValue('stockStatus', e.target.value as 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK')}
+                  className="border border-gray-300 rounded-md px-3 py-2 w-full focus:ring-indigo-500 focus:border-indigo-500"
+                >
+                  <option value="IN_STOCK">In Stock</option>
+                  <option value="LOW_STOCK">Low Stock</option>
+                  <option value="OUT_OF_STOCK">Out of Stock</option>
+                </select>
                 {errors.stockStatus && (
                   <p className="mt-1 text-sm text-red-600">{errors.stockStatus.message}</p>
                 )}

@@ -1,10 +1,11 @@
+
 'use client';
 import { useState, useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import toast from '@/components/ui/Toast';
+import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
@@ -20,6 +21,7 @@ const brandSchema = z.object({
 type BrandFormValues = z.infer<typeof brandSchema>;
 
 export default function CreateBrandPage() {
+  const toast = useToast();
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);

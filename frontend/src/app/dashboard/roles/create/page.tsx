@@ -1,10 +1,11 @@
+
 'use client';
 import { useState } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
-import toast from '@/components/ui/Toast';
+import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import Select from '@/components/ui/select'
@@ -20,6 +21,7 @@ const roleSchema = z.object({
 type RoleFormValues = z.infer<typeof roleSchema>;
 
 export default function CreateRolePage() {
+  const toast = useToast();
   const router = useRouter();
   const [permissions, setPermissions] = useState<string[]>([]);
 
