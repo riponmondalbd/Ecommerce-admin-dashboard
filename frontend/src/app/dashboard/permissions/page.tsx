@@ -41,7 +41,7 @@ export default function PermissionsPage() {
       if (searchTerm) params.set('search', searchTerm);
       if (groupFilter) params.set('group', groupFilter);
       const res = await api.get('/permissions', { params });
-      return res.data;
+      return res.data.data;
     },
   });
 
