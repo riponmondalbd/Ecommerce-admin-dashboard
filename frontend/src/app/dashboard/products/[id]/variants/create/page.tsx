@@ -25,8 +25,8 @@ type VariantFormValues = z.infer<typeof variantSchema>;
 export default function CreateVariantPage() {
   const toast = useToast();
   const router = useRouter();
-  const params = useParams<{ productId: string }>();
-  const { productId } = params;
+  const params = useParams<{ id: string }>();
+  const { id: productId } = params;
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 

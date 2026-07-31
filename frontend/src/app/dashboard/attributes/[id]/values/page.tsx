@@ -11,8 +11,8 @@ import { useParams } from 'next/navigation';
 export default function AttributeValuesPage() {
   const toast = useToast();
   const queryClient = useQueryClient();
-  const params = useParams<{ attributeId: string }>();
-  const { attributeId } = params;
+  const params = useParams<{ id: string }>();
+  const { id: attributeId } = params;
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newValue, setNewValue] = useState({ label: '', referenceValue: '' });
 

@@ -100,8 +100,8 @@ const SellModal = ({ variant, onClose, onSell }: { variant: any; onClose: () => 
 
 export default function ProductVariantsPage() {
   const toast = useToast();
-  const params = useParams<{ productId: string }>();
-  const { productId } = params;
+  const params = useParams<{ id: string }>();
+  const { id: productId } = params;
   const [showRestockModal, setShowRestockModal] = useState<any>(null);
   const [showSellModal, setShowSellModal] = useState<any>(null);
 
