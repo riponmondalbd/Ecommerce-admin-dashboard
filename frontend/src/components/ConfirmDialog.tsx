@@ -53,7 +53,7 @@ export default function ConfirmDialog({
     },
   };
 
-  const variant = variantClasses[variant];
+  const variantStyle = variantClasses[variant];
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
@@ -73,19 +73,19 @@ export default function ConfirmDialog({
       >
         {/* Icon */}
         <div className="flex justify-center pt-6">
-          <div className={`w-12 h-12 rounded-full ${variant.bg} flex items-center justify-center`}>
+          <div className={`w-12 h-12 rounded-full ${variantStyle.bg} flex items-center justify-center`}>
             {variant === 'danger' && (
-              <svg className={`w-6 h-6 ${variant.icon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-6 h-6 ${variantStyle.icon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
               </svg>
             )}
             {variant === 'warning' && (
-              <svg className={`w-6 h-6 ${variant.icon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-6 h-6 ${variantStyle.icon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
               </svg>
             )}
             {variant === 'info' && (
-              <svg className={`w-6 h-6 ${variant.icon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className={`w-6 h-6 ${variantStyle.icon}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             )}
@@ -114,7 +114,7 @@ export default function ConfirmDialog({
           <button
             type="button"
             onClick={onConfirm}
-            className={`flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${variant.button}`}
+            className={`flex-1 px-4 py-2 text-sm font-medium text-white rounded-lg transition-colors ${variantStyle.button}`}
           >
             {confirmText}
           </button>
