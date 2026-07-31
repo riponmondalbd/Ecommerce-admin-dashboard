@@ -43,12 +43,13 @@ app.get('/health', (_req, res) => {
   res.status(200).json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Rate limiter for authentication endpoints — 5 attempts per 15 minutes per IP
+// Rate limiter for authentication endpoints — relaxed in development
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 5,
+  max: env.nodeEnv === 'production' ? 10 : 1000,
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => env.nodeEnv === 'development', // Completely bypass in dev
   message: { success: false, message: 'Too many authentication attempts. Please try again later.' },
 });
 
