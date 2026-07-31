@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
@@ -23,6 +23,8 @@ type CategoryFormValues = z.infer<typeof categorySchema>;
 export default function CreateCategoryPage() {
   const toast = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const parentId = searchParams.get('parentId');
 
   // Form initialization
   const {
@@ -34,7 +36,7 @@ export default function CreateCategoryPage() {
   } = useForm<CategoryFormValues>({
     resolver: zodResolver(categorySchema),
     defaultValues: {
-      parentId: '',
+      parentId: parentId || '',
     },
   });
 
