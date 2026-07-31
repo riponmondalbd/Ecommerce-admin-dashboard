@@ -6,12 +6,14 @@ import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import Link from 'next/link';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function BrandsPage() {
   const toast = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [page, setPage] = useState(1);
   const LIMIT = 10;
+  const [deleteBrand, setDeleteBrand] = useState<{ id: string; name: string } | null>(null);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['brands', searchTerm, page],
@@ -26,11 +28,12 @@ export default function BrandsPage() {
   const totalItems = data?.pagination?.total || 0;
   const totalPages = Math.ceil(totalItems / LIMIT) || 1;
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+  const handleDelete = async () => {
+    if (!deleteBrand) return;
     try {
-      await api.delete(`/brands/${id}`);
+      await api.delete(`/brands/${deleteBrand.id}`);
       toast.success('Brand deleted successfully!');
+      setDeleteBrand(null);
       refetch();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to delete brand');
@@ -107,7 +110,7 @@ export default function BrandsPage() {
                       <Link href={`/dashboard/brands/${brand.id}/edit`}>
                         <Button variant="outline" size="sm">Edit</Button>
                       </Link>
-                      <Button variant="destructive" size="sm" onClick={() => handleDelete(brand.id, brand.name)}>Delete</Button>
+                      <Button variant="destructive" size="sm" onClick={() => setDeleteBrand({ id: brand.id, name: brand.name })}>Delete</Button>
                     </div>
                   </td>
                 </tr>
@@ -125,6 +128,18 @@ export default function BrandsPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteBrand}
+        title="Delete Brand"
+        message={`Are you sure you want to delete "${deleteBrand?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={handleDelete}
+        onCancel={() => setDeleteBrand(null)}
+      />
     </div>
   );
 }
