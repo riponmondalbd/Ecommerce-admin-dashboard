@@ -21,7 +21,7 @@ export default function BrandsPage() {
       const params = new URLSearchParams({ page: String(page), limit: String(LIMIT) });
       if (searchTerm) params.set('search', searchTerm);
       const res = await api.get('/brands', { params });
-      return res.data;
+      return res.data.data;
     },
   });
 
