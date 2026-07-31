@@ -48,7 +48,7 @@ const CategoryTreeItem = ({
           <Link href={`/dashboard/categories/create?parentId=${category.id}`}>
             <Button variant="outline" size="sm">Add Child</Button>
           </Link>
-          <Button variant="destructive" size="sm" onClick={() => setDeleteDialog({ id: category.id, name: category.name })}>Delete</Button>
+          <Button variant="destructive" size="sm" onClick={() => onDelete(category.id, category.name)}>Delete</Button>
         </div>
       </div>
 
