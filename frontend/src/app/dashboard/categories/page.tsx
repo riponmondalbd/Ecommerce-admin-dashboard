@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios-client';
 import useToast from '@/components/ui/Toast';
@@ -71,10 +71,16 @@ export default function CategoriesPage() {
   const toast = useToast();
   const [creatingNew, setCreatingNew] = useState(false);
   const [newCategory, setNewCategory] = useState({ name: '', slug: '' });
+  const [responseData, setResponseData] = useState<any>(null);
 
   const { data: treeData, isLoading, refetch } = useQuery({
     queryKey: ['categories-tree'],
-    queryFn: () => api.get('/categories/tree').then(res => res.data.data),
+    queryFn: async () => {
+      const res = await api.get('/categories/tree');
+      console.log('Full response:', res);
+      setResponseData(res.data);
+      return res.data?.data || [];
+    },
   });
 
   const handleCreate = async (e: React.FormEvent) => {
@@ -83,6 +89,7 @@ export default function CategoriesPage() {
       await api.post('/categories', {
         name: newCategory.name,
         slug: newCategory.slug || newCategory.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, ''),
+        isActive: true,
       });
       toast.success('Category created successfully!');
       setCreatingNew(false);
@@ -105,7 +112,15 @@ export default function CategoriesPage() {
   };
 
   return (
-    <div className="p-8 min-h-full">
+    <div className="p-6 lg:p-8">
+      {/* Debug Info */}
+      {responseData && (
+        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
+          <p className="text-sm font-medium">Debug Response:</p>
+          <pre className="text-xs mt-2 overflow-auto max-h-40">{JSON.stringify(responseData, null, 2)}</pre>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <div>
@@ -172,7 +187,12 @@ export default function CategoriesPage() {
           ))
         ) : (
           <div className="text-center py-8 text-gray-500">
-            No categories found. Click "Add Category" to create one.
+            <p>No categories found. Click "Add Category" to create one.</p>
+            {responseData && (
+              <p className="text-sm text-red-500 mt-2">
+                API returned: {JSON.stringify(responseData)}
+              </p>
+            )}
           </div>
         )}
       </div>
