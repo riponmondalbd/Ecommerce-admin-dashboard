@@ -102,7 +102,11 @@ export default function CategoriesPage() {
     }
   };
 
-  const handleDelete = async () => {
+  const handleDelete = async (id: string, name: string) => {
+    setDeleteDialog({ id, name });
+  };
+
+  const confirmDelete = async () => {
     if (!deleteDialog?.id) return;
     try {
       await api.delete(`/categories/${deleteDialog.id}`);
@@ -183,7 +187,7 @@ export default function CategoriesPage() {
         confirmText="Delete"
         cancelText="Cancel"
         variant="danger"
-        onConfirm={handleDelete}
+        onConfirm={confirmDelete}
         onCancel={() => setDeleteDialog(null)}
       />
 
