@@ -7,23 +7,12 @@ import { LoginInput } from './dtos/login.dto';
 import { RegisterInput } from './dtos/register.dto';
 
 export class AuthService {
-  async register(input: RegisterInput) {
-    const existingUser = await prisma.user.findUnique({ where: { email: input.email } });
-    if (existingUser) throw new AppError('Email already registered', 409);
-
-    const hashedPassword = await bcrypt.hash(input.password, 10);
-    const roleName = input.role as string;
-    let role = await prisma.role.findUnique({ where: { name: roleName } });
-    if (!role) role = await prisma.role.create({ data: { name: roleName } });
-
-    return prisma.user.create({
-      data: {
-        name: input.name,
-        email: input.email,
-        password: hashedPassword,
-        roleId: role.id,
-      },
-    });
+  /**
+   * Register is intentionally disabled — accounts are created through the User module only.
+   * The assignment explicitly states: "No public sign-up. Accounts are created through the User module."
+   */
+  async register(_input: RegisterInput) {
+    throw new AppError('Public registration is not allowed. Contact an administrator to create an account.', 403);
   }
 
   async login(input: LoginInput, req?: any) {

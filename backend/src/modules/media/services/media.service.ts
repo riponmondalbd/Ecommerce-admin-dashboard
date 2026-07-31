@@ -272,12 +272,29 @@ export const partialUpdateMedia = async (id: string, input: unknown) => {
 };
 
 /**
- * Delete a media item with cleanup of files
+ * Delete a media item with cleanup of files.
+ * Refuses deletion while the asset is attached to any product, variant, brand, or category.
  */
 export const deleteMedia = async (id: string) => {
   const media = await prisma.media.findUnique({ where: { id } });
   if (!media) {
     throw new AppError('Media not found', 404);
+  }
+
+  // Safety guard: refuse deletion while still referenced by any product, variant, brand, or category
+  const [productCount, variantCount, brandCount, categoryCount] = await Promise.all([
+    prisma.productMedia.count({ where: { mediaId: id } }),
+    prisma.variantMedia.count({ where: { mediaId: id } }),
+    prisma.brand.count({ where: { mediaId: id } }),
+    prisma.category.count({ where: { mediaId: id } }),
+  ]);
+
+  const totalReferences = productCount + variantCount + brandCount + categoryCount;
+  if (totalReferences > 0) {
+    throw new AppError(
+      `Cannot delete media: "${media.fileName}" is still referenced by ${totalReferences} resource(s) (products: ${productCount}, variants: ${variantCount}, brands: ${brandCount}, categories: ${categoryCount}). Remove the references first.`,
+      400,
+    );
   }
 
   // Delete from filesystem (files are stored in uploads directory)
@@ -287,7 +304,7 @@ export const deleteMedia = async (id: string) => {
     const thumbPath = media.filePath + '.thumb';
     try {
       await fs.unlink(thumbPath);
-    } catch (err) {
+    } catch {
       // If thumbnail doesn't exist or can't be deleted, ignore it
     }
   } catch (err) {

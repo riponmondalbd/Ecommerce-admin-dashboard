@@ -367,39 +367,49 @@ export const deleteCategory = async (id: string) => {
 };
 
 /**
- * Get all categories as a hierarchical tree
+ * Get all categories as a hierarchical tree with unlimited nesting depth.
+ * Uses a two-step approach: fetch all categories flat, then build the tree in memory.
  */
 export const getCategoriesTree = async (activeOnly: boolean = true) => {
   const categories = await prisma.category.findMany({
     where: activeOnly ? { isActive: true } : undefined,
-    orderBy: { name: 'asc' },
-    include: {
-      children: {
-        where: activeOnly ? { isActive: true } : undefined,
-        orderBy: { name: 'asc' },
-        include: {
-          children: {
-            where: activeOnly ? { isActive: true } : undefined,
-            orderBy: { name: 'asc' },
-          },
-        },
-      },
+    orderBy: { sortOrder: 'asc', name: 'asc' },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      parentId: true,
+      isActive: true,
+      sortOrder: true,
+      media: { select: { id: true, fileName: true, publicUrl: true, altText: true } },
     },
   });
 
-  // Build hierarchical structure from flat list
-  const buildTree = (cats: any[], parentId: string | null = null): any[] => {
-    return cats
-      .filter((cat) => cat.parentId === parentId)
-      .map((cat) => ({
-        ...cat,
-        children: cat.children && cat.children.length > 0
-          ? buildTree(cat.children, cat.id)
-          : [],
-      }));
-  };
+  // Build an index by id for O(1) lookups
+  const index = new Map<string, any>();
+  for (const cat of categories) {
+    index.set(cat.id, { ...cat, children: [] });
+  }
 
-  return buildTree(categories);
+  const roots: any[] = [];
+  for (const cat of categories) {
+    const node = index.get(cat.id)!;
+    if (cat.parentId && index.has(cat.parentId)) {
+      index.get(cat.parentId)!.children.push(node);
+    } else {
+      roots.push(node);
+    }
+  }
+
+  // Sort children at each level by sortOrder then name
+  const sortNode = (node: any) => {
+    node.children.sort((a: any, b: any) => a.sortOrder - b.sortOrder || a.name.localeCompare(b.name));
+    for (const child of node.children) sortNode(child);
+  };
+  for (const root of roots) sortNode(root);
+
+  return roots;
 };
 
 /**

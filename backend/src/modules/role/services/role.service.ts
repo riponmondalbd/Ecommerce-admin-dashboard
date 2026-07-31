@@ -3,6 +3,15 @@ import { AppError } from '../../../utils/appError';
 import * as z from 'zod';
 import { ListRoleDto, CreateRoleDto, UpdateRoleDto, PartialUpdateRoleDto } from '../../../validation/schemas';
 
+// Permissions that MUST be held by at least one role to prevent a lock-out
+const CRITICAL_PERMISSIONS = [
+  'role:delete',
+  'role:update',
+  'user:delete',
+  'user:create',
+  'permission:delete',
+];
+
 // Validate the input against Zod schemas
 const validateInput = <T>(input: unknown, schema: z.Schema<T>): T => {
   const parsed = schema.safeParse(input);
@@ -176,6 +185,11 @@ export const deleteRole = async (id: string) => {
     throw new AppError(`Cannot delete role: ${role.name} has ${permissionCount} permission(s) assigned`, 400);
   }
 
+  // Safety guard 3: Prevent deleting system roles
+  if (role.isSystem) {
+    throw new AppError(`Cannot delete system role: ${role.name}`, 400);
+  }
+
   await prisma.role.delete({ where: { id } });
   return { success: true, message: 'Role deleted successfully' };
 };
@@ -203,7 +217,8 @@ export const assignPermissionToRole = async (roleId: string, permissionId: strin
 };
 
 /**
- * Remove a permission from a role
+ * Remove a permission from a role with safety guard.
+ * Refuses to remove a permission if it would leave no role holding it.
  */
 export const removePermissionFromRole = async (roleId: string, permissionId: string) => {
   const assignment = await prisma.rolePermission.findFirst({
@@ -212,6 +227,31 @@ export const removePermissionFromRole = async (roleId: string, permissionId: str
 
   if (!assignment) {
     throw new AppError('Permission not assigned to this role', 404);
+  }
+
+  // Fetch the permission key before deletion
+  const permission = await prisma.permission.findUnique({
+    where: { id: permissionId },
+    select: { key: true },
+  });
+  if (!permission) {
+    throw new AppError('Permission not found', 404);
+  }
+
+  // Safety guard: For critical permissions, ensure at least one other role retains it
+  if (CRITICAL_PERMISSIONS.includes(permission.key)) {
+    const remainingRoles = await prisma.rolePermission.count({
+      where: {
+        permissionId,
+        roleId: { not: roleId },
+      },
+    });
+    if (remainingRoles === 0) {
+      throw new AppError(
+        `Cannot revoke ${permission.key}: no other role would retain this permission. At least one role must keep it to prevent system lockout.`,
+        400,
+      );
+    }
   }
 
   await prisma.rolePermission.deleteMany({ where: { roleId, permissionId } });

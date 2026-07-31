@@ -290,21 +290,14 @@ export const partialUpdateProduct = async (id: string, input: unknown, createdBy
 };
 
 /**
- * Delete a product with safety guards
+ * Delete a product. Variants and media attachments cascade via Prisma onDelete: Cascade.
+ * Media assets themselves survive (they may be shared with other products).
+ * Transactions are left as an audit trail and are not deleted.
  */
 export const deleteProduct = async (id: string) => {
   const product = await prisma.product.findUnique({ where: { id } });
   if (!product) {
     throw new AppError('Product not found', 404);
-  }
-
-  // Safety guard: Cannot delete if it has variants
-  const variantCount = await prisma.productVariant.count({
-    where: { productId: id },
-  });
-
-  if (variantCount > 0) {
-    throw new AppError(`Cannot delete product: "${product.name}" has ${variantCount} variant(s)`, 400);
   }
 
   await prisma.product.delete({ where: { id } });

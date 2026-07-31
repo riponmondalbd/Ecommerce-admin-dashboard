@@ -213,7 +213,8 @@ export const partialUpdateAttribute = async (id: string, input: unknown) => {
 };
 
 /**
- * Delete an attribute with safety guards (cannot delete if it has attribute values)
+ * Delete an attribute with safety guards.
+ * Refuses deletion if the attribute has values, or if any value is used by a product variant.
  */
 export const deleteAttribute = async (id: string) => {
   const attribute = await prisma.attribute.findUnique({ where: { id } });
@@ -227,7 +228,24 @@ export const deleteAttribute = async (id: string) => {
   });
 
   if (valueCount > 0) {
-    throw new AppError(`Cannot delete attribute: "${attribute.name}" has ${valueCount} attribute value(s)`, 400);
+    throw new AppError(
+      `Cannot delete attribute: "${attribute.name}" has ${valueCount} attribute value(s). Remove the values first.`,
+      400,
+    );
+  }
+
+  // Safety guard: Cannot delete if any of its values are used in product variants
+  const variantUsageCount = await prisma.productAttributeValue.count({
+    where: {
+      attributeValue: { attributeId: id },
+    },
+  });
+
+  if (variantUsageCount > 0) {
+    throw new AppError(
+      `Cannot delete attribute: "${attribute.name}" is still used by ${variantUsageCount} product variant(s). Remove the variant associations first.`,
+      400,
+    );
   }
 
   await prisma.attribute.delete({ where: { id } });
@@ -347,12 +365,25 @@ export const partialUpdateAttributeValue = async (id: string, input: unknown) =>
 };
 
 /**
- * Delete an attribute value
+ * Delete an attribute value with safety guard.
+ * Refuses deletion if the value is still referenced by any product variant.
  */
 export const deleteAttributeValue = async (id: string) => {
   const attributeValue = await prisma.attributeValue.findUnique({ where: { id } });
   if (!attributeValue) {
     throw new AppError('Attribute value not found', 404);
+  }
+
+  // Safety guard: refuse deletion if the value is still used by a product variant
+  const usageCount = await prisma.productAttributeValue.count({
+    where: { attributeValueId: id },
+  });
+
+  if (usageCount > 0) {
+    throw new AppError(
+      `Cannot delete attribute value: "${attributeValue.label}" is still used by ${usageCount} product variant(s). Remove the variant associations first.`,
+      400,
+    );
   }
 
   await prisma.attributeValue.delete({ where: { id } });

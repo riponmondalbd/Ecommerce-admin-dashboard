@@ -275,47 +275,57 @@ export type ListBrandsInput = z.infer<typeof ListBrandDto>;
 export const ProductStatusEnum = z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']);
 export const TransactionTypeEnum = z.enum(['CREATE', 'UPDATE', 'SELL', 'RESTOCK', 'ADJUST', 'TRANSFER']);
 
-export const CreateProductDto = z.object({
-  name: z.string().min(1, 'Name is required').max(255),
-  slug: z.string().min(1, 'Slug is required').max(255).optional(),
-  sku: z.string().max(50).optional(),
-  shortDescription: z.string().max(500).optional(),
-  description: z.string().max(2000).optional(),
-  hasVariants: z.boolean().optional().default(false),
-  price: z.number().min(0, 'Price must be non-negative'),
-  salePrice: z.number().min(0).optional(),
-  stock: z.number().min(0).optional().default(0),
-  stockStatus: z.string().optional(),
-  weight: z.number().min(0).optional(),
-  isActive: z.boolean().optional().default(true),
-  isFeatured: z.boolean().optional().default(false),
-  sortOrder: z.number().optional().default(0),
-  brandId: z.string().optional(),
-  status: ProductStatusEnum.default('DRAFT'),
-  categories: z.array(z.string()).optional(),
-  mediaIds: z.array(z.string()).optional(),
-});
+export const CreateProductDto = z
+  .object({
+    name: z.string().min(1, 'Name is required').max(255),
+    slug: z.string().min(1, 'Slug is required').max(255).optional(),
+    sku: z.string().max(50).optional(),
+    shortDescription: z.string().max(500).optional(),
+    description: z.string().max(2000).optional(),
+    hasVariants: z.boolean().optional().default(false),
+    price: z.number().min(0, 'Price must be non-negative'),
+    salePrice: z.number().min(0).optional(),
+    stock: z.number().min(0).optional().default(0),
+    stockStatus: z.string().optional(),
+    weight: z.number().min(0).optional(),
+    isActive: z.boolean().optional().default(true),
+    isFeatured: z.boolean().optional().default(false),
+    sortOrder: z.number().optional().default(0),
+    brandId: z.string().optional(),
+    status: ProductStatusEnum.default('DRAFT'),
+    categories: z.array(z.string()).optional(),
+    mediaIds: z.array(z.string()).optional(),
+  })
+  .refine(
+    (data) => data.salePrice === undefined || data.salePrice <= data.price,
+    { message: 'Sale price must not exceed price', path: ['salePrice'] },
+  );
 
-export const UpdateProductDto = z.object({
-  name: z.string().min(1, 'Name is required').max(255).optional(),
-  slug: z.string().min(1, 'Slug is required').max(255).optional(),
-  sku: z.string().max(50).optional(),
-  shortDescription: z.string().max(500).optional(),
-  description: z.string().max(2000).optional(),
-  hasVariants: z.boolean().optional(),
-  price: z.number().min(0, 'Price must be non-negative').optional(),
-  salePrice: z.number().min(0).optional(),
-  stock: z.number().min(0).optional(),
-  stockStatus: z.string().optional(),
-  weight: z.number().min(0).optional(),
-  isActive: z.boolean().optional(),
-  isFeatured: z.boolean().optional(),
-  sortOrder: z.number().optional(),
-  brandId: z.string().optional(),
-  status: ProductStatusEnum.optional(),
-  categories: z.array(z.string()).optional(),
-  mediaIds: z.array(z.string()).optional(),
-});
+export const UpdateProductDto = z
+  .object({
+    name: z.string().min(1, 'Name is required').max(255).optional(),
+    slug: z.string().min(1, 'Slug is required').max(255).optional(),
+    sku: z.string().max(50).optional(),
+    shortDescription: z.string().max(500).optional(),
+    description: z.string().max(2000).optional(),
+    hasVariants: z.boolean().optional(),
+    price: z.number().min(0, 'Price must be non-negative').optional(),
+    salePrice: z.number().min(0).optional(),
+    stock: z.number().min(0).optional(),
+    stockStatus: z.string().optional(),
+    weight: z.number().min(0).optional(),
+    isActive: z.boolean().optional(),
+    isFeatured: z.boolean().optional(),
+    sortOrder: z.number().optional(),
+    brandId: z.string().optional(),
+    status: ProductStatusEnum.optional(),
+    categories: z.array(z.string()).optional(),
+    mediaIds: z.array(z.string()).optional(),
+  })
+  .refine(
+    (data) => data.salePrice === undefined || data.price === undefined || data.salePrice <= data.price,
+    { message: 'Sale price must not exceed price', path: ['salePrice'] },
+  );
 
 export const PartialUpdateProductDto = UpdateProductDto;
 
@@ -333,34 +343,44 @@ export type UpdateProductInput = z.infer<typeof UpdateProductDto>;
 export type PartialUpdateProductInput = z.infer<typeof PartialUpdateProductDto>;
 export type ListProductsInput = z.infer<typeof ListProductDto>;
 
-export const CreateProductVariantDto = z.object({
-  productId: z.string(),
-  sku: z.string().max(50).optional(),
-  price: z.number().min(0, 'Price must be non-negative').optional(),
-  salePrice: z.number().min(0).optional(),
-  inventory: z.number().min(0, 'Inventory must be non-negative').default(0),
-  stockStatus: z.string().optional(),
-  lowStockThreshold: z.number().optional().default(5),
-  weight: z.number().min(0).optional(),
-  dimensions: z.record(z.unknown()).optional(),
-  isActive: z.boolean().optional().default(true),
-  attributeValueIds: z.array(z.string()).optional(), // Array of attribute value IDs for this variant
-  mediaIds: z.array(z.string()).optional(),
-});
+export const CreateProductVariantDto = z
+  .object({
+    productId: z.string(),
+    sku: z.string().max(50).optional(),
+    price: z.number().min(0, 'Price must be non-negative').optional(),
+    salePrice: z.number().min(0).optional(),
+    inventory: z.number().min(0, 'Inventory must be non-negative').default(0),
+    stockStatus: z.string().optional(),
+    lowStockThreshold: z.number().optional().default(5),
+    weight: z.number().min(0).optional(),
+    dimensions: z.record(z.unknown()).optional(),
+    isActive: z.boolean().optional().default(true),
+    attributeValueIds: z.array(z.string()).optional(),
+    mediaIds: z.array(z.string()).optional(),
+  })
+  .refine(
+    (data) => data.salePrice === undefined || data.price === undefined || data.salePrice <= data.price,
+    { message: 'Sale price must not exceed price', path: ['salePrice'] },
+  );
 
-export const UpdateProductVariantDto = z.object({
-  sku: z.string().max(50).optional(),
-  price: z.number().min(0, 'Price must be non-negative').optional(),
-  salePrice: z.number().min(0).optional(),
-  inventory: z.number().min(0, 'Inventory must be non-negative').optional(),
-  stockStatus: z.string().optional(),
-  lowStockThreshold: z.number().optional(),
-  weight: z.number().min(0).optional(),
-  dimensions: z.record(z.unknown()).optional(),
-  isActive: z.boolean().optional(),
-  attributeValueIds: z.array(z.string()).optional(),
-  mediaIds: z.array(z.string()).optional(),
-});
+export const UpdateProductVariantDto = z
+  .object({
+    sku: z.string().max(50).optional(),
+    price: z.number().min(0, 'Price must be non-negative').optional(),
+    salePrice: z.number().min(0).optional(),
+    inventory: z.number().min(0, 'Inventory must be non-negative').optional(),
+    stockStatus: z.string().optional(),
+    lowStockThreshold: z.number().optional(),
+    weight: z.number().min(0).optional(),
+    dimensions: z.record(z.unknown()).optional(),
+    isActive: z.boolean().optional(),
+    attributeValueIds: z.array(z.string()).optional(),
+    mediaIds: z.array(z.string()).optional(),
+  })
+  .refine(
+    (data) => data.salePrice === undefined || data.price === undefined || data.salePrice <= data.price,
+    { message: 'Sale price must not exceed price', path: ['salePrice'] },
+  );
 
 export type CreateProductVariantInput = z.infer<typeof CreateProductVariantDto>;
 export type UpdateProductVariantInput = z.infer<typeof UpdateProductVariantDto>;

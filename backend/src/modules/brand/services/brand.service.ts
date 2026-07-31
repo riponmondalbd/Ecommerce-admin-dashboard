@@ -225,12 +225,21 @@ export const partialUpdateBrand = async (id: string, input: unknown) => {
 };
 
 /**
- * Delete a brand
+ * Delete a brand with safety guard — refuses deletion while products reference it.
  */
 export const deleteBrand = async (id: string) => {
   const brand = await prisma.brand.findUnique({ where: { id } });
   if (!brand) {
     throw new AppError('Brand not found', 404);
+  }
+
+  // Safety guard: refuse deletion while products still reference this brand
+  const productCount = await prisma.product.count({ where: { brandId: id } });
+  if (productCount > 0) {
+    throw new AppError(
+      `Cannot delete brand: "${brand.name}" is still referenced by ${productCount} product(s). Remove or reassign the products first.`,
+      400,
+    );
   }
 
   await prisma.brand.delete({ where: { id } });
