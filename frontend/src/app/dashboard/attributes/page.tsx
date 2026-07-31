@@ -22,7 +22,7 @@ export default function AttributesPage() {
       if (searchTerm) params.set('search', searchTerm);
       if (filterType) params.set('type', filterType);
       const res = await api.get('/attributes', { params });
-      return res.data;
+      return res.data.data;
     },
   });
 
@@ -113,10 +113,10 @@ export default function AttributesPage() {
                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
                 <p>Loading attributes...</p>
               </td></tr>
-            ) : (data?.data || []).length === 0 ? (
+            ) : (Array.isArray(data?.data) ? data.data : []).length === 0 ? (
               <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500">No attributes found</td></tr>
             ) : (
-              (data?.data || []).map((attr: any) => (
+              (Array.isArray(data?.data) ? data.data : []).map((attr: any) => (
                 <tr key={attr.id} className="border-t hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="font-medium text-gray-900">{attr.name}</span>

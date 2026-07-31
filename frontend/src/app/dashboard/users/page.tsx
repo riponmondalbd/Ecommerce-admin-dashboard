@@ -103,14 +103,14 @@ export default function UsersPage() {
       if (searchTerm) params.set('search', searchTerm);
       if (filterRole) params.set('roleId', filterRole);
       const res = await api.get('/users', { params });
-      return res.data;
+      return res.data.data;
     },
   });
 
   // Fetch roles for filter dropdown
   const { data: rolesData } = useQuery({
     queryKey: ['roles'],
-    queryFn: () => api.get('/roles?limit=100').then(r => r.data),
+    queryFn: () => api.get('/roles?limit=100').then(r => r.data.data),
   });
 
   const totalItems = data?.pagination?.total || 0;
@@ -170,10 +170,10 @@ export default function UsersPage() {
                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
                 <p>Loading users...</p>
               </td></tr>
-            ) : (data?.data || []).length === 0 ? (
+            ) : (Array.isArray(data?.data) ? data.data : []).length === 0 ? (
               <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500">No users found</td></tr>
             ) : (
-              (data?.data || []).map((user: any) => (
+              (Array.isArray(data?.data) ? data.data : []).map((user: any) => (
                 <UserRow key={user.id} user={user} onStatusChange={() => refetch()} />
               ))
             )}

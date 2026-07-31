@@ -39,8 +39,8 @@ export const PartialUpdatePermissionDto = z.object({
 });
 
 export const ListPermissionDto = z.object({
-  page: z.number().min(1).default(1).optional(),
-  limit: z.number().min(1).max(100).default(10).optional(),
+  page: z.coerce.number().min(1).default(1).optional(),
+  limit: z.coerce.number().min(1).max(100).default(10).optional(),
   group: PermissionGroupSchema.optional(),
   search: z.string().optional(),
   isActive: z.boolean().optional(),
@@ -66,8 +66,8 @@ export const PartialUpdateRoleDto = z.object({
 });
 
 export const ListRoleDto = z.object({
-  page: z.number().min(1).default(1).optional(),
-  limit: z.number().min(1).max(100).default(10).optional(),
+  page: z.coerce.number().min(1).default(1).optional(),
+  limit: z.coerce.number().min(1).max(100).default(10).optional(),
   search: z.string().optional(),
 });
 
@@ -114,8 +114,8 @@ export const PartialUpdateUserDto = z.object({
 });
 
 export const ListUserDto = z.object({
-  page: z.number().min(1).default(1).optional(),
-  limit: z.number().min(1).max(100).default(10).optional(),
+  page: z.coerce.number().min(1).default(1).optional(),
+  limit: z.coerce.number().min(1).max(100).default(10).optional(),
   search: z.string().optional(),
   roleId: z.string().optional(),
   status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'LOCKED']).optional(),
@@ -177,8 +177,8 @@ export const PartialUpdateMediaDto = z.object({
 });
 
 export const ListMediaDto = z.object({
-  page: z.number().min(1).default(1).optional(),
-  limit: z.number().min(1).max(100).default(10).optional(),
+  page: z.coerce.number().min(1).default(1).optional(),
+  limit: z.coerce.number().min(1).max(100).default(10).optional(),
   search: z.string().optional(),
   type: MediaTypeSchema.optional(),
   status: MediaStatusSchema.optional(),
@@ -222,8 +222,8 @@ export const PartialUpdateCategoryDto = z.object({
 });
 
 export const ListCategoryDto = z.object({
-  page: z.number().min(1).default(1).optional(),
-  limit: z.number().min(1).max(100).default(10).optional(),
+  page: z.coerce.number().min(1).default(1).optional(),
+  limit: z.coerce.number().min(1).max(100).default(10).optional(),
   search: z.string().optional(),
   parentId: z.string().optional(),
   isActive: z.boolean().optional(),
@@ -415,8 +415,8 @@ export const UpdateAttributeDto = z.object({
 export const PartialUpdateAttributeDto = UpdateAttributeDto;
 
 export const ListAttributeDto = z.object({
-  page: z.number().min(1).default(1).optional(),
-  limit: z.number().min(1).max(100).default(10).optional(),
+  page: z.coerce.number().min(1).default(1).optional(),
+  limit: z.coerce.number().min(1).max(100).default(10).optional(),
   search: z.string().optional(),
   type: AttributeTypeSchema.optional(),
 });
