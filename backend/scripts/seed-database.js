@@ -464,7 +464,7 @@ async function main() {
       price: 999.99,
       inventory: 50,
       weight: 0.187,
-      dimensions: JSON.stringify({ width: '7.15', height: '14.66', depth: '0.78' }),
+      dimensions: { width: 7.15, height: 14.66, depth: 0.78 },
     },
   });
 
@@ -477,7 +477,7 @@ async function main() {
       price: 999.99,
       inventory: 35,
       weight: 0.187,
-      dimensions: JSON.stringify({ width: '7.15', height: '14.66', depth: '0.78' }),
+      dimensions: { width: 7.15, height: 14.66, depth: 0.78 },
     },
   });
 
@@ -491,7 +491,7 @@ async function main() {
       price: 129.99,
       inventory: 100,
       weight: 0.5,
-      dimensions: JSON.stringify({ width: '12', height: '4', depth: '4' }),
+      dimensions: { width: 12, height: 4, depth: 4 },
     },
   });
 
@@ -529,11 +529,11 @@ async function main() {
 
   await prisma.productTransaction.createMany({
     data: [
-      { productId: iphoneProduct.id, variantId: null, type: 'CREATE', quantity: 1, priceAtTime: 999.99, notes: 'Product initially created' },
-      { productId: iphoneProduct.id, variantId: iphoneBlueVariant.id, type: 'SELL', quantity: -5, priceAtTime: 999.99, notes: '5 units sold' },
-      { productId: iphoneProduct.id, variantId: iphoneBlackVariant.id, type: 'RESTOCK', quantity: 20, priceAtTime: 999.99, notes: 'Restocked 20 units' },
-      {productId: nikeAirMaxProduct.id, variantId: nikeWhiteVariant.id, type: 'SELL', quantity: -15, priceAtTime: 129.99, notes: '15 units sold' },
-      { productId: nikeAirMaxProduct.id, variantId: nikeWhiteVariant.id, type: 'ADJUST', quantity: -2, priceAtTime: 129.99, notes: '2 units damaged/returned' },
+      { productId: iphoneProduct.id, variantId: null, type: 'CREATE', quantity: 1, priceAtTime: 999.99, notes: 'Product initially created', createdBy: adminUser.id },
+      { productId: iphoneProduct.id, variantId: iphoneBlueVariant.id, type: 'SELL', quantity: -5, priceAtTime: 999.99, notes: '5 units sold', createdBy: adminUser.id },
+      { productId: iphoneProduct.id, variantId: iphoneBlackVariant.id, type: 'RESTOCK', quantity: 20, priceAtTime: 999.99, notes: 'Restocked 20 units', createdBy: adminUser.id },
+      { productId: nikeAirMaxProduct.id, variantId: nikeWhiteVariant.id, type: 'SELL', quantity: -15, priceAtTime: 129.99, notes: '15 units sold', createdBy: adminUser.id },
+      { productId: nikeAirMaxProduct.id, variantId: nikeWhiteVariant.id, type: 'ADJUST', quantity: -2, priceAtTime: 129.99, notes: '2 units damaged/returned', createdBy: adminUser.id },
     ],
   });
 

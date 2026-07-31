@@ -315,9 +315,10 @@ export const getUserPermissions = async (userId: string) => {
   }
 
   // Extract permission keys from role permissions relationship
-const permissions = user.role.permissions.flatMap(rp =>
-  [rp.permission].map(p => ({ key: p.key, name: p.name }))
-);
+  const permissions = user.role.permissions.map(rp => ({
+    key: rp.permission.key,
+    name: rp.permission.name,
+  }));
 
   return permissions;
 };
