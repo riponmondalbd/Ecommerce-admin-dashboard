@@ -15,19 +15,20 @@ export default function BrandsPage() {
   const LIMIT = 10;
   const [deleteBrand, setDeleteBrand] = useState<{ id: string; name: string } | null>(null);
 
-  const { data, isLoading, refetch } = useQuery({
+  const { data, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['brands', searchTerm, page],
     queryFn: async () => {
       const params = new URLSearchParams({ page: String(page), limit: String(LIMIT) });
       if (searchTerm) params.set('search', searchTerm);
       const res = await api.get('/brands', { params });
+      console.log("FETCHED BRANDS API RESPONSE:", res.data);
       return res.data.data;
     },
   });
 
-  // Note: pagination not available in this simplified response
-  const totalItems = 0;
-  const totalPages = 1;
+  const totalItems = data?.pagination?.total || 0;
+  const totalPages = data?.pagination?.pages || 1;
+  const brandsList = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
 
   const handleDelete = async () => {
     if (!deleteBrand) return;
@@ -57,6 +58,16 @@ export default function BrandsPage() {
       </div>
 
       <div className="mb-6">
+        {/* Debug Info — only shown on error */}
+        {isError && (
+          <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded">
+            <p className="text-sm font-medium text-red-700">API Error:</p>
+            <pre className="text-xs mt-2 overflow-auto max-h-40 text-red-600">{String((error as any)?.response?.data?.message || error)}</pre>
+            <p className="text-xs mt-1 text-red-500">
+              Status: {(error as any)?.response?.status} — Check your permissions or authentication.
+            </p>
+          </div>
+        )}
         <Input
           placeholder="Search by name..."
           value={searchTerm}
@@ -82,10 +93,10 @@ export default function BrandsPage() {
                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
                 <p>Loading brands...</p>
               </td></tr>
-            ) : (data || []).length === 0 ? (
+            ) : brandsList.length === 0 ? (
               <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500">No brands found</td></tr>
             ) : (
-              (data || []).map((brand: any) => (
+              brandsList.map((brand: any) => (
                 <tr key={brand.id} className="border-t hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
