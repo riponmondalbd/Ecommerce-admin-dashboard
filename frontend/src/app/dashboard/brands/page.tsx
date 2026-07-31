@@ -25,7 +25,7 @@ export default function BrandsPage() {
     },
   });
 
-  const totalItems = data?.data?.pagination?.total || 0;
+  const totalItems = data?.pagination?.total || 0;
   const totalPages = Math.ceil(totalItems / LIMIT) || 1;
 
   const handleDelete = async () => {
@@ -81,10 +81,10 @@ export default function BrandsPage() {
                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
                 <p>Loading brands...</p>
               </td></tr>
-            ) : (data?.data || []).length === 0 ? (
+            ) : (data || []).length === 0 ? (
               <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500">No brands found</td></tr>
             ) : (
-              (data?.data || []).map((brand: any) => (
+              (data || []).map((brand: any) => (
                 <tr key={brand.id} className="border-t hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
