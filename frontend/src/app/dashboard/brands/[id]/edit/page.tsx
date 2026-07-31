@@ -1,7 +1,7 @@
 
 'use client';
 import { useState, useEffect, useRef } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter, useParams } from 'next/navigation';
@@ -30,80 +30,83 @@ export default function EditBrandPage() {
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Fetch brand data on mount
-  useEffect(() => {
-    if (id) {
-      api.get(`/brands/${id}`)
-        .then(res => {
-          const brandData = res.data.data || res.data;
-          setBrand(brandData);
-        // Reset form with fetched data - use setValue for individual fields instead of reset()
-        setValue('name', brandData.name);
-        setValue('slug', brandData.slug || '');
-        setValue('status', brandData.status);
-      })
-        .catch(err => console.error('Failed to fetch brand:', err))
-        .finally(() => setLoading(false));
-    }
-  }, [id]);
-
-  // Form initialization
+  // Form initialization — must be before any useEffect that calls setValue
   const {
     register,
     handleSubmit,
     formState: { errors },
     watch,
     setValue,
+    reset,
+    control,
   } = useForm<BrandFormValues>({
     resolver: zodResolver(brandSchema),
-    defaultValues: {},
+    defaultValues: {
+      name: '',
+      slug: '',
+      status: 'ACTIVE',
+    },
   });
 
-  // Note: reset is now included in the first useForm call on line 45-54
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const fileInput = e.target;
-    if (fileInput.files && fileInput.files[0]) {
-      setFile(fileInput.files[0]);
-      e.target.value = ''; // Reset so same file can be selected again
-    }
-  };
-
-  // Auto-generate slug if not provided
-  const watchName = watch('name');
+  // Fetch brand data and populate form
   useEffect(() => {
-    if (watchName && !watch('slug') && brand) {
+    if (!id) return;
+    api.get(`/brands/${id}`)
+      .then(res => {
+        const brandData = res.data.data || res.data;
+        setBrand(brandData);
+        // Use reset() to populate all fields at once — the correct RHF pattern
+        reset({
+          name: brandData.name ?? '',
+          slug: brandData.slug ?? '',
+          status: brandData.status === 'INACTIVE' ? 'INACTIVE' : 'ACTIVE',
+        });
+      })
+      .catch(err => console.error('Failed to fetch brand:', err))
+      .finally(() => setLoading(false));
+  }, [id, reset]);
+
+  // Auto-generate slug from name if slug is empty
+  const watchName = watch('name');
+  const watchSlug = watch('slug');
+  useEffect(() => {
+    if (watchName && !watchSlug) {
       const slug = watchName
         .toLowerCase()
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-+|-+$/g, '');
-      setValue('slug', slug || brand.slug);
+      setValue('slug', slug);
     }
-  }, [watchName, watch('slug'), brand, setValue]);
+  }, [watchName]);  // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) {
+      setFile(e.target.files[0]);
+      e.target.value = '';
+    }
+  };
 
   // Handle form submission
   const onSubmit: SubmitHandler<BrandFormValues> = async (data) => {
     try {
       if (!brand?.id) return;
-
       setUploading(true);
+
+      // Update brand details
       await api.put(`/brands/${brand.id}`, data);
-      
+
+      // Upload and link logo if a new file was selected
       if (file) {
-        // Upload to media endpoint first
         const formData = new FormData();
         formData.append('file', file);
         formData.append('altText', `${data.name} logo`);
 
-        const mediaRes = await api.post(`/media`, formData, {
+        const mediaRes = await api.post('/media', formData, {
           headers: { 'Content-Type': 'multipart/form-data' },
         });
-        
-        // Extract mediaId from standard API response structure
-        const mediaId = mediaRes.data?.data?.id || mediaRes.data?.id;
 
+        const mediaId = mediaRes.data?.data?.id || mediaRes.data?.id;
         if (mediaId) {
-          // Link media to brand
           await api.post(`/brands/${brand.id}/media`, { mediaId });
         }
       }
@@ -154,12 +157,12 @@ export default function EditBrandPage() {
               <p className="text-sm text-gray-600">
                 {file ? `New Logo: ${file.name}` : brand.media ? `Logo (${brand.media.fileName})` : 'No logo assigned yet'}
               </p>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                className="hidden" 
-                accept="image/*" 
-                onChange={handleFileChange} 
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={handleFileChange}
               />
               <Button type="button" variant="secondary" size="sm" className="mt-2" onClick={() => fileInputRef.current?.click()}>
                 {file ? 'Change Logo' : 'Upload New Logo'}
@@ -170,7 +173,6 @@ export default function EditBrandPage() {
 
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Information */}
           <section className="bg-white rounded-lg border border-gray-200 p-6">
             <h2 className="text-xl font-semibold mb-4 flex items-center">
               <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -179,6 +181,7 @@ export default function EditBrandPage() {
               Basic Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Name */}
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                   Name *
@@ -193,6 +196,7 @@ export default function EditBrandPage() {
                 )}
               </div>
 
+              {/* Slug */}
               <div>
                 <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-1">
                   Slug
@@ -204,19 +208,26 @@ export default function EditBrandPage() {
                 />
               </div>
 
+              {/* Status — using Controller for proper Radix UI Select integration */}
               <div>
                 <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
                   Status *
                 </label>
-                <Select value={watch('status')} onValueChange={(v: 'ACTIVE' | 'INACTIVE') => setValue('status', v)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="ACTIVE">Active</SelectItem>
-                    <SelectItem value="INACTIVE">Inactive</SelectItem>
-                  </SelectContent>
-                </Select>
+                <Controller
+                  name="status"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <SelectTrigger id="status" className="w-full">
+                        <SelectValue placeholder="Select status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ACTIVE">Active</SelectItem>
+                        <SelectItem value="INACTIVE">Inactive</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
                 {errors.status && (
                   <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
                 )}
