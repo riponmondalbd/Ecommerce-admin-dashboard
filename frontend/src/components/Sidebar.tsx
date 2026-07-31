@@ -179,7 +179,11 @@ export default function Sidebar() {
       <nav className="flex-1 overflow-y-auto p-3">
         <ul className="space-y-1">
           {visibleItems.map((item) => {
-            const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+            // Active if exact match or direct child route
+            const pathSegments = pathname?.split('/').filter(Boolean) || [];
+            const hrefSegments = item.href.split('/').filter(Boolean) || [];
+            const isActive = pathname === item.href ||
+              (pathname?.startsWith(item.href + '/') && pathSegments.length <= hrefSegments.length + 1);
             return (
               <li key={item.href}>
                 <Link
