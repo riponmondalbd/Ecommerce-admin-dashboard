@@ -1,6 +1,6 @@
 
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -26,17 +26,21 @@ export default function EditBrandPage() {
   const router = useRouter();
   const [brand, setBrand] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [file, setFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Fetch brand data on mount
   useEffect(() => {
     if (id) {
-      api.get(`/api/brands/${id}`)
+      api.get(`/brands/${id}`)
         .then(res => {
-          setBrand(res.data);
+          const brandData = res.data.data || res.data;
+          setBrand(brandData);
         // Reset form with fetched data - use setValue for individual fields instead of reset()
-        setValue('name', res.data.name);
-        setValue('slug', res.data.slug || '');
-        setValue('status', res.data.status);
+        setValue('name', brandData.name);
+        setValue('slug', brandData.slug || '');
+        setValue('status', brandData.status);
       })
         .catch(err => console.error('Failed to fetch brand:', err))
         .finally(() => setLoading(false));
@@ -57,6 +61,14 @@ export default function EditBrandPage() {
 
   // Note: reset is now included in the first useForm call on line 45-54
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const fileInput = e.target;
+    if (fileInput.files && fileInput.files[0]) {
+      setFile(fileInput.files[0]);
+      e.target.value = ''; // Reset so same file can be selected again
+    }
+  };
+
   // Auto-generate slug if not provided
   const watchName = watch('name');
   useEffect(() => {
@@ -74,11 +86,25 @@ export default function EditBrandPage() {
     try {
       if (!brand?.id) return;
 
-      await api.put(`/api/brands/${brand.id}`, data);
+      setUploading(true);
+      await api.put(`/brands/${brand.id}`, data);
+      
+      if (file) {
+        const formData = new FormData();
+        formData.append('file', file);
+        formData.append('brandId', brand.id);
+
+        await api.post(`/brands/${brand.id}/media`, formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+      }
+
       toast.success('Brand updated successfully!');
       router.push('/dashboard/brands');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to update brand');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -106,16 +132,29 @@ export default function EditBrandPage() {
         <section className="bg-white rounded-lg border border-gray-200 p-6 mb-6">
           <h3 className="text-lg font-semibold mb-4">Current Logo</h3>
           <div className="flex items-center space-x-4">
-            {brand.media ? (
-              <img src={brand.media.publicUrl} alt={brand.name} className="w-24 h-24 rounded border" />
+            {file ? (
+              <img src={URL.createObjectURL(file)} alt="New logo preview" className="w-24 h-24 rounded border object-contain" />
+            ) : brand.media ? (
+              <img src={brand.media.publicUrl} alt={brand.name} className="w-24 h-24 rounded border object-contain" />
             ) : (
               <div className="w-24 h-24 border-2 border-dashed border-gray-300 rounded flex items-center justify-center text-gray-400">
                 No logo
               </div>
             )}
             <div className="flex-1">
-              <p className="text-sm text-gray-600">{brand.media ? `Logo (${brand.media.fileName})` : 'No logo assigned yet'}</p>
-              <Button variant="secondary" size="sm" className="mt-2">Upload New Logo</Button>
+              <p className="text-sm text-gray-600">
+                {file ? `New Logo: ${file.name}` : brand.media ? `Logo (${brand.media.fileName})` : 'No logo assigned yet'}
+              </p>
+              <input 
+                type="file" 
+                ref={fileInputRef} 
+                className="hidden" 
+                accept="image/*" 
+                onChange={handleFileChange} 
+              />
+              <Button type="button" variant="secondary" size="sm" className="mt-2" onClick={() => fileInputRef.current?.click()}>
+                {file ? 'Change Logo' : 'Upload New Logo'}
+              </Button>
             </div>
           </div>
         </section>
@@ -182,8 +221,10 @@ export default function EditBrandPage() {
 
           {/* Actions */}
           <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-            <Button variant="secondary" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit">Update Brand</Button>
+            <Button type="button" variant="secondary" onClick={() => router.back()}>Cancel</Button>
+            <Button type="submit" disabled={uploading}>
+              {uploading ? 'Updating...' : 'Update Brand'}
+            </Button>
           </div>
         </form>
       </div>
