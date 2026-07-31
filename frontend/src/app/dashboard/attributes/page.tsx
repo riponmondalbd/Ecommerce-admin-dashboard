@@ -6,6 +6,7 @@ import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import Link from 'next/link';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 export default function AttributesPage() {
   const toast = useToast();
@@ -14,6 +15,7 @@ export default function AttributesPage() {
   const [filterType, setFilterType] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const LIMIT = 10;
+  const [deleteAttr, setDeleteAttr] = useState<{ id: string; name: string } | null>(null);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['attributes', searchTerm, filterType, page],
@@ -30,10 +32,15 @@ export default function AttributesPage() {
   const totalPages = Math.ceil(totalItems / LIMIT) || 1;
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"? This will also delete all its values.`)) return;
+    setDeleteAttr({ id, name });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteAttr) return;
     try {
-      await api.delete(`/attributes/${id}`);
+      await api.delete(`/attributes/${deleteAttr.id}`);
       toast.success('Attribute deleted successfully!');
+      setDeleteAttr(null);
       await queryClient.invalidateQueries({ queryKey: ['attributes'] });
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to delete attribute');
@@ -155,6 +162,18 @@ export default function AttributesPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteAttr}
+        title="Delete Attribute"
+        message={`Are you sure you want to delete "${deleteAttr?.name}"? This will also delete all its values.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteAttr(null)}
+      />
     </div>
   );
 }
