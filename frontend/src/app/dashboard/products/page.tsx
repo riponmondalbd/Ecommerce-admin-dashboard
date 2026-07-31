@@ -4,6 +4,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios-client';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import Link from 'next/link';
 import useToast from '@/components/ui/Toast';
 
@@ -43,6 +44,7 @@ export default function ProductsPage() {
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [selectedStatus, setSelectedStatus] = useState<string | null>(null);
   const [page, setPage] = useState(1);
+  const [deleteProduct, setDeleteProduct] = useState<{ id: string; name: string } | null>(null);
   const LIMIT = 10;
 
   const { data, isLoading, refetch } = useQuery({

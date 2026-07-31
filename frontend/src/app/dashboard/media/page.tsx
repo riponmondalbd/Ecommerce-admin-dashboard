@@ -5,6 +5,7 @@ import api from '@/lib/axios-client';
 import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import Link from 'next/link';
 
 const MediaItem = ({ media, onDelete }: { media: any; onDelete: () => void }) => (
@@ -63,6 +64,7 @@ export default function MediaPage() {
   const [uploading, setUploading] = useState(false);
   const [page, setPage] = useState(1);
   const LIMIT = 12;
+  const [deleteMediaId, setDeleteMediaId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['media', filterType, filterStatus, page],
@@ -79,10 +81,15 @@ export default function MediaPage() {
   const totalPages = Math.ceil(totalItems / LIMIT) || 1;
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this media?')) return;
+    setDeleteMediaId(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteMediaId) return;
     try {
-      await api.delete(`/media/${id}`);
+      await api.delete(`/media/${deleteMediaId}`);
       toast.success('Media deleted successfully!');
+      setDeleteMediaId(null);
       await refetch();
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to delete media');
@@ -227,6 +234,18 @@ export default function MediaPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteMediaId}
+        title="Delete Media"
+        message="Are you sure you want to delete this media? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteMediaId(null)}
+      />
     </div>
   );
 }
