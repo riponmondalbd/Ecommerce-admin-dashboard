@@ -149,10 +149,15 @@ export const deleteCategoryController = (req: Request, res: Response) => {
 
 /**
  * GET /api/categories/tree - Get all categories as a hierarchical tree
+ * For the admin dashboard we show ALL categories (including inactive) so
+ * that admins can see and manage every category they've created.
+ * Pass `?activeOnly=true` as a query param to filter to active-only.
  */
-export const getCategoriesTreeController = (_req: Request, res: Response) => {
+export const getCategoriesTreeController = (req: Request, res: Response) => {
   try {
-    getCategoriesTree()
+    // Default to false (show all) for admin dashboard; frontend can pass ?activeOnly=true
+    const activeOnly = req.query.activeOnly === 'true';
+    getCategoriesTree(activeOnly)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error: any) {

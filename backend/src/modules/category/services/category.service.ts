@@ -373,7 +373,7 @@ export const deleteCategory = async (id: string) => {
 export const getCategoriesTree = async (activeOnly: boolean = true) => {
   const categories = await prisma.category.findMany({
     where: activeOnly ? { isActive: true } : undefined,
-    orderBy: { sortOrder: 'asc', name: 'asc' },
+    orderBy: [{ sortOrder: 'asc' }, { name: 'asc' }],
     select: {
       id: true,
       name: true,

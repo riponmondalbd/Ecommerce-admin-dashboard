@@ -73,7 +73,7 @@ export default function CategoriesPage() {
   const [newCategory, setNewCategory] = useState({ name: '', slug: '' });
   const [responseData, setResponseData] = useState<any>(null);
 
-  const { data: treeData, isLoading, refetch } = useQuery({
+  const { data: treeData, isLoading, isError, error, refetch } = useQuery({
     queryKey: ['categories-tree'],
     queryFn: async () => {
       const res = await api.get('/categories/tree');
@@ -113,11 +113,14 @@ export default function CategoriesPage() {
 
   return (
     <div className="p-6 lg:p-8">
-      {/* Debug Info */}
-      {responseData && (
-        <div className="mb-4 p-4 bg-yellow-50 border border-yellow-200 rounded">
-          <p className="text-sm font-medium">Debug Response:</p>
-          <pre className="text-xs mt-2 overflow-auto max-h-40">{JSON.stringify(responseData, null, 2)}</pre>
+      {/* Debug Info — only shown on error */}
+      {isError && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded">
+          <p className="text-sm font-medium text-red-700">API Error:</p>
+          <pre className="text-xs mt-2 overflow-auto max-h-40 text-red-600">{String((error as any)?.response?.data?.message || error)}</pre>
+          <p className="text-xs mt-1 text-red-500">
+            Status: {(error as any)?.response?.status} — If you see 403, your role may be missing the <code>category:read</code> permission.
+          </p>
         </div>
       )}
 
@@ -177,6 +180,19 @@ export default function CategoriesPage() {
             <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
             <p className="text-gray-500">Loading categories...</p>
           </div>
+        ) : isError ? (
+          <div className="text-center py-8">
+            <p className="text-red-500 font-medium">Failed to load categories.</p>
+            <p className="text-sm text-gray-500 mt-1">
+              {(error as any)?.response?.status === 403
+                ? 'You do not have permission to view categories (category:read).'
+                : (error as any)?.response?.data?.message || String(error)}
+            </p>
+            <button
+              onClick={() => refetch()}
+              className="mt-3 text-sm text-indigo-600 underline hover:text-indigo-800"
+            >Try again</button>
+          </div>
         ) : treeData && treeData.length > 0 ? (
           treeData.map((category: any) => (
             <CategoryTreeItem
@@ -188,11 +204,6 @@ export default function CategoriesPage() {
         ) : (
           <div className="text-center py-8 text-gray-500">
             <p>No categories found. Click "Add Category" to create one.</p>
-            {responseData && (
-              <p className="text-sm text-red-500 mt-2">
-                API returned: {JSON.stringify(responseData)}
-              </p>
-            )}
           </div>
         )}
       </div>
