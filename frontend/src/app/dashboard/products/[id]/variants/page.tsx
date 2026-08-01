@@ -1,10 +1,10 @@
-'use client';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios-client';
 import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Link from 'next/link';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { useParams } from 'next/navigation';
 
 const RestockModal = ({ variant, onClose, onRestock }: { variant: any; onClose: () => void; onRestock: () => void }) => {
@@ -114,11 +114,18 @@ export default function ProductVariantsPage() {
     enabled: !!productId,
   });
 
+  const [deleteVariant, setDeleteVariant] = useState<string | null>(null);
+
   const handleDeleteVariant = async (id: string) => {
-    if (!confirm('Delete this variant?')) return;
+    setDeleteVariant(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteVariant) return;
     try {
-      await api.delete(`/variants/${id}`);
+      await api.delete(`/variants/${deleteVariant}`);
       toast.success('Variant deleted!');
+      setDeleteVariant(null);
       await refetch();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to delete variant');
@@ -197,7 +204,7 @@ export default function ProductVariantsPage() {
                       <div className="flex gap-1">
                         <Button variant="secondary" size="sm" onClick={() => setShowRestockModal(variant)}>Restock</Button>
                         <Button variant="destructive" size="sm" onClick={() => setShowSellModal(variant)}>Sell</Button>
-                        <Button variant="outline" size="sm" onClick={() => handleDeleteVariant(variant.id)}>Delete</Button>
+                        <Button variant="destructive" size="sm" onClick={() => handleDeleteVariant(variant.id)}>Delete</Button>
                       </div>
                     </td>
                   </tr>
@@ -222,6 +229,18 @@ export default function ProductVariantsPage() {
           onSell={() => refetch()}
         />
       )}
+
+      {/* Delete Variant Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteVariant}
+        title="Delete Variant"
+        message="Are you sure you want to delete this variant? This action cannot be undone."
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteVariant(null)}
+      />
     </div>
   );
 }
