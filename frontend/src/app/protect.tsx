@@ -1,5 +1,5 @@
 'use client';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
 
@@ -8,16 +8,20 @@ import { useAuthStore } from '@/store/authStore';
  * If not authenticated, redirects to login page.
  */
 export default function Protect({ children }: { children: React.ReactNode }) {
-  const { user, getUser, refreshAccessToken } = useAuthStore();
+  const { user, getUser, loading } = useAuthStore();
   const pathname = usePathname();
   const router = useRouter();
+  const [authChecked, setAuthChecked] = useState(false);
 
-  // Check authentication on mount and keep track
+  // Check authentication on mount
   useEffect(() => {
+    let mounted = true;
+
     const checkAuth = async () => {
-      // Try to get user first (may trigger refresh)
       try {
         const userData = await getUser();
+
+        if (!mounted) return;
 
         // If we got user data but it's null or no user, redirect
         if (!userData) {
@@ -30,21 +34,35 @@ export default function Protect({ children }: { children: React.ReactNode }) {
           console.warn('User missing permissions data');
         }
       } catch (error) {
+        if (!mounted) return;
         console.error('Authentication check failed:', error);
         router.push('/login');
+      } finally {
+        if (mounted) {
+          setAuthChecked(true);
+        }
       }
     };
 
     checkAuth();
-  }, [user, getUser, router, pathname]);
 
-  // If loading or not authenticated, show loading or redirect
-  if (!user) {
+    return () => {
+      mounted = false;
+    };
+  }, [getUser, router]);
+
+  // Show loading while checking auth
+  if (!authChecked) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-gray-600">Loading...</p>
       </div>
     );
+  }
+
+  // If still no user after auth check, redirect to login (but don't render)
+  if (!user) {
+    return null;
   }
 
   return <>{children}</>;

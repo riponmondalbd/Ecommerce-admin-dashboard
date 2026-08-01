@@ -36,12 +36,17 @@ export const isAuthenticated = (): boolean => {
 
   try {
     // Split token into parts (header.payload.signature)
-    const payloadBase64 = token.split('.')[1];
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+
+    const payloadBase64 = parts[1];
     if (!payloadBase64) return false;
 
     // Decode base64 (handles padding issues)
     const padded = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
-    const decodedAtob = atob(padded + '=='.substring(0 - payloadBase64.length % 4));
+    // Properly add padding
+    const paddingNeeded = (4 - (padded.length % 4)) % 4;
+    const decodedAtob = atob(padded + '='.repeat(paddingNeeded));
     const payload = JSON.parse(decodedAtob);
 
     // Check expiration (exp is in seconds, convert to ms)
@@ -61,11 +66,15 @@ export const getRemainingTime = (): number => {
   if (!token) return 0;
 
   try {
-    const payloadBase64 = token.split('.')[1];
+    const parts = token.split('.');
+    if (parts.length !== 3) return 0;
+
+    const payloadBase64 = parts[1];
     if (!payloadBase64) return 0;
 
     const padded = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
-    const decodedAtob = atob(padded + '=='.substring(0 - payloadBase64.length % 4));
+    const paddingNeeded = (4 - (padded.length % 4)) % 4;
+    const decodedAtob = atob(padded + '='.repeat(paddingNeeded));
     const payload = JSON.parse(decodedAtob);
 
     const expSeconds = payload.exp || 0;
@@ -96,9 +105,13 @@ export const refreshToken = async (api: any): Promise<{ accessToken: string; ref
  */
 export const decodeToken = (token: string): any => {
   try {
-    const payloadBase64 = token.split('.')[1];
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+
+    const payloadBase64 = parts[1];
     const padded = payloadBase64.replace(/-/g, '+').replace(/_/g, '/');
-    const decodedAtob = atob(padded + '=='.substring(0 - payloadBase64.length % 4));
+    const paddingNeeded = (4 - (padded.length % 4)) % 4;
+    const decodedAtob = atob(padded + '='.repeat(paddingNeeded));
     return JSON.parse(decodedAtob);
   } catch (error) {
     console.warn('Could not decode token:', error);
