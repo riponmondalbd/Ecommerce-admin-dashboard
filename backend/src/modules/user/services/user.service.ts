@@ -165,9 +165,17 @@ export const updateUser = async (id: string, input: unknown, requestingUserId?: 
     email: validated.email,
     name: validated.name,
     phone: validated.phone,
-    roleId: validated.role,
     status: validated.status,
   };
+
+  // Look up role ID from role name if provided
+  if (validated.role) {
+    const role = await prisma.role.findUnique({ where: { name: validated.role } });
+    if (!role) {
+      throw new AppError('Role not found', 404);
+    }
+    updateData.roleId = role.id;
+  }
 
   if (validated.password !== undefined) {
     updateData.password = await bcrypt.hash(validated.password, 10);
@@ -217,27 +225,35 @@ export const partialUpdateUser = async (id: string, input: unknown, requestingUs
     updateData.password = await bcrypt.hash(validated.password, 10);
   }
 
-  if (validated.role !== undefined && validated.role !== user.roleId) {
-    // Self-escalation prevention
-    if (requestingUserId && requestingUserId === id) {
-      const roleOrder: Record<string, number> = {
-        VIEWER: 0,
-        SUPPORT_AGENT: 1,
-        CATALOG_MANAGER: 2,
-        ADMIN: 3,
-        SUPER_ADMIN: 4,
-      };
+  if (validated.role !== undefined) {
+    // Look up role ID from role name
+    const role = await prisma.role.findUnique({ where: { name: validated.role } });
+    if (!role) {
+      throw new AppError('Role not found', 404);
+    }
+    const newRoleId = role.id;
+    if (newRoleId !== user.roleId) {
+      // Self-escalation prevention
+      if (requestingUserId && requestingUserId === id) {
+        const roleOrder: Record<string, number> = {
+          VIEWER: 0,
+          SUPPORT_AGENT: 1,
+          CATALOG_MANAGER: 2,
+          ADMIN: 3,
+          SUPER_ADMIN: 4,
+        };
 
-      const newRoleName = validated.role;
-      const currentRoleName = user.role?.name;
+        const newRoleName = validated.role;
+        const currentRoleName = user.role?.name;
 
-      if (newRoleName && currentRoleName && roleOrder[newRoleName] !== undefined && roleOrder[currentRoleName] !== undefined) {
-        if (roleOrder[newRoleName]! >= roleOrder[currentRoleName]!) {
-          throw new AppError('Self-role escalation is not permitted', 403);
+        if (newRoleName && currentRoleName && roleOrder[newRoleName] !== undefined && roleOrder[currentRoleName] !== undefined) {
+          if (roleOrder[newRoleName]! >= roleOrder[currentRoleName]!) {
+            throw new AppError('Self-role escalation is not permitted', 403);
+          }
         }
       }
+      updateData.roleId = newRoleId;
     }
-    updateData.roleId = validated.role;
   }
 
   if (Object.keys(updateData).length === 0) {
