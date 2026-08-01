@@ -3,14 +3,14 @@ import { useState, useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useRouter } from 'next/navigation';
+import { useRouter, useParams } from 'next/navigation';
 import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import api from '@/lib/axios-client'
 import Link from 'next/link';
 
-// Validation schema for role creation (matches backend CreateRole payload)
+// Validation schema for role editing
 const roleSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   description: z.string().optional(),
@@ -25,12 +25,21 @@ interface Permission {
   group: string;
 }
 
-export default function CreateRolePage() {
+interface Role {
+  id: string;
+  name: string;
+  description: string | null;
+  permissions: Array<{ permission: { key: string; name: string } }>;
+}
+
+export default function EditRolePage() {
   const toast = useToast();
   const router = useRouter();
+  const params = useParams();
+  const roleId = params.id as string;
   const [permissions, setPermissions] = useState<string[]>([]);
   const [allPermissions, setAllPermissions] = useState<Permission[]>([]);
-  const [loadingPermissions, setLoadingPermissions] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [groupedPermissions, setGroupedPermissions] = useState<Record<string, Permission[]>>({});
 
   // Fetch all permissions on mount
@@ -52,20 +61,37 @@ export default function CreateRolePage() {
       } catch (error) {
         console.error('Failed to fetch permissions:', error);
         toast.error('Failed to load permissions');
-      } finally {
-        setLoadingPermissions(false);
       }
     };
     fetchPermissions();
   }, [toast]);
 
+  // Fetch role data
+  useEffect(() => {
+    const fetchRole = async () => {
+      try {
+        const res = await api.get(`/roles/${roleId}`);
+        const role = res.data?.data || res.data;
+        if (role) {
+          setPermissions(role.permissions?.map((p: { permission: { key: string } }) => p.permission.key) || []);
+        }
+      } catch (error: any) {
+        toast.error(error.response?.data?.message || 'Failed to load role');
+        router.push('/dashboard/roles');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchRole();
+  }, [roleId, router, toast]);
+
   // Form initialization
   const {
     register,
     handleSubmit,
-    formState: { errors },
-    watch,
     setValue,
+    formState: { errors },
   } = useForm<RoleFormValues>({
     resolver: zodResolver(roleSchema),
     defaultValues: {
@@ -83,19 +109,19 @@ export default function CreateRolePage() {
   // Handle form submission
   const onSubmit: SubmitHandler<RoleFormValues> = async (data) => {
     try {
-      await api.post('/roles', {
+      await api.put(`/roles/${roleId}`, {
         name: data.name,
         description: data.description,
         permissions: data.permissions,
       });
-      toast.success('Role created successfully!');
+      toast.success('Role updated successfully!');
       router.push('/dashboard/roles');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create role');
+      toast.error(error.response?.data?.message || 'Failed to update role');
     }
   };
 
-  if (loadingPermissions) {
+  if (loading) {
     return (
       <div className="p-8 min-h-full flex items-center justify-center">
         <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
@@ -108,8 +134,8 @@ export default function CreateRolePage() {
       <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New Role</h1>
-          <p className="text-gray-600">Define a new role with specific permissions for users</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit Role</h1>
+          <p className="text-gray-600">Update role details and permissions</p>
         </div>
 
         {/* Form */}
@@ -214,7 +240,7 @@ export default function CreateRolePage() {
             <Link href="/dashboard/roles">
               <Button variant="secondary" type="button">Cancel</Button>
             </Link>
-            <Button type="submit">Create Role</Button>
+            <Button type="submit">Update Role</Button>
           </div>
         </form>
       </div>

@@ -57,14 +57,20 @@ export type ListPermissionsInput = z.infer<typeof ListPermissionDto>;
 // Role DTOs
 export const CreateRoleDto = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters'),
+  description: z.string().max(255).optional(),
+  permissions: z.array(z.string()).optional().default([]),
 });
 
 export const UpdateRoleDto = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters'),
+  description: z.string().max(255).optional(),
+  permissions: z.array(z.string()).optional(),
 });
 
 export const PartialUpdateRoleDto = z.object({
   name: z.string().min(1, 'Name is required').max(50, 'Name must be less than 50 characters').optional(),
+  description: z.string().max(255).optional(),
+  permissions: z.array(z.string()).optional(),
 });
 
 export const ListRoleDto = z.object({

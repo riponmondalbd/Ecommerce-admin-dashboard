@@ -103,11 +103,41 @@ export const createRole = async (input: unknown) => {
     throw new AppError('Role with this name already exists', 409);
   }
 
+  // Extract permissions before creating role
+  const { permissions: permissionKeys, description, ...roleData } = validated;
+
+  // Create role with description
   const role = await prisma.role.create({
-    data: { name: validated.name },
+    data: {
+      name: roleData.name,
+      description: description || null,
+    },
   });
 
-  return role;
+  // Assign permissions if provided
+  if (permissionKeys && permissionKeys.length > 0) {
+    // Find permission IDs from keys
+    const permissions = await prisma.permission.findMany({
+      where: { key: { in: permissionKeys } },
+      select: { id: true, key: true },
+    });
+
+    // Check if all requested permissions exist
+    const foundKeys = permissions.map(p => p.key);
+    const missingKeys = permissionKeys.filter((key: string) => !foundKeys.includes(key));
+    if (missingKeys.length > 0) {
+      throw new AppError(`Permissions not found: ${missingKeys.join(', ')}`, 404);
+    }
+
+    // Create role-permission assignments
+    await prisma.rolePermission.createMany({
+      data: permissions.map(p => ({ roleId: role.id, permissionId: p.id })),
+      skipDuplicates: true,
+    });
+  }
+
+  // Return role with permissions
+  return getRoleById(role.id);
 };
 
 /**
@@ -129,11 +159,16 @@ export const updateRole = async (id: string, input: unknown) => {
     }
   }
 
-  return await prisma.role.update({
+  // Update role basic info
+  await prisma.role.update({
     where: { id },
-    data: { name: validated.name },
-    include: { permissions: { select: { permission: { select: { key: true } } } } },
+    data: {
+      name: validated.name,
+      description: validated.description ?? null,
+    },
   });
+
+  return getRoleById(id);
 };
 
 /**
@@ -157,11 +192,18 @@ export const partialUpdateRole = async (id: string, input: unknown) => {
     updateData.name = validated.name;
   }
 
-  return await prisma.role.update({
-    where: { id },
-    data: updateData,
-    include: { permissions: { select: { permission: { select: { key: true } } } } },
-  });
+  if (validated.description !== undefined) {
+    updateData.description = validated.description;
+  }
+
+  if (Object.keys(updateData).length > 0) {
+    await prisma.role.update({
+      where: { id },
+      data: updateData,
+    });
+  }
+
+  return getRoleById(id);
 };
 
 /**
