@@ -10,6 +10,7 @@ import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import api from '@/lib/axios-client';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 // Validation schema for user update (matches backend UpdateUserDto)
 const userSchema = z.object({
@@ -27,7 +28,7 @@ export default function EditUserPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const [deleteUser, setDeleteUser] = useState<{ id: string | null; name: string } | null>(null);
 
   // Fetch user data on mount
   useEffect(() => {
@@ -99,38 +100,22 @@ export default function EditUserPage() {
     }
   };
 
-  const handleLock = async () => {
-    try {
-      await api.put(`/api/users/${id}/lock`);
-      toast.success('User locked!');
-      window.location.reload();
-    } catch (err) {
-      toast.error('Failed to lock user');
-    }
+  const handleDelete = async () => {
+    if (!user) return;
+    setDeleteUser({ id: user.id, name: user.name });
   };
 
-  const handleUnlock = async () => {
+  const confirmDelete = async () => {
+    if (!deleteUser) return;
     try {
-      await api.put(`/api/users/${id}/unlock`);
-      toast.success('User unlocked!');
-      window.location.reload();
-    } catch (err) {
-      toast.error('Failed to unlock user');
+      await api.delete(`/users/${deleteUser.id}`);
+      toast.success('User deleted successfully!');
+      setDeleteUser(null);
+      router.push('/dashboard/users');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to delete user');
     }
   };
-
-  if (loading || !user) {
-    return (
-      <div className="p-8 min-h-full">
-        <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          <p className="mt-2 text-gray-500">Loading user...</p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
     <div className="p-8 min-h-full">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
@@ -285,11 +270,7 @@ export default function EditUserPage() {
               {user.status === 'LOCKED' && (
                 <Button variant="secondary" onClick={handleUnlock}>Unlock User</Button>
               )}
-              <Button variant="destructive" size="sm" onClick={() => {
-                if (confirm('Are you sure you want to delete this user?')) {
-                  toast.warning('Delete clicked');
-                }
-              }}>Delete User</Button>
+              <Button variant="destructive" size="sm" onClick={() => setDeleteUser({ id: user.id, name: user.name })}>Delete User</Button>
             </div>
           </section>
 

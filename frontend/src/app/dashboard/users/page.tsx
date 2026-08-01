@@ -6,6 +6,7 @@ import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import Link from 'next/link';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 const UserRow = ({ user, onStatusChange }: { user: any; onStatusChange: () => void }) => {
   const toast = useToast();
@@ -20,12 +21,17 @@ const UserRow = ({ user, onStatusChange }: { user: any; onStatusChange: () => vo
     }
   };
 
-  const handleDelete = async () => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
+  const handleDelete = async (id: string, name: string) => {
+    setDeleteUser({ id, name });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteUser) return;
     try {
-      await api.delete(`/users/${user.id}`);
+      await api.delete(`/users/${deleteUser.id}`);
       toast.success('User deleted successfully!');
-      onStatusChange();
+      setDeleteUser(null);
+      refetch();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to delete user');
     }
@@ -95,6 +101,7 @@ export default function UsersPage() {
   const [filterRole, setFilterRole] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const LIMIT = 10;
+  const [deleteUser, setDeleteUser] = useState<{ id: string; name: string } | null>(null);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['users', searchTerm, filterRole, page],
@@ -196,6 +203,7 @@ export default function UsersPage() {
             </div>
           </div>
         )}
+      </div>
       </div>
     </div>
   );
