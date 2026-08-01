@@ -81,7 +81,9 @@ export default function CategoriesPage() {
       const res = await api.get('/categories/tree');
       console.log('Full response:', res);
       setResponseData(res.data);
-      return res.data?.data || [];
+      // Handle both response formats
+      const response = res.data;
+      return Array.isArray(response) ? response : (response?.data || []);
     },
   });
 
@@ -212,7 +214,7 @@ export default function CategoriesPage() {
               className="mt-3 text-sm text-indigo-600 underline hover:text-indigo-800"
             >Try again</button>
           </div>
-        ) : treeData && treeData.length > 0 ? (
+        ) : Array.isArray(treeData) && treeData.length > 0 ? (
           treeData.map((category: any) => (
             <CategoryTreeItem
               key={category.id}

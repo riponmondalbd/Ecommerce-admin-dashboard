@@ -94,18 +94,26 @@ export default function UsersPage() {
       if (searchTerm) params.set('search', searchTerm);
       if (filterRole) params.set('roleId', filterRole);
       const res = await api.get('/users', { params });
-      return res.data.data;
+      // Handle both response formats
+      const response = res.data;
+      return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
     },
   });
 
   // Fetch roles for filter dropdown
   const { data: rolesData } = useQuery({
     queryKey: ['roles'],
-    queryFn: () => api.get('/roles?limit=100').then(r => r.data.data),
+    queryFn: () => api.get('/roles?limit=100').then(r => {
+      const response = r.data;
+      return Array.isArray(response) ? response : response?.data || [];
+    }),
   });
 
-  const totalItems = data?.pagination?.total || 0;
-  const totalPages = Math.ceil(totalItems / LIMIT) || 1;
+  // Extract users list safely
+  const userList = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+
+  const totalItems = data?.pagination?.total || userList.length || 0;
+  const totalPages = data?.pagination?.pages || Math.ceil(totalItems / LIMIT) || 1;
 
   const handleDelete = (id: string, name: string) => {
     setDeleteUser({ id, name });
@@ -153,7 +161,7 @@ export default function UsersPage() {
           className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
         >
           <option value="">All Roles</option>
-          {rolesData?.data?.map((role: any) => (
+          {(Array.isArray(rolesData?.data) ? rolesData.data : (Array.isArray(rolesData) ? rolesData : [])).map((role: any) => (
             <option key={role.id} value={role.id}>{role.name}</option>
           ))}
         </select>
@@ -177,10 +185,10 @@ export default function UsersPage() {
                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
                 <p>Loading users...</p>
               </td></tr>
-            ) : (Array.isArray(data?.data) ? data.data : []).length === 0 ? (
+            ) : userList.length === 0 ? (
               <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500">No users found</td></tr>
             ) : (
-              (Array.isArray(data?.data) ? data.data : []).map((user: any) => (
+              userList.map((user: any) => (
                 <UserRow key={user.id} user={user} onStatusChange={() => refetch()} onDeleteClick={handleDelete} />
               ))
             )}

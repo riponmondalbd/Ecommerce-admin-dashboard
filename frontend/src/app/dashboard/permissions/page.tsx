@@ -41,18 +41,23 @@ export default function PermissionsPage() {
       if (searchTerm) params.set('search', searchTerm);
       if (groupFilter) params.set('group', groupFilter);
       const res = await api.get('/permissions', { params });
-      return res.data.data;
+      // Handle both response formats
+      const response = res.data;
+      return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
     },
   });
 
+  // Extract permissions list safely
+  const permissionList = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+
   // Extract unique groups from the data
-  const groups = data?.data?.reduce((acc: string[], perm: any) => {
+  const groups = permissionList.reduce((acc: string[], perm: any) => {
     if (perm.group && !acc.includes(perm.group)) acc.push(perm.group);
     return acc;
-  }, [] as string[]) || [];
+  }, [] as string[]);
 
-  const totalItems = data?.pagination?.total || 0;
-  const totalPages = Math.ceil(totalItems / LIMIT) || 1;
+  const totalItems = data?.pagination?.total || permissionList.length || 0;
+  const totalPages = data?.pagination?.pages || Math.ceil(totalItems / LIMIT) || 1;
 
   return (
     <div className="p-8 min-h-full">
@@ -99,10 +104,10 @@ export default function PermissionsPage() {
                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
                 <p>Loading permissions...</p>
               </td></tr>
-            ) : (data?.data || []).length === 0 ? (
+            ) : permissionList.length === 0 ? (
               <tr><td colSpan={3} className="px-6 py-12 text-center text-gray-500">No permissions found</td></tr>
             ) : (
-              (data?.data || []).map((perm: any) => (
+              permissionList.map((perm: any) => (
                 <PermissionRow key={perm.id} permission={perm} />
               ))
             )}

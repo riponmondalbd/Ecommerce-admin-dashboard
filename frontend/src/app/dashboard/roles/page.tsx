@@ -47,12 +47,17 @@ export default function RolesPage() {
       const params = new URLSearchParams({ page: String(page), limit: String(LIMIT) });
       if (searchTerm) params.set('search', searchTerm);
       const res = await api.get('/roles', { params });
-      return res.data;
+      // Handle both response formats
+      const response = res.data;
+      return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
     },
   });
 
-  const totalItems = data?.pagination?.total || 0;
-  const totalPages = Math.ceil(totalItems / LIMIT) || 1;
+  // Extract roles list safely
+  const roleList = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+
+  const totalItems = data?.pagination?.total || roleList.length || 0;
+  const totalPages = data?.pagination?.pages || Math.ceil(totalItems / LIMIT) || 1;
 
   return (
     <div className="p-8 min-h-full">
@@ -97,10 +102,10 @@ export default function RolesPage() {
                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
                 <p>Loading roles...</p>
               </td></tr>
-            ) : (data?.data || []).length === 0 ? (
+            ) : roleList.length === 0 ? (
               <tr><td colSpan={4} className="px-6 py-12 text-center text-gray-500">No roles found</td></tr>
             ) : (
-              (data?.data || []).map((role: any) => (
+              roleList.map((role: any) => (
                 <RoleRow key={role.id} role={role} onRefresh={() => queryClient.invalidateQueries({ queryKey: ['roles'] })} />
               ))
             )}

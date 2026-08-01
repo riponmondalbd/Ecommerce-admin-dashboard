@@ -55,18 +55,27 @@ export default function ProductsPage() {
       if (selectedBrand) params.set('brandId', selectedBrand);
       if (selectedStatus) params.set('status', selectedStatus);
       const res = await api.get('/products', { params });
-      return res.data;
+      // Handle both response formats
+      const response = res.data;
+      return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
     },
   });
 
   // Fetch brands for filter dropdown
   const { data: brandsData } = useQuery({
     queryKey: ['brands'],
-    queryFn: () => api.get('/brands?limit=100').then(r => r.data),
+    queryFn: () => api.get('/brands?limit=100').then(r => {
+      // Handle both response formats: {data: [...], pagination} or [...]
+      const response = r.data;
+      return Array.isArray(response) ? response : response?.data || [];
+    }),
   });
 
-  const totalItems = data?.pagination?.total || 0;
-  const totalPages = Math.ceil(totalItems / LIMIT) || 1;
+  // Extract product list safely
+  const productList = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+
+  const totalItems = data?.pagination?.total || productList.length || 0;
+  const totalPages = data?.pagination?.pages || Math.ceil(totalItems / LIMIT) || 1;
 
   const handleDelete = async (id: string, name: string) => {
     setDeleteProduct({ id, name });
@@ -114,7 +123,7 @@ export default function ProductsPage() {
           className="border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
         >
           <option value="">All Brands</option>
-          {brandsData?.data?.map((b: any) => (
+          {(Array.isArray(brandsData?.data) ? brandsData.data : (Array.isArray(brandsData) ? brandsData : [])).map((b: any) => (
             <option key={b.id} value={b.id}>{b.name}</option>
           ))}
         </select>
@@ -151,10 +160,10 @@ export default function ProductsPage() {
                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
                 <p>Loading products...</p>
               </td></tr>
-            ) : (data?.data || []).length === 0 ? (
+            ) : productList.length === 0 ? (
               <tr><td colSpan={7}><EmptyState /></td></tr>
             ) : (
-              (data?.data || []).map((product: any) => (
+              productList.map((product: any) => (
                 <tr key={product.id} className="border-t hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div>

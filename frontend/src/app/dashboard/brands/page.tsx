@@ -22,13 +22,15 @@ export default function BrandsPage() {
       if (searchTerm) params.set('search', searchTerm);
       const res = await api.get('/brands', { params });
       console.log("FETCHED BRANDS API RESPONSE:", res.data);
-      return res.data.data;
+      // Handle both response formats
+      const response = res.data;
+      return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
     },
   });
 
   const totalItems = data?.pagination?.total || 0;
   const totalPages = data?.pagination?.pages || 1;
-  const brandsList = Array.isArray(data?.data) ? data.data : Array.isArray(data) ? data : [];
+  const brandsList = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
 
   const handleDelete = async () => {
     if (!deleteBrand) return;

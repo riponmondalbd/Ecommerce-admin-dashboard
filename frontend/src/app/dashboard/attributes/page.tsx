@@ -24,12 +24,17 @@ export default function AttributesPage() {
       if (searchTerm) params.set('search', searchTerm);
       if (filterType) params.set('type', filterType);
       const res = await api.get('/attributes', { params });
-      return res.data.data;
+      // Handle both response formats
+      const response = res.data;
+      return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
     },
   });
 
-  const totalItems = data?.pagination?.total || 0;
-  const totalPages = Math.ceil(totalItems / LIMIT) || 1;
+  // Extract attributes list safely
+  const attributeList = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+
+  const totalItems = data?.pagination?.total || attributeList.length || 0;
+  const totalPages = data?.pagination?.pages || Math.ceil(totalItems / LIMIT) || 1;
 
   const handleDelete = async (id: string, name: string) => {
     setDeleteAttr({ id, name });
@@ -120,10 +125,10 @@ export default function AttributesPage() {
                 <div className="inline-block animate-spin rounded-full h-6 w-6 border-b-2 border-indigo-600 mb-2"></div>
                 <p>Loading attributes...</p>
               </td></tr>
-            ) : (Array.isArray(data?.data) ? data.data : []).length === 0 ? (
+            ) : attributeList.length === 0 ? (
               <tr><td colSpan={6} className="px-6 py-12 text-center text-gray-500">No attributes found</td></tr>
             ) : (
-              (Array.isArray(data?.data) ? data.data : []).map((attr: any) => (
+              attributeList.map((attr: any) => (
                 <tr key={attr.id} className="border-t hover:bg-gray-50">
                   <td className="px-6 py-4 whitespace-nowrap">
                     <span className="font-medium text-gray-900">{attr.name}</span>

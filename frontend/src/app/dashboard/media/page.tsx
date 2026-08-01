@@ -73,12 +73,17 @@ export default function MediaPage() {
       if (filterType) params.set('type', filterType);
       if (filterStatus) params.set('status', filterStatus);
       const res = await api.get('/media', { params });
-      return res.data;
+      // Handle both response formats
+      const response = res.data;
+      return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
     },
   });
 
-  const totalItems = data?.pagination?.total || 0;
-  const totalPages = Math.ceil(totalItems / LIMIT) || 1;
+  // Extract media list safely
+  const mediaList = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
+
+  const totalItems = data?.pagination?.total || mediaList.length || 0;
+  const totalPages = data?.pagination?.pages || Math.ceil(totalItems / LIMIT) || 1;
 
   const handleDelete = async (id: string) => {
     setDeleteMediaId(id);
@@ -165,12 +170,12 @@ export default function MediaPage() {
             <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-2"></div>
             <p className="text-gray-500">Loading media...</p>
           </div>
-        ) : (data?.data || []).length === 0 ? (
+        ) : mediaList.length === 0 ? (
           <div className="col-span-full text-center py-12 text-gray-500">
             No media found. Upload your first file above.
           </div>
         ) : (
-          (data?.data || []).map((media: any) => (
+          mediaList.map((media: any) => (
             <MediaItem key={media.id} media={media} onDelete={() => handleDelete(media.id)} />
           ))
         )}
