@@ -3,9 +3,8 @@ import { PrismaClient } from '@prisma/client';
 const prisma = new PrismaClient();
 
 async function main() {
-  const brands = await prisma.brand.findMany();
-  console.log("BRANDS:");
-  console.log(JSON.stringify(brands, null, 2));
+  const roles = await prisma.role.findMany({ select: { id: true, name: true } });
+  console.log('ROLES:', JSON.stringify(roles, null, 2));
 }
 
 main()

@@ -20,7 +20,7 @@ const permissionSchema = z.object({
   name: z.string().min(1, 'Name is required').max(100, 'Name must be less than 100 characters'),
   description: z.string().max(255).optional(),
   group: z.string().min(1, 'Group is required'),
-  isActive: z.boolean().default(true),
+  isActive: z.boolean().optional().default(true),
 });
 
 type PermissionFormValues = z.infer<typeof permissionSchema>;

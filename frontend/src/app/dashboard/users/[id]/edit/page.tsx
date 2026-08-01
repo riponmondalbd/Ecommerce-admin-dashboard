@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useForm, Controller, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter, useParams } from 'next/navigation';
@@ -16,11 +16,17 @@ const userSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   email: z.string().email('Invalid email format'),
   password: z.string().optional(),
-  roleId: z.string().optional(),
-  status: z.enum(['ACTIVE', 'INACTIVE', 'LOCKED']),
+  role: z.string().optional(),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'LOCKED']),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
+
+interface Role {
+  id: string;
+  name: string;
+  description: string | null;
+}
 
 export default function EditUserPage() {
   const toast = useToast();
@@ -29,34 +35,53 @@ export default function EditUserPage() {
   const [user, setUser] = useState<any>(null);
   const [deleteUser, setDeleteUser] = useState<{ id: string | null; name: string } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [rolesLoading, setRolesLoading] = useState(true);
 
   // Form initialization
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors },
-    watch,
     setValue,
     reset,
   } = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
-    defaultValues: {},
+    defaultValues: {
+      role: undefined,
+      status: 'ACTIVE',
+    },
   });
+
+  // Fetch roles on mount
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const res = await api.get('/roles', { params: { limit: 100 } });
+        const response = res.data?.data || res.data;
+        const data = Array.isArray(response) ? response : (response?.data || []);
+        setRoles(data);
+      } catch (error) {
+        console.error('Failed to fetch roles:', error);
+      } finally {
+        setRolesLoading(false);
+      }
+    };
+    fetchRoles();
+  }, []);
 
   // Fetch user data on mount
   useEffect(() => {
     if (id) {
-      api.get(`/api/users/${id}`)
+      api.get(`/users/${id}`)
         .then(res => {
-          setUser(res.data);
-          formMethods.reset(res.data);
+          setUser(res.data?.data || res.data);
         })
         .catch(err => console.error('Failed to fetch user:', err))
         .finally(() => setLoading(false));
     }
   }, [id]);
-
-  const formMethods = { register, handleSubmit, errors, watch, setValue, reset };
 
   // Handle form submission
   const onSubmit: SubmitHandler<UserFormValues> = async (data) => {
@@ -67,10 +92,10 @@ export default function EditUserPage() {
         ...data,
         // Only include password if provided
         password: data.password ? data.password : undefined,
-        roleId: data.roleId || undefined,
+        role: data.role || undefined,
       };
 
-      await api.put(`/api/users/${user.id}`, updateData);
+      await api.put(`/users/${user.id}`, updateData);
       toast.success('User updated successfully!');
       router.push('/dashboard/users');
     } catch (error: any) {
@@ -81,7 +106,7 @@ export default function EditUserPage() {
   // Status action handlers
   const handleActivate = async () => {
     try {
-      await api.put(`/api/users/${id}/activate`);
+      await api.put(`/users/${id}/activate`);
       toast.success('User activated!');
       window.location.reload();
     } catch (err) {
@@ -91,7 +116,7 @@ export default function EditUserPage() {
 
   const handleDeactivate = async () => {
     try {
-      await api.put(`/api/users/${id}/deactivate`);
+      await api.put(`/users/${id}/deactivate`);
       toast.success('User deactivated!');
       window.location.reload();
     } catch (err) {
@@ -101,11 +126,21 @@ export default function EditUserPage() {
 
   const handleLock = async () => {
     try {
-      await api.put(`/api/users/${id}/lock`);
+      await api.put(`/users/${id}/lock`);
       toast.success('User locked!');
       window.location.reload();
     } catch (err) {
       toast.error('Failed to lock user');
+    }
+  };
+
+  const handleUnlock = async () => {
+    try {
+      await api.put(`/users/${id}/unlock`);
+      toast.success('User unlocked!');
+      window.location.reload();
+    } catch (err) {
+      toast.error('Failed to unlock user');
     }
   };
 
@@ -236,15 +271,31 @@ export default function EditUserPage() {
               <label htmlFor="roleId" className="block text-sm font-medium text-gray-700 mb-1">
                 Assign Role
               </label>
-              <Select value={watch('roleId') || ''} onValueChange={(v) => setValue('roleId', v)}>
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select a role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="">No change</SelectItem>
-                  {/* Roles would be populated from API */}
-                </SelectContent>
-              </Select>
+              {rolesLoading ? (
+                <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                  Loading roles...
+                </div>
+              ) : (
+                <Controller
+                  name="role"
+                  control={control}
+                  render={({ field }) => (
+                    <Select value={field.value || ''} onValueChange={(v) => field.onChange(v)}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select a role" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="">No change</SelectItem>
+                        {roles.map((role) => (
+                          <SelectItem key={role.id} value={role.name}>
+                            {role.name}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              )}
               <p className="text-xs text-gray-500 mt-1">Changing your own role may be restricted by self-escalation prevention.</p>
             </div>
           </section>
@@ -288,6 +339,9 @@ export default function EditUserPage() {
               )}
               {user?.status !== 'LOCKED' && (
                 <Button variant="secondary" onClick={handleLock}>Lock User</Button>
+              )}
+              {user?.status === 'LOCKED' && (
+                <Button variant="secondary" onClick={handleUnlock}>Unlock User</Button>
               )}
               <Button variant="destructive" onClick={handleDelete}>Delete User</Button>
             </div>

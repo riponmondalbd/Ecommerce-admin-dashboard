@@ -1,6 +1,6 @@
 
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,20 +11,50 @@ import Input from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import api from '@/lib/axios-client'
 
+// Valid role names that the backend accepts
+const VALID_ROLES = ['SUPER_ADMIN', 'ADMIN', 'CATALOG_MANAGER', 'SUPPORT_AGENT', 'VIEWER'] as const;
+
 // Validation schema for user creation (matches backend CreateUserDto)
 const userSchema = z.object({
   name: z.string().min(2, 'Name is required'),
   email: z.string().email('Invalid email format'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  roleId: z.string().min(1, 'Role is required'),
-  status: z.enum(['ACTIVE', 'INACTIVE', 'LOCKED']),
+  role: z.string().min(1, 'Role is required'),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED', 'LOCKED']),
 });
 
 type UserFormValues = z.infer<typeof userSchema>;
 
+interface Role {
+  id: string;
+  name: string;
+  description: string | null;
+}
+
 export default function CreateUserPage() {
   const toast = useToast();
   const router = useRouter();
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch roles on mount
+  useEffect(() => {
+    const fetchRoles = async () => {
+      try {
+        const res = await api.get('/roles', { params: { limit: 100 } });
+        const response = res.data?.data || res.data;
+        const data = Array.isArray(response) ? response : (response?.data || []);
+        const filtered = data.filter((r: Role) => VALID_ROLES.includes(r.name as any));
+        setRoles(filtered);
+      } catch (error) {
+        console.error('Failed to fetch roles:', error);
+        toast.error('Failed to load roles');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRoles();
+  }, [toast]);
 
   // Form initialization
   const {
@@ -37,7 +67,7 @@ export default function CreateUserPage() {
     resolver: zodResolver(userSchema),
     defaultValues: {
       status: 'ACTIVE',
-      roleId: '',
+      role: 'CATALOG_MANAGER',
     },
   });
 
@@ -131,20 +161,36 @@ export default function CreateUserPage() {
               </div>
 
               <div>
-                <label htmlFor="roleId" className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
                   Role *
                 </label>
-                <Select value={watch('roleId')} onValueChange={(v) => setValue('roleId', v)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Select a role</SelectItem>
-                    {/* Roles would be populated from API */}
-                  </SelectContent>
-                </Select>
-                {errors.roleId && (
-                  <p className="mt-1 text-sm text-red-600">{errors.roleId.message}</p>
+                {loading ? (
+                  <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
+                    Loading roles...
+                  </div>
+                ) : (
+                  <Select
+                    value={watch('role') || ''}
+                    onValueChange={(v) => setValue('role', v)}
+                  >
+                    <SelectTrigger id="role" className="w-full">
+                      <SelectValue placeholder="Select a role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.length === 0 ? (
+                        <SelectItem value="__none__">No roles available</SelectItem>
+                      ) : (
+                        roles.map((role) => (
+                          <SelectItem key={role.id} value={role.name}>
+                            {role.name}
+                          </SelectItem>
+                        ))
+                      )}
+                    </SelectContent>
+                  </Select>
+                )}
+                {errors.role && (
+                  <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
                 )}
               </div>
             </div>
@@ -162,13 +208,17 @@ export default function CreateUserPage() {
               <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
                 Initial Status *
               </label>
-              <Select value={watch('status') as 'ACTIVE' | 'INACTIVE' | 'LOCKED' | undefined} onValueChange={(v) => setValue('status', v as 'ACTIVE' | 'INACTIVE' | 'LOCKED')}>
+              <Select
+                value={watch('status')}
+                onValueChange={(v) => setValue('status', v as 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'LOCKED')}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Select status" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="ACTIVE">Active (can log in)</SelectItem>
                   <SelectItem value="INACTIVE">Inactive (disabled)</SelectItem>
+                  <SelectItem value="SUSPENDED">Suspended</SelectItem>
                   <SelectItem value="LOCKED">Locked (temporarily disabled)</SelectItem>
                 </SelectContent>
               </Select>
