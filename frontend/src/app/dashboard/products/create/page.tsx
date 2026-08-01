@@ -78,7 +78,7 @@ function CategoryMultiSelect({
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-left bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between min-h-[42px]"
+          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-left bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between min-h-10.5"
         >
           <span className="truncate flex-1">
             {selected.length > 0
@@ -253,7 +253,7 @@ function AttributeMultiSelect({
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-left bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between min-h-[42px]"
+          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-left bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between min-h-10.5"
         >
           <span className="truncate flex-1">
             {selectedValues.length > 0
@@ -432,7 +432,7 @@ function MediaMultiSelect({
         <button
           type="button"
           onClick={() => setOpen(!open)}
-          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-left bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between min-h-[42px]"
+          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-left bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between min-h-10.5"
         >
           <span className="truncate flex-1">
             {selected.length > 0

@@ -29,32 +29,33 @@ Developed as part of the Backend Developer Intern assignment for **Trends Bird L
 
 ## Tech Stack
 
-| Layer | Technology | Version |
-|-------|-----------|---------|
-| **Backend** | Express.js | ^5.1.0 |
-| | TypeScript | ^5.9.2 |
-| **Frontend** | Next.js (App Router) | ^16.2.12 |
-| | React | ^19.2.8 |
-| | Tailwind CSS | ^4 |
-| | Zustand | ^5.0.14 |
-| | React Query | ^5.10.4 |
-| | React Hook Form | ^7.83.0 |
-| | Zod | ^4.4.3 |
-| **Database** | PostgreSQL | — |
-| **ORM** | Prisma | ^6.13.0 |
-| **Auth** | JWT (jsonwebtoken) | ^9.0.2 |
-| | Bcrypt | ^6.0.0 |
-| **File Upload** | Multer | ^2.0.2 |
-| | Sharp | ^0.34.3 |
-| **Validation** | Zod | ^3.25.76 |
-| **Security** | Helmet, CORS, Rate Limiter, Compression | — |
-| **Linting** | ESLint + Prettier | — |
+| Layer           | Technology                              | Version  |
+| --------------- | --------------------------------------- | -------- |
+| **Backend**     | Express.js                              | ^5.1.0   |
+|                 | TypeScript                              | ^5.9.2   |
+| **Frontend**    | Next.js (App Router)                    | ^16.2.12 |
+|                 | React                                   | ^19.2.8  |
+|                 | Tailwind CSS                            | ^4       |
+|                 | Zustand                                 | ^5.0.14  |
+|                 | React Query                             | ^5.10.4  |
+|                 | React Hook Form                         | ^7.83.0  |
+|                 | Zod                                     | ^4.4.3   |
+| **Database**    | PostgreSQL                              | —        |
+| **ORM**         | Prisma                                  | ^6.13.0  |
+| **Auth**        | JWT (jsonwebtoken)                      | ^9.0.2   |
+|                 | Bcrypt                                  | ^6.0.0   |
+| **File Upload** | Multer                                  | ^2.0.2   |
+|                 | Sharp                                   | ^0.34.3  |
+| **Validation**  | Zod                                     | ^3.25.76 |
+| **Security**    | Helmet, CORS, Rate Limiter, Compression | —        |
+| **Linting**     | ESLint + Prettier                       | —        |
 
 ---
 
 ## Features
 
 ### Authentication & Security
+
 - JWT access token (15 min) + refresh token (7 days) rotation
 - Secure logout with token revocation
 - Password hashing with bcrypt
@@ -63,6 +64,7 @@ Developed as part of the Backend Developer Intern assignment for **Trends Bird L
 - CORS protection
 
 ### Role-Based Access Control (RBAC)
+
 - Hierarchical user roles: Super Admin, Admin, Catalog Manager, Support Agent, Viewer
 - Fine-grained permissions with CRUD operations per module
 - System role protection (cannot delete/modify built-in roles)
@@ -70,6 +72,7 @@ Developed as part of the Backend Developer Intern assignment for **Trends Bird L
 - Self-escalation prevention
 
 ### Product Management (Core Module)
+
 - Full CRUD for products with draft/published/archived status
 - **Product Variants** with unique SKUs, individual pricing, and stock
 - **Attribute System** — TEXT, DROPDOWN, RADIO, CHECKBOX, COLOR_SWATCH, IMAGE_SWATCH
@@ -79,16 +82,19 @@ Developed as part of the Backend Developer Intern assignment for **Trends Bird L
 - Featured product flag
 
 ### Catalog Management
+
 - **Categories** — Nested tree structure with cycle detection, slug validation, breadcrumb support
 - **Brands** — CRUD with status management, logo upload via media system
 - **Attributes & Values** — Manage product attributes (Color, Size, etc.) with swatch support
 - **Media Library** — Upload images/videos/documents, auto thumbnail generation via Sharp, filter by type
 
 ### Dashboard
+
 - Aggregate statistics (total products, categories, brands, users, recent transactions)
 - Real-time data from authenticated API
 
 ### Frontend
+
 - Next.js 16 App Router with TypeScript
 - Permission-based dynamic sidebar navigation
 - Responsive dashboard layout
@@ -233,39 +239,44 @@ Ecommerce-admin-dashboard/
 The database consists of **22 models** across 6 conceptual domains:
 
 ### Identity & Access (5 models)
-| Model | Description |
-|-------|-------------|
-| `User` | User accounts with role, status, avatar, last login |
-| `Role` | Role definitions with system protection flag |
-| `Permission` | Granular permissions keyed by `module:action` pattern |
-| `RolePermission` | Junction table linking roles to permissions |
-| `RefreshToken` | JWT rotation tokens with expiry and revocation tracking |
+
+| Model            | Description                                             |
+| ---------------- | ------------------------------------------------------- |
+| `User`           | User accounts with role, status, avatar, last login     |
+| `Role`           | Role definitions with system protection flag            |
+| `Permission`     | Granular permissions keyed by `module:action` pattern   |
+| `RolePermission` | Junction table linking roles to permissions             |
+| `RefreshToken`   | JWT rotation tokens with expiry and revocation tracking |
 
 ### Content & Catalog (7 models)
-| Model | Description |
-|-------|-------------|
-| `Category` | Nested tree via self-referencing `parentId`, slug-unique |
-| `Brand` | Brand entities with status and optional logo media |
-| `Attribute` | Product attributes (Color, Size, etc.) with type enum |
-| `AttributeValue` | Individual values linked to an attribute |
-| `Media` | Unified media library — images, videos, documents with thumbnails |
-| `ProductMedia` | Junction table: products ↔ media (gallery/thumbnail) |
-| `VariantMedia` | Junction table: variants ↔ media |
+
+| Model            | Description                                                       |
+| ---------------- | ----------------------------------------------------------------- |
+| `Category`       | Nested tree via self-referencing `parentId`, slug-unique          |
+| `Brand`          | Brand entities with status and optional logo media                |
+| `Attribute`      | Product attributes (Color, Size, etc.) with type enum             |
+| `AttributeValue` | Individual values linked to an attribute                          |
+| `Media`          | Unified media library — images, videos, documents with thumbnails |
+| `ProductMedia`   | Junction table: products ↔ media (gallery/thumbnail)              |
+| `VariantMedia`   | Junction table: variants ↔ media                                  |
 
 ### Product & Inventory (6 models)
-| Model | Description |
-|-------|-------------|
-| `Product` | Core product with status, pricing, stock, featured flag |
-| `ProductVariant` | Variant-level SKU, pricing, inventory, dimensions |
-| `ProductAttributeValue` | M:N junction: variants ↔ attribute values |
-| `ProductTransaction` | Audit trail for all inventory movements |
+
+| Model                   | Description                                             |
+| ----------------------- | ------------------------------------------------------- |
+| `Product`               | Core product with status, pricing, stock, featured flag |
+| `ProductVariant`        | Variant-level SKU, pricing, inventory, dimensions       |
+| `ProductAttributeValue` | M:N junction: variants ↔ attribute values               |
+| `ProductTransaction`    | Audit trail for all inventory movements                 |
 
 ### Dashboard (1 model)
-| Model | Description |
-|-------|-------------|
+
+| Model      | Description                               |
+| ---------- | ----------------------------------------- |
 | (computed) | Aggregate stats derived from other models |
 
 ### Key Relationships
+
 ```
 User ──→ Role ──→ RolePermission ──→ Permission
   │
@@ -282,6 +293,7 @@ Brand ──→ Media (logo)
 ```
 
 ### Indexes
+
 - All foreign keys are indexed
 - Unique indexes on `email`, `slug`, `sku`, `token`, `key`
 - Composite index on `(productId, variantId, type)` for transactions
@@ -292,6 +304,7 @@ Brand ──→ Media (logo)
 ## API Reference
 
 All endpoints return a standardized response format:
+
 ```json
 { "success": true, "data": { ... }, "message": "..." }
 // or on error:
@@ -299,135 +312,147 @@ All endpoints return a standardized response format:
 ```
 
 ### Auth Endpoints
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| POST | `/api/auth/login` | Public | Login with email/password, returns access + refresh tokens |
-| POST | `/api/auth/refresh` | Public | Rotate refresh token, returns new access token |
-| POST | `/api/auth/logout` | Public | Revoke current refresh token |
-| GET | `/api/auth/me` | Required | Get current user with permissions |
+
+| Method | Endpoint            | Auth     | Description                                                |
+| ------ | ------------------- | -------- | ---------------------------------------------------------- |
+| POST   | `/api/auth/login`   | Public   | Login with email/password, returns access + refresh tokens |
+| POST   | `/api/auth/refresh` | Public   | Rotate refresh token, returns new access token             |
+| POST   | `/api/auth/logout`  | Public   | Revoke current refresh token                               |
+| GET    | `/api/auth/me`      | Required | Get current user with permissions                          |
 
 ### Permission Endpoints
-| Method | Endpoint | Permission | Description |
-|--------|----------|------------|-------------|
-| GET | `/api/permissions` | `permission:read` | List all permissions (paginated) |
-| GET | `/api/permissions/:id` | `permission:read` | Get single permission |
-| POST | `/api/permissions` | `permission:create` | Create permission |
-| PUT | `/api/permissions/:id` | `permission:update` | Full update permission |
-| PATCH | `/api/permissions/:id` | `permission:update` | Partial update permission |
-| DELETE | `/api/permissions/:id` | `permission:delete` | Delete permission |
-| POST | `/api/permissions/:id/roles/:roleId` | `permission:update` | Assign to role |
-| DELETE | `/api/permissions/:id/roles/:roleId` | `permission:update` | Remove from role |
+
+| Method | Endpoint                             | Permission          | Description                      |
+| ------ | ------------------------------------ | ------------------- | -------------------------------- |
+| GET    | `/api/permissions`                   | `permission:read`   | List all permissions (paginated) |
+| GET    | `/api/permissions/:id`               | `permission:read`   | Get single permission            |
+| POST   | `/api/permissions`                   | `permission:create` | Create permission                |
+| PUT    | `/api/permissions/:id`               | `permission:update` | Full update permission           |
+| PATCH  | `/api/permissions/:id`               | `permission:update` | Partial update permission        |
+| DELETE | `/api/permissions/:id`               | `permission:delete` | Delete permission                |
+| POST   | `/api/permissions/:id/roles/:roleId` | `permission:update` | Assign to role                   |
+| DELETE | `/api/permissions/:id/roles/:roleId` | `permission:update` | Remove from role                 |
 
 ### Role Endpoints
-| Method | Endpoint | Permission | Description |
-|--------|----------|------------|-------------|
-| GET | `/api/roles` | `role:read` | List roles (paginated, searchable) |
-| GET | `/api/roles/:id` | `role:read` | Get single role |
-| POST | `/api/roles` | `role:create` | Create role |
-| PUT | `/api/roles/:id` | `role:update` | Full update role |
-| PATCH | `/api/roles/:id` | `role:update` | Partial update role |
-| DELETE | `/api/roles/:id` | `role:delete` | Delete role (guarded: no system roles) |
-| POST | `/api/roles/:roleId/permissions/:permissionId` | `role:update` | Assign permission |
-| DELETE | `/api/roles/:roleId/permissions/:permissionId` | `role:update` | Remove permission |
-| GET | `/api/roles/:roleId/permissions` | `role:read` | Get role's permissions |
+
+| Method | Endpoint                                       | Permission    | Description                            |
+| ------ | ---------------------------------------------- | ------------- | -------------------------------------- |
+| GET    | `/api/roles`                                   | `role:read`   | List roles (paginated, searchable)     |
+| GET    | `/api/roles/:id`                               | `role:read`   | Get single role                        |
+| POST   | `/api/roles`                                   | `role:create` | Create role                            |
+| PUT    | `/api/roles/:id`                               | `role:update` | Full update role                       |
+| PATCH  | `/api/roles/:id`                               | `role:update` | Partial update role                    |
+| DELETE | `/api/roles/:id`                               | `role:delete` | Delete role (guarded: no system roles) |
+| POST   | `/api/roles/:roleId/permissions/:permissionId` | `role:update` | Assign permission                      |
+| DELETE | `/api/roles/:roleId/permissions/:permissionId` | `role:update` | Remove permission                      |
+| GET    | `/api/roles/:roleId/permissions`               | `role:read`   | Get role's permissions                 |
 
 ### User Endpoints
-| Method | Endpoint | Permission | Description |
-|--------|----------|------------|-------------|
-| GET | `/api/users` | `user:read` | List users (paginated, filterable) |
-| GET | `/api/users/:id` | `user:read` | Get single user |
-| POST | `/api/users` | `user:create` | Create user |
-| PUT | `/api/users/:id` | `user:update` | Full update user |
-| PATCH | `/api/users/:id` | `user:update` | Partial update user |
-| DELETE | `/api/users/:id` | `user:delete` | Delete user |
-| PUT | `/api/users/:id/activate` | `user:update` | Activate user |
-| PUT | `/api/users/:id/deactivate` | `user:update` | Deactivate user |
-| PUT | `/api/users/:id/lock` | `user:update` | Lock user |
-| PUT | `/api/users/:id/unlock` | `user:update` | Unlock user |
-| GET | `/api/users/:roleId` | `user:read` | Get users by role |
+
+| Method | Endpoint                    | Permission    | Description                        |
+| ------ | --------------------------- | ------------- | ---------------------------------- |
+| GET    | `/api/users`                | `user:read`   | List users (paginated, filterable) |
+| GET    | `/api/users/:id`            | `user:read`   | Get single user                    |
+| POST   | `/api/users`                | `user:create` | Create user                        |
+| PUT    | `/api/users/:id`            | `user:update` | Full update user                   |
+| PATCH  | `/api/users/:id`            | `user:update` | Partial update user                |
+| DELETE | `/api/users/:id`            | `user:delete` | Delete user                        |
+| PUT    | `/api/users/:id/activate`   | `user:update` | Activate user                      |
+| PUT    | `/api/users/:id/deactivate` | `user:update` | Deactivate user                    |
+| PUT    | `/api/users/:id/lock`       | `user:update` | Lock user                          |
+| PUT    | `/api/users/:id/unlock`     | `user:update` | Unlock user                        |
+| GET    | `/api/users/:roleId`        | `user:read`   | Get users by role                  |
 
 ### Media Endpoints
-| Method | Endpoint | Permission | Description |
-|--------|----------|------------|-------------|
-| GET | `/api/media` | `media:read` | List media (paginated, filterable) |
-| GET | `/api/media/:id` | `media:read` | Get single media |
-| POST | `/api/media` | `media:create` | Upload file (multipart) |
-| PUT | `/api/media/:id` | `media:update` | Full update media |
-| PATCH | `/api/media/:id` | `media:update` | Partial update media |
-| DELETE | `/api/media/:id` | `media:delete` | Delete media |
-| GET | `/api/media/assigned-to/:userId` | `media:read` | Get user's uploaded media |
+
+| Method | Endpoint                         | Permission     | Description                        |
+| ------ | -------------------------------- | -------------- | ---------------------------------- |
+| GET    | `/api/media`                     | `media:read`   | List media (paginated, filterable) |
+| GET    | `/api/media/:id`                 | `media:read`   | Get single media                   |
+| POST   | `/api/media`                     | `media:create` | Upload file (multipart)            |
+| PUT    | `/api/media/:id`                 | `media:update` | Full update media                  |
+| PATCH  | `/api/media/:id`                 | `media:update` | Partial update media               |
+| DELETE | `/api/media/:id`                 | `media:delete` | Delete media                       |
+| GET    | `/api/media/assigned-to/:userId` | `media:read`   | Get user's uploaded media          |
 
 ### Category Endpoints
-| Method | Endpoint | Permission | Description |
-|--------|----------|------------|-------------|
-| GET | `/api/categories` | `category:read` | List categories (paginated) |
-| GET | `/api/categories/tree` | `category:read` | Get full nested tree |
-| GET | `/api/categories/:id/ancestors` | `category:read` | Get breadcrumb path |
-| GET | `/api/categories/:id` | `category:read` | Get single category |
-| POST | `/api/categories` | `category:create` | Create category |
-| PUT | `/api/categories/:id` | `category:update` | Full update category |
-| PATCH | `/api/categories/:id` | `category:update` | Partial update category |
-| DELETE | `/api/categories/:id` | `category:delete` | Delete category |
+
+| Method | Endpoint                        | Permission        | Description                 |
+| ------ | ------------------------------- | ----------------- | --------------------------- |
+| GET    | `/api/categories`               | `category:read`   | List categories (paginated) |
+| GET    | `/api/categories/tree`          | `category:read`   | Get full nested tree        |
+| GET    | `/api/categories/:id/ancestors` | `category:read`   | Get breadcrumb path         |
+| GET    | `/api/categories/:id`           | `category:read`   | Get single category         |
+| POST   | `/api/categories`               | `category:create` | Create category             |
+| PUT    | `/api/categories/:id`           | `category:update` | Full update category        |
+| PATCH  | `/api/categories/:id`           | `category:update` | Partial update category     |
+| DELETE | `/api/categories/:id`           | `category:delete` | Delete category             |
 
 ### Brand Endpoints
-| Method | Endpoint | Permission | Description |
-|--------|----------|------------|-------------|
-| GET | `/api/brands` | `brand:read` | List brands (paginated) |
-| GET | `/api/brands/:id` | `brand:read` | Get single brand |
-| POST | `/api/brands` | `brand:create` | Create brand |
-| PUT | `/api/brands/:id` | `brand:update` | Full update brand |
-| PATCH | `/api/brands/:id` | `brand:update` | Partial update brand |
-| DELETE | `/api/brands/:id` | `brand:delete` | Delete brand |
-| POST | `/api/brands/:brandId/media` | `brand:update` | Assign logo media |
-| DELETE | `/api/brands/:brandId/media` | `brand:update` | Remove logo media |
+
+| Method | Endpoint                     | Permission     | Description             |
+| ------ | ---------------------------- | -------------- | ----------------------- |
+| GET    | `/api/brands`                | `brand:read`   | List brands (paginated) |
+| GET    | `/api/brands/:id`            | `brand:read`   | Get single brand        |
+| POST   | `/api/brands`                | `brand:create` | Create brand            |
+| PUT    | `/api/brands/:id`            | `brand:update` | Full update brand       |
+| PATCH  | `/api/brands/:id`            | `brand:update` | Partial update brand    |
+| DELETE | `/api/brands/:id`            | `brand:delete` | Delete brand            |
+| POST   | `/api/brands/:brandId/media` | `brand:update` | Assign logo media       |
+| DELETE | `/api/brands/:brandId/media` | `brand:update` | Remove logo media       |
 
 ### Attribute Endpoints
-| Method | Endpoint | Permission | Description |
-|--------|----------|------------|-------------|
-| GET | `/api/attributes` | `attribute:read` | List attributes |
-| GET | `/api/attributes/:id` | `attribute:read` | Get single attribute |
-| POST | `/api/attributes` | `attribute:create` | Create attribute |
-| PUT | `/api/attributes/:id` | `attribute:update` | Full update attribute |
-| PATCH | `/api/attributes/:id` | `attribute:update` | Partial update attribute |
-| DELETE | `/api/attributes/:id` | `attribute:delete` | Delete attribute |
-| GET | `/api/attributes/:id/values` | `attribute:read` | List attribute values |
-| POST | `/api/attributes/:id/values` | `attribute:update` | Create attribute value |
-| PUT | `/api/attribute-values/:id` | `attribute:update` | Full update value |
-| PATCH | `/api/attribute-values/:id` | `attribute:update` | Partial update value |
-| DELETE | `/api/attribute-values/:id` | `attribute:delete` | Delete value |
+
+| Method | Endpoint                     | Permission         | Description              |
+| ------ | ---------------------------- | ------------------ | ------------------------ |
+| GET    | `/api/attributes`            | `attribute:read`   | List attributes          |
+| GET    | `/api/attributes/:id`        | `attribute:read`   | Get single attribute     |
+| POST   | `/api/attributes`            | `attribute:create` | Create attribute         |
+| PUT    | `/api/attributes/:id`        | `attribute:update` | Full update attribute    |
+| PATCH  | `/api/attributes/:id`        | `attribute:update` | Partial update attribute |
+| DELETE | `/api/attributes/:id`        | `attribute:delete` | Delete attribute         |
+| GET    | `/api/attributes/:id/values` | `attribute:read`   | List attribute values    |
+| POST   | `/api/attributes/:id/values` | `attribute:update` | Create attribute value   |
+| PUT    | `/api/attribute-values/:id`  | `attribute:update` | Full update value        |
+| PATCH  | `/api/attribute-values/:id`  | `attribute:update` | Partial update value     |
+| DELETE | `/api/attribute-values/:id`  | `attribute:delete` | Delete value             |
 
 ### Product Endpoints (Star Module)
-| Method | Endpoint | Permission | Description |
-|--------|----------|------------|-------------|
-| GET | `/api/products` | `product:read` | List products (paginated, filterable) |
-| GET | `/api/products/:id` | `product:read` | Get product with variants |
-| POST | `/api/products` | `product:create` | Create product |
-| PUT | `/api/products/:id` | `product:update` | Full update product |
-| PATCH | `/api/products/:id` | `product:update` | Partial update product |
-| DELETE | `/api/products/:id` | `product:delete` | Delete product |
-| GET | `/api/products/:id/variants` | `product:read` | List product variants |
-| POST | `/api/products/:id/variants` | `product:update` | Create variant |
-| PUT | `/api/variants/:id` | `product:update` | Update variant |
-| DELETE | `/api/variants/:id` | `product:delete` | Delete variant |
-| PUT | `/api/variants/:id/restock` | `product:update` | Restock inventory |
-| PUT | `/api/variants/:id/sell` | `product:update` | Record sale |
-| GET | `/api/products/:id/transactions` | `product:read` | Transaction history |
+
+| Method | Endpoint                         | Permission       | Description                           |
+| ------ | -------------------------------- | ---------------- | ------------------------------------- |
+| GET    | `/api/products`                  | `product:read`   | List products (paginated, filterable) |
+| GET    | `/api/products/:id`              | `product:read`   | Get product with variants             |
+| POST   | `/api/products`                  | `product:create` | Create product                        |
+| PUT    | `/api/products/:id`              | `product:update` | Full update product                   |
+| PATCH  | `/api/products/:id`              | `product:update` | Partial update product                |
+| DELETE | `/api/products/:id`              | `product:delete` | Delete product                        |
+| GET    | `/api/products/:id/variants`     | `product:read`   | List product variants                 |
+| POST   | `/api/products/:id/variants`     | `product:update` | Create variant                        |
+| PUT    | `/api/variants/:id`              | `product:update` | Update variant                        |
+| DELETE | `/api/variants/:id`              | `product:delete` | Delete variant                        |
+| PUT    | `/api/variants/:id/restock`      | `product:update` | Restock inventory                     |
+| PUT    | `/api/variants/:id/sell`         | `product:update` | Record sale                           |
+| GET    | `/api/products/:id/transactions` | `product:read`   | Transaction history                   |
 
 ### Dashboard Endpoint
-| Method | Endpoint | Auth | Description |
-|--------|----------|------|-------------|
-| GET | `/api/dashboard/stats` | Required | Aggregate statistics |
+
+| Method | Endpoint               | Auth     | Description          |
+| ------ | ---------------------- | -------- | -------------------- |
+| GET    | `/api/dashboard/stats` | Required | Aggregate statistics |
 
 ### Health Check
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/health` | Public health check |
+
+| Method | Endpoint  | Description         |
+| ------ | --------- | ------------------- |
+| GET    | `/health` | Public health check |
 
 ---
 
 ## Installation & Setup
 
 ### Prerequisites
+
 - Node.js 20+
 - PostgreSQL 14+
 - npm or yarn
@@ -565,6 +590,7 @@ Route → Controller → Service → Prisma (Database)
 ```
 
 **Per Module Pattern:**
+
 - `*.routes.ts` — Express route definitions with middleware composition
 - `controllers/*.controller.ts` — Request/response handling, input extraction
 - `services/*.service.ts` — Business logic, database operations, transactions
@@ -572,6 +598,7 @@ Route → Controller → Service → Prisma (Database)
 - `dtos/` — Data transfer objects for request validation
 
 **Cross-Cutting Concerns:**
+
 - [app.ts](Ecommerce-admin-dashboard/backend/src/app.ts) — Global middleware composition (security, logging, error handling)
 - [middleware/auth.middleware.ts](Ecommerce-admin-dashboard/backend/src/middleware/auth.middleware.ts) — JWT verification, user extraction
 - [middleware/errorHandler.ts](Ecommerce-admin-dashboard/backend/src/middleware/errorHandler.ts) — Centralized error handling
@@ -605,19 +632,19 @@ App Router (Next.js 16)
 
 ## Security
 
-| Concern | Implementation |
-|---------|---------------|
-| **Authentication** | JWT with short-lived access tokens (15 min) + rotating refresh tokens (7 days) |
-| **Password Security** | bcrypt hashing with appropriate work factor |
-| **Authorization** | RBAC via `requirePermission` middleware on every protected route |
-| **Input Validation** | Zod schemas on all create/update endpoints |
-| **Rate Limiting** | 10 requests/15 min on auth endpoints (bypassed in development) |
-| **HTTP Security** | Helmet headers (CSP, HSTS, X-Frame-Options, etc.) |
-| **CORS** | Configured with credentials support |
-| **SQL Injection** | Prevented by Prisma ORM parameterized queries |
-| **File Upload** | Multer with size limits (5MB), Sharp for thumbnail generation, mime-type validation |
-| **Self-Escalation** | Users cannot assign themselves super-admin roles |
-| **System Roles** | Built-in roles (`isSystem: true`) cannot be deleted or modified |
+| Concern               | Implementation                                                                      |
+| --------------------- | ----------------------------------------------------------------------------------- |
+| **Authentication**    | JWT with short-lived access tokens (15 min) + rotating refresh tokens (7 days)      |
+| **Password Security** | bcrypt hashing with appropriate work factor                                         |
+| **Authorization**     | RBAC via `requirePermission` middleware on every protected route                    |
+| **Input Validation**  | Zod schemas on all create/update endpoints                                          |
+| **Rate Limiting**     | 10 requests/15 min on auth endpoints (bypassed in development)                      |
+| **HTTP Security**     | Helmet headers (CSP, HSTS, X-Frame-Options, etc.)                                   |
+| **CORS**              | Configured with credentials support                                                 |
+| **SQL Injection**     | Prevented by Prisma ORM parameterized queries                                       |
+| **File Upload**       | Multer with size limits (5MB), Sharp for thumbnail generation, mime-type validation |
+| **Self-Escalation**   | Users cannot assign themselves super-admin roles                                    |
+| **System Roles**      | Built-in roles (`isSystem: true`) cannot be deleted or modified                     |
 
 ---
 
@@ -643,40 +670,40 @@ App Router (Next.js 16)
 
 Permissions follow a `module:action` naming convention:
 
-| Permission Key | Description |
-|---------------|-------------|
-| `permission:read` | View permissions |
+| Permission Key      | Description        |
+| ------------------- | ------------------ |
+| `permission:read`   | View permissions   |
 | `permission:create` | Create permissions |
 | `permission:update` | Update permissions |
 | `permission:delete` | Delete permissions |
-| `role:read` | View roles |
-| `role:create` | Create roles |
-| `role:update` | Update roles |
-| `role:delete` | Delete roles |
-| `user:read` | View users |
-| `user:create` | Create users |
-| `user:update` | Update users |
-| `user:delete` | Delete users |
-| `media:read` | View media |
-| `media:create` | Upload media |
-| `media:update` | Update media |
-| `media:delete` | Delete media |
-| `category:read` | View categories |
-| `category:create` | Create categories |
-| `category:update` | Update categories |
-| `category:delete` | Delete categories |
-| `brand:read` | View brands |
-| `brand:create` | Create brands |
-| `brand:update` | Update brands |
-| `brand:delete` | Delete brands |
-| `attribute:read` | View attributes |
-| `attribute:create` | Create attributes |
-| `attribute:update` | Update attributes |
-| `attribute:delete` | Delete attributes |
-| `product:read` | View products |
-| `product:create` | Create products |
-| `product:update` | Update products |
-| `product:delete` | Delete products |
+| `role:read`         | View roles         |
+| `role:create`       | Create roles       |
+| `role:update`       | Update roles       |
+| `role:delete`       | Delete roles       |
+| `user:read`         | View users         |
+| `user:create`       | Create users       |
+| `user:update`       | Update users       |
+| `user:delete`       | Delete users       |
+| `media:read`        | View media         |
+| `media:create`      | Upload media       |
+| `media:update`      | Update media       |
+| `media:delete`      | Delete media       |
+| `category:read`     | View categories    |
+| `category:create`   | Create categories  |
+| `category:update`   | Update categories  |
+| `category:delete`   | Delete categories  |
+| `brand:read`        | View brands        |
+| `brand:create`      | Create brands      |
+| `brand:update`      | Update brands      |
+| `brand:delete`      | Delete brands      |
+| `attribute:read`    | View attributes    |
+| `attribute:create`  | Create attributes  |
+| `attribute:update`  | Update attributes  |
+| `attribute:delete`  | Delete attributes  |
+| `product:read`      | View products      |
+| `product:create`    | Create products    |
+| `product:update`    | Update products    |
+| `product:delete`    | Delete products    |
 
 ---
 
@@ -684,21 +711,21 @@ Permissions follow a `module:action` naming convention:
 
 ### Pages
 
-| Page | Route | Description |
-|------|-------|-------------|
-| Login | `/login` | Email/password authentication |
-| Dashboard | `/dashboard` | Overview with statistics |
-| Products | `/dashboard/products` | Product listing with filters |
-| Create Product | `/dashboard/products/create` | New product form |
-| Edit Product | `/dashboard/products/[id]/edit` | Product edit form |
-| Variants | `/dashboard/products/[id]/variants` | Variant management |
-| Categories | `/dashboard/categories` | Category tree view |
-| Brands | `/dashboard/brands` | Brand listing |
-| Attributes | `/dashboard/attributes` | Attribute management |
-| Media Library | `/dashboard/media` | File upload & management |
-| Permissions | `/dashboard/permissions` | Permission CRUD |
-| Roles | `/dashboard/roles` | Role management |
-| Users | `/dashboard/users` | User management |
+| Page           | Route                               | Description                   |
+| -------------- | ----------------------------------- | ----------------------------- |
+| Login          | `/login`                            | Email/password authentication |
+| Dashboard      | `/dashboard`                        | Overview with statistics      |
+| Products       | `/dashboard/products`               | Product listing with filters  |
+| Create Product | `/dashboard/products/create`        | New product form              |
+| Edit Product   | `/dashboard/products/[id]/edit`     | Product edit form             |
+| Variants       | `/dashboard/products/[id]/variants` | Variant management            |
+| Categories     | `/dashboard/categories`             | Category tree view            |
+| Brands         | `/dashboard/brands`                 | Brand listing                 |
+| Attributes     | `/dashboard/attributes`             | Attribute management          |
+| Media Library  | `/dashboard/media`                  | File upload & management      |
+| Permissions    | `/dashboard/permissions`            | Permission CRUD               |
+| Roles          | `/dashboard/roles`                  | Role management               |
+| Users          | `/dashboard/users`                  | User management               |
 
 ### Key Components
 
@@ -729,9 +756,9 @@ npm run seed-init
 
 ### Default Credentials
 
-| Role | Email | Password |
-|------|-------|----------|
-| Super Admin | `admin@trendsbird.com` | `Admin@123` |
+| Role            | Email                    | Password    |
+| --------------- | ------------------------ | ----------- |
+| Super Admin     | `admin@trendsbird.com`   | `Admin@123` |
 | Catalog Manager | `catalog@trendsbird.com` | `Admin@123` |
 
 ---
@@ -775,6 +802,7 @@ npm run lint     # Run ESLint
 ## Development Guidelines
 
 ### Code Organization
+
 - Each module has its own `routes/`, `controllers/`, `services/` directory
 - Routes define endpoints with middleware composition
 - Controllers handle HTTP I/O only
@@ -782,6 +810,7 @@ npm run lint     # Run ESLint
 - Validation schemas in `validation/schemas.ts`
 
 ### API Response Format
+
 ```json
 {
   "success": true,
@@ -791,6 +820,7 @@ npm run lint     # Run ESLint
 ```
 
 Error responses:
+
 ```json
 {
   "success": false,
@@ -799,6 +829,7 @@ Error responses:
 ```
 
 ### Git Workflow
+
 - Feature-based commits (one feature per commit)
 - Meaningful commit messages
 - Never commit secrets (`.env`, `.env.local`)
@@ -823,21 +854,21 @@ Error responses:
 
 ## Project Stats
 
-| Metric | Value |
-|--------|-------|
-| Backend TypeScript files | 48 |
-| Frontend source files | 50 |
-| Database models | 22 |
-| API endpoints | ~50 |
-| Permission keys | 35+ |
-| User roles | 5 |
-| Attribute types | 6 |
-| Transaction types | 7 |
-| Backend dependencies | 17 |
-| Frontend dependencies | 13 |
+| Metric                   | Value |
+| ------------------------ | ----- |
+| Backend TypeScript files | 48    |
+| Frontend source files    | 50    |
+| Database models          | 22    |
+| API endpoints            | ~50   |
+| Permission keys          | 35+   |
+| User roles               | 5     |
+| Attribute types          | 6     |
+| Transaction types        | 7     |
+| Backend dependencies     | 17    |
+| Frontend dependencies    | 13    |
 
 ---
 
 ## License
 
-Internal project — Trends Bird Limited
+Internal project — Ripon Mondal
