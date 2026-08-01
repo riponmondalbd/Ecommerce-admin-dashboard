@@ -10,7 +10,7 @@ import Button from '@/components/ui/button';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import api from '@/lib/axios-client';
 
-// Validation schema for user creation (matches backend CreateUserDto)
+// Validation schema - must match backend CreateUserDto
 const userSchema = z.object({
   name: z.string().min(2, 'Name is required').max(100),
   email: z.string().email('Invalid email format'),
@@ -24,8 +24,9 @@ type UserFormValues = z.infer<typeof userSchema>;
 export default function CreateUserPage() {
   const toast = useToast();
   const router = useRouter();
+  const [submitting, setSubmitting] = useState(false);
 
-  // Form initialization with Controller for better select integration
+  // Form initialization
   const {
     control,
     register,
@@ -41,48 +42,73 @@ export default function CreateUserPage() {
 
   // Handle form submission
   const onSubmit: SubmitHandler<UserFormValues> = async (data) => {
-    console.log('[CreateUser] Submitting:', data);
+    setSubmitting(true);
+    console.log('[CreateUser] Submitting data:', data);
+
     try {
       const response = await api.post('/users', data);
-      console.log('[CreateUser] Success:', response);
+      console.log('[CreateUser] API Response:', response);
+
+      // Extract data from various possible response formats
+      let responseData = response.data;
+      if (responseData?.data) {
+        responseData = responseData.data;
+      }
+
+      console.log('[CreateUser] Success:', responseData);
       toast.success('User created successfully!');
       router.push('/dashboard/users');
     } catch (error: any) {
       console.error('[CreateUser] Error:', error);
-      const errorMessage = error.response?.data?.message || error.message || 'Failed to create user';
-      toast.error(errorMessage);
+
+      let errorMsg = 'Failed to create user';
+
+      // Try to extract meaningful error message from various sources
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        console.log('[CreateUser] Response:', error.response);
+        console.log('[CreateUser] Response data:', error.response.data);
+        console.log('[CreateUser] Response status:', error.response.status);
+
+        if (error.response.data?.errorMsg) {
+          errorMsg = error.response.data.errorMsg;
+        } else if (error.response.data?.message) {
+          errorMsg = error.response.data.message;
+        } else if (error.response.data?.error) {
+          errorMsg = error.response.data.error;
+        } else if (error.response.data?.data) {
+          errorMsg = error.response.data.data;
+        } else {
+          errorMsg = `HTTP ${error.response.status}: ${error.response.statusText}`;
+        }
+      } else if (error.request) {
+        // The request was made but no response was received
+        errorMsg = 'Network error: No response from server';
+      } else {
+        // Something happened in setting up the request
+        errorMsg = error.message || 'Unknown error';
+      }
+
+      toast.error(errorMsg);
+      alert('Error: ' + errorMsg); // Fallback to alert to ensure user sees the error
+    } finally {
+      setSubmitting(false);
     }
   };
 
-  // Valid roles for the dropdown
-  const roles = [
-    { id: '1', name: 'SUPER_ADMIN' },
-    { id: '2', name: 'ADMIN' },
-    { id: '3', name: 'CATALOG_MANAGER' },
-    { id: '4', name: 'SUPPORT_AGENT' },
-    { id: '5', name: 'VIEWER' },
-  ];
-
-  // Valid status options
-  const statusOptions = [
-    { value: 'ACTIVE', label: 'Active (can log in)' },
-    { value: 'INACTIVE', label: 'Inactive (disabled)' },
-    { value: 'SUSPENDED', label: 'Suspended' },
-    { value: 'LOCKED', label: 'Locked (temporarily disabled)' },
-  ];
+  // Valid roles matching backend validation
+  const validRoles = ['SUPER_ADMIN', 'ADMIN', 'CATALOG_MANAGER', 'SUPPORT_AGENT', 'VIEWER'];
+  const validStatus = ['ACTIVE', 'INACTIVE', 'SUSPENDED', 'LOCKED'];
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md mx-auto">
         <div className="text-center">
-          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            Create New User
-          </h2>
-          <p className="mt-2 text-sm text-gray-600">
-            Add a new user to your admin team
-          </p>
+          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">Create New User</h2>
+          <p className="mt-2 text-sm text-gray-600">Add a new user to your admin team</p>
         </div>
-        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+        <form className="mt-8 space-y-6" onSubmit={handleSubmit(onSubmit)}>
           <div className="rounded-lg shadow-sm bg-white py-6 px-4 sm:px-8">
             <div className="space-y-6">
               {/* Personal Information */}
@@ -93,6 +119,7 @@ export default function CreateUserPage() {
                     id="name"
                     name="name"
                     type="text"
+                    required
                     {...register('name')}
                     className={`appearance-none rounded-md border w-full px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
                       errors.name ? 'border-red-300' : 'border-gray-300'
@@ -107,6 +134,7 @@ export default function CreateUserPage() {
                     id="email"
                     name="email"
                     type="email"
+                    required
                     {...register('email')}
                     className={`appearance-none rounded-md border w-full px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
                       errors.email ? 'border-red-300' : 'border-gray-300'
@@ -124,6 +152,7 @@ export default function CreateUserPage() {
                       id="password"
                       name="password"
                       type="password"
+                      required
                       {...register('password')}
                       className="appearance-none rounded-md border w-full px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300"
                     />
@@ -132,56 +161,42 @@ export default function CreateUserPage() {
 
                   <div>
                     <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role*</label>
-                    <Controller
-                      name="role"
-                      control={control}
-                      render={({ field }) => (
-                        <select
-                          id="role"
-                          name="role"
-                          value={field.value || ''}
-                          onChange={(e) => field.onChange(e.target.value)}
-                          className={`appearance-none rounded-md border w-full px-3 py-2 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300`}
-                        >
-                          <option value="">Select a role</option>
-                          {roles.map((role) => (
-                            <option key={role.id} value={role.name}>
-                              {role.name}
-                            </option>
-                          ))}
-                        </select>
-                      )}
-                    />
+                    <Controller name="role" control={control} render={({ field }) => (
+                      <select
+                        id="role"
+                        name="role"
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className={`appearance-none rounded-md border w-full px-3 py-2 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300`}
+                      >
+                        <option value="">Select a role</option>
+                        {validRoles.map((role) => (
+                          <option key={role} value={role}>{role}</option>
+                        ))}
+                      </select>
+                    )} />
                     {errors.role && <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>}
                   </div>
                 </div>
               </div>
 
               <div className="pt-4 border-t border-gray-200">
-                <div>
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700">Initial Status*</label>
-                  <Controller
+                <label htmlFor="status" className="block text-sm font-medium text-gray-700">Initial Status*</label>
+                <Controller name="status" control={control} render={({ field }) => (
+                  <select
+                    id="status"
                     name="status"
-                    control={control}
-                    render={({ field }) => (
-                      <select
-                        id="status"
-                        name="status"
-                        value={field.value}
-                        onChange={(e) => field.onChange(e.target.value)}
-                        className={`appearance-none rounded-md border w-full px-3 py-2 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300`}
-                      >
-                        <option value="">Select status</option>
-                        {statusOptions.map((option) => (
-                          <option key={option.value} value={option.value}>
-                            {option.label}
-                          </option>
-                        ))}
-                      </select>
-                    )}
-                  />
-                  {errors.status && <p className="mt-1 text-xs text-red-600">{errors.status.message}</p>}
-                </div>
+                    value={field.value}
+                    onChange={(e) => field.onChange(e.target.value)}
+                    className={`appearance-none rounded-md border w-full px-3 py-2 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300`}
+                  >
+                    <option value="">Select status</option>
+                    {validStatus.map((s) => (
+                      <option key={s} value={s}>{s}</option>
+                    ))}
+                  </select>
+                )} />
+                {errors.status && <p className="mt-1 text-xs text-red-600">{errors.status.message}</p>}
               </div>
             </div>
           </div>
@@ -200,9 +215,14 @@ export default function CreateUserPage() {
               <div>
                 <button
                   type="submit"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  disabled={submitting}
+                  className={`w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 ${
+                    submitting
+                      ? 'bg-blue-400 not-allowed'
+                      : 'bg-blue-600 hover:bg-blue-700 text-white'
+                  }`}
                 >
-                  Create User
+                  {submitting ? 'Creating...' : 'Create User'}
                 </button>
               </div>
             </div>
