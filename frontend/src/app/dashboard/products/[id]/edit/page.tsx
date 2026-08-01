@@ -58,10 +58,25 @@ function CategoryMultiSelect({
     queryFn: () => api.get('/categories/tree').then((r) => r.data?.data || r.data),
   });
 
-  const categories = useMemo(() => {
+  // Flatten nested category tree and ensure each node has a `level` property for indented display
+  const flatCategories = useMemo(() => {
     const list: CategoryNode[] = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any[]) || [];
-    return list.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
-  }, [categoriesData, search]);
+    const result: CategoryNode[] = [];
+    const flatten = (nodes: any[], depth: number) => {
+      for (const node of nodes) {
+        result.push({ ...node, level: depth });
+        if (node.children && node.children.length > 0) {
+          flatten(node.children, depth + 1);
+        }
+      }
+    };
+    flatten(list, 0);
+    return result;
+  }, [categoriesData]);
+
+  const categories = useMemo(() => {
+    return flatCategories.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
+  }, [flatCategories, search]);
 
   const selected = useMemo(
     () => categories.filter((c) => value.includes(c.id)),
@@ -153,7 +168,7 @@ function BrandSelect({
   const { data, isLoading } = useQuery({
     queryKey: ['brands'],
     queryFn: () =>
-      api.get('/brands?limit=200').then((r) => {
+      api.get('/brands?limit=100').then((r) => {
         const resp = r.data?.data || r.data;
         return Array.isArray(resp) ? resp : resp?.data || [];
       }),
@@ -202,7 +217,7 @@ function MediaMultiSelect({
   const { data: mediaData, isLoading } = useQuery({
     queryKey: ['media-list'],
     queryFn: () =>
-      api.get('/media?limit=200').then((r) => {
+      api.get('/media?limit=100').then((r) => {
         const resp = r.data?.data || r.data;
         return Array.isArray(resp) ? resp : resp?.data || [];
       }),
@@ -493,14 +508,12 @@ export default function EditProductPage() {
   }, [watchName, watchSlug, setValue]);
 
   // Auto-clear sale price if it exceeds price
+  const watchSalePrice = watch('salePrice');
   useEffect(() => {
-    if (watchPrice !== undefined && watchPrice !== null) {
-      const sp = watch('salePrice');
-      if (sp !== undefined && sp !== null && sp > watchPrice) {
-        setValue('salePrice', undefined);
-      }
+    if (watchPrice !== undefined && watchPrice !== null && watchSalePrice !== undefined && watchSalePrice !== null && watchSalePrice > watchPrice) {
+      setValue('salePrice', undefined);
     }
-  }, [watchPrice, watch('salePrice'), setValue, watch]);
+  }, [watchPrice, watchSalePrice, setValue]);
 
   const handleUploaded = useCallback((mediaId: string, _url: string) => {
     const current = watch('mediaIds');

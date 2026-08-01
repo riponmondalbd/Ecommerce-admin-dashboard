@@ -58,11 +58,7 @@ function CategoryMultiSelect({
     queryFn: () => api.get('/categories/tree').then((r) => r.data?.data || r.data),
   });
 
-  const categories = useMemo(() => {
-    return flatCategories.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
-  }, [flatCategories, search]);
-
-  // Flatten nested category tree and ensure each node has a `level` property
+  // Flatten nested category tree and ensure each node has a `level` property for indented display
   const flatCategories = useMemo(() => {
     const list: CategoryNode[] = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any[]) || [];
     const result: CategoryNode[] = [];
@@ -77,6 +73,10 @@ function CategoryMultiSelect({
     flatten(list, 0);
     return result;
   }, [categoriesData]);
+
+  const categories = useMemo(() => {
+    return flatCategories.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
+  }, [flatCategories, search]);
 
   const selected = useMemo(
     () => categories.filter((c) => value.includes(c.id)),
@@ -168,7 +168,7 @@ function BrandSelect({
   const { data, isLoading } = useQuery({
     queryKey: ['brands'],
     queryFn: () =>
-      api.get('/brands?limit=200').then((r) => {
+      api.get('/brands?limit=100').then((r) => {
         const resp = r.data?.data || r.data;
         return Array.isArray(resp) ? resp : resp?.data || [];
       }),
