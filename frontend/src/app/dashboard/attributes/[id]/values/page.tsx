@@ -6,6 +6,7 @@ import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import Link from 'next/link';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { useParams } from 'next/navigation';
 
 export default function AttributeValuesPage() {
@@ -15,6 +16,7 @@ export default function AttributeValuesPage() {
   const { id: attributeId } = params;
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newValue, setNewValue] = useState({ label: '', referenceValue: '' });
+  const [deleteValue, setDeleteValue] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['attribute-values', attributeId],
@@ -44,10 +46,15 @@ export default function AttributeValuesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this attribute value?')) return;
+    setDeleteValue(id);
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteValue) return;
     try {
-      await api.delete(`/attribute-values/${id}`);
+      await api.delete(`/attribute-values/${deleteValue}`);
       toast.success('Attribute value deleted!');
+      setDeleteValue(null);
       await queryClient.invalidateQueries({ queryKey: ['attribute-values', attributeId] });
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to delete attribute value');
@@ -123,41 +130,7 @@ export default function AttributeValuesPage() {
             </tbody>
           </table>
         </div>
-      )}
-
-      {/* Create Value Modal */}
-      {showCreateModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Add Attribute Value</h3>
-            <form onSubmit={handleCreate}>
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Label *</label>
-                  <Input
-                    value={newValue.label}
-                    onChange={(e) => setNewValue({...newValue, label: e.target.value})}
-                    placeholder="e.g., Red, Blue, Small"
-                    required
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Reference Value</label>
-                  <Input
-                    value={newValue.referenceValue}
-                    onChange={(e) => setNewValue({...newValue, referenceValue: e.target.value})}
-                    placeholder="e.g., #FF0000 for colors, S/L/XL for sizes"
-                  />
-                </div>
-              </div>
-              <div className="flex justify-end space-x-3 mt-6">
-                <Button variant="secondary" type="button" onClick={() => setShowCreateModal(false)}>Cancel</Button>
-                <Button type="submit">Add Value</Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
