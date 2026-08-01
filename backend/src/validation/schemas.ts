@@ -186,7 +186,7 @@ export const PartialUpdateMediaDto = z.object({
 
 export const ListMediaDto = z.object({
   page: z.coerce.number().min(1).default(1).optional(),
-  limit: z.coerce.number().min(1).max(100).default(10).optional(),
+  limit: z.coerce.number().min(1).max(1000).default(10).optional(),
   search: z.string().optional(),
   type: MediaTypeSchema.optional(),
   status: MediaStatusSchema.optional(),

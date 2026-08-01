@@ -20,7 +20,7 @@ const MediaItem = ({ media, onDelete }: { media: Media; onDelete: () => void }) 
       {/* Main content based on type */}
       {isImage ? (
         <img
-          src={media.publicUrl}
+          src={`/uploads/${media.fileName}`}
           alt={media.altText || media.fileName}
           className="w-full h-48 object-cover"
           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
@@ -49,7 +49,7 @@ const MediaItem = ({ media, onDelete }: { media: Media; onDelete: () => void }) 
       {/* Overlay with actions */}
       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-40 transition-all flex items-center justify-center">
         <div className="opacity-0 group-hover:opacity-100 transition-opacity space-x-2">
-          <Button variant="secondary" size="sm" onClick={() => window.open(media.publicUrl, '_blank')}>View</Button>
+          <Button variant="secondary" size="sm" onClick={() => window.open(`/uploads/${media.fileName}`, '_blank')}>View</Button>
           <Button variant="destructive" size="sm" onClick={onDelete}>Delete</Button>
         </div>
       </div>

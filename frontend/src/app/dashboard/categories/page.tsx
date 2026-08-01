@@ -71,7 +71,7 @@ const CategoryTreeItem = ({
 export default function CategoriesPage() {
   const toast = useToast();
   const [creatingNew, setCreatingNew] = useState(false);
-  const [newCategory, setNewCategory] = useState({ name: '', slug: '' });
+  const [newCategory, setNewCategory] = useState<{ name: string; slug: string; parentId?: string }>({ name: '', slug: '' });
   const [responseData, setResponseData] = useState<any>(null);
   const [deleteDialog, setDeleteDialog] = useState<{ id: string | null; name: string } | null>(null);
 
