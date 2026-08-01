@@ -73,8 +73,8 @@ export default function MediaPage() {
       if (filterType) params.set('type', filterType);
       if (filterStatus) params.set('status', filterStatus);
       const res = await api.get('/media', { params });
-      // Handle both response formats
-      const response = res.data;
+      // Handle both response formats - unwrap API wrapper { success: true, data: {...} }
+      const response = res.data?.data || res.data;
       return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
     },
   });

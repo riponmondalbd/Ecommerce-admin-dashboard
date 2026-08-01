@@ -55,8 +55,8 @@ export default function ProductsPage() {
       if (selectedBrand) params.set('brandId', selectedBrand);
       if (selectedStatus) params.set('status', selectedStatus);
       const res = await api.get('/products', { params });
-      // Handle both response formats
-      const response = res.data;
+      // Handle both response formats - unwrap API wrapper { success: true, data: {...} }
+      const response = res.data?.data || res.data;
       return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
     },
   });
@@ -66,7 +66,7 @@ export default function ProductsPage() {
     queryKey: ['brands'],
     queryFn: () => api.get('/brands?limit=100').then(r => {
       // Handle both response formats: {data: [...], pagination} or [...]
-      const response = r.data;
+      const response = r.data?.data || r.data;
       return Array.isArray(response) ? response : response?.data || [];
     }),
   });

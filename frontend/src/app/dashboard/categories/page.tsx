@@ -81,8 +81,8 @@ export default function CategoriesPage() {
       const res = await api.get('/categories/tree');
       console.log('Full response:', res);
       setResponseData(res.data);
-      // Handle both response formats
-      const response = res.data;
+      // Handle both response formats - unwrap API wrapper { success: true, data: {...} }
+      const response = res.data?.data || res.data;
       return Array.isArray(response) ? response : (response?.data || []);
     },
   });

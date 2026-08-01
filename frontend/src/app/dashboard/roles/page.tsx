@@ -47,8 +47,8 @@ export default function RolesPage() {
       const params = new URLSearchParams({ page: String(page), limit: String(LIMIT) });
       if (searchTerm) params.set('search', searchTerm);
       const res = await api.get('/roles', { params });
-      // Handle both response formats
-      const response = res.data;
+      // Handle both response formats - unwrap API wrapper { success: true, data: {...} }
+      const response = res.data?.data || res.data;
       return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
     },
   });

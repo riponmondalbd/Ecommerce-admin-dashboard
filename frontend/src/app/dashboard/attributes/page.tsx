@@ -24,8 +24,8 @@ export default function AttributesPage() {
       if (searchTerm) params.set('search', searchTerm);
       if (filterType) params.set('type', filterType);
       const res = await api.get('/attributes', { params });
-      // Handle both response formats
-      const response = res.data;
+      // Handle both response formats - unwrap API wrapper { success: true, data: {...} }
+      const response = res.data?.data || res.data;
       return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
     },
   });

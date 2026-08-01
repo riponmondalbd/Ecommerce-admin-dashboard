@@ -94,8 +94,8 @@ export default function UsersPage() {
       if (searchTerm) params.set('search', searchTerm);
       if (filterRole) params.set('roleId', filterRole);
       const res = await api.get('/users', { params });
-      // Handle both response formats
-      const response = res.data;
+      // Handle both response formats - unwrap API wrapper { success: true, data: {...} }
+      const response = res.data?.data || res.data;
       return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
     },
   });
@@ -104,7 +104,7 @@ export default function UsersPage() {
   const { data: rolesData } = useQuery({
     queryKey: ['roles'],
     queryFn: () => api.get('/roles?limit=100').then(r => {
-      const response = r.data;
+      const response = r.data?.data || r.data;
       return Array.isArray(response) ? response : response?.data || [];
     }),
   });

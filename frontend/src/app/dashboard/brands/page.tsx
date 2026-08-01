@@ -23,8 +23,8 @@ export default function BrandsPage() {
       const res = await api.get('/brands', { params });
       console.log("FETCHED BRANDS API RESPONSE:", res.data);
       console.log("FETCHED BRANDS RESPONSE TYPE:", typeof res.data, Array.isArray(res.data));
-      // Handle both response formats
-      const response = res.data;
+      // Handle both response formats - unwrap API wrapper { success: true, data: {...} }
+      const response = res.data?.data || res.data;
       return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
     },
   });
