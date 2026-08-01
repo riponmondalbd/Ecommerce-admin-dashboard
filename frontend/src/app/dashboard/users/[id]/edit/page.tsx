@@ -116,7 +116,9 @@ export default function EditUserPage() {
       toast.error(err.response?.data?.message || 'Failed to delete user');
     }
   };
-    <div className="p-8 min-h-full">
+}
+
+export default function EditUserPage() {
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-8">
@@ -267,11 +269,7 @@ export default function EditUserPage() {
               {user.status !== 'LOCKED' && (
                 <Button variant="secondary" onClick={handleLock}>Lock User</Button>
               )}
-              {user.status === 'LOCKED' && (
-                <Button variant="secondary" onClick={handleUnlock}>Unlock User</Button>
-              )}
-              <Button variant="destructive" size="sm" onClick={() => setDeleteUser({ id: user.id, name: user.name })}>Delete User</Button>
-            </div>
+              </div>
           </section>
 
           {/* Save changes */}
@@ -282,5 +280,17 @@ export default function EditUserPage() {
         </form>
       </div>
     </div>
+
+    {/* Delete Confirmation Dialog */}
+    <ConfirmDialog
+      isOpen={!!deleteUser}
+      title="Delete User"
+      message={`Are you sure you want to delete "${deleteUser?.name}"? This action cannot be undone.`}
+      confirmText="Delete"
+      cancelText="Cancel"
+      variant="danger"
+      onConfirm={confirmDelete}
+      onCancel={() => setDeleteUser(null)}
+    />
   );
 }

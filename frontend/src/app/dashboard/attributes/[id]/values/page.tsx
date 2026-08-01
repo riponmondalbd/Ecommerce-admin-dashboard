@@ -23,7 +23,7 @@ export default function AttributeValuesPage() {
     queryFn: async () => {
       if (!attributeId) throw new Error('Missing attribute ID');
       const res = await api.get(`/attributes/${attributeId}/values`);
-      return res.data;
+      return res.data.data;
     },
     enabled: !!attributeId,
   });
@@ -130,7 +130,53 @@ export default function AttributeValuesPage() {
             </tbody>
           </table>
         </div>
-      </div>
+      )}
+
+      {/* Create Value Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Add Attribute Value</h3>
+            <form onSubmit={handleCreate}>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Label *</label>
+                  <Input
+                    value={newValue.label}
+                    onChange={(e) => setNewValue({...newValue, label: e.target.value})}
+                    placeholder="e.g., Red, Blue, Small"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Reference Value</label>
+                  <Input
+                    value={newValue.referenceValue}
+                    onChange={(e) => setNewValue({...newValue, referenceValue: e.target.value})}
+                    placeholder="e.g., #FF0000 for colors, S/L/XL for sizes"
+                  />
+                </div>
+              </div>
+              <div className="flex justify-end space-x-3 mt-6">
+                <Button variant="secondary" type="button" onClick={() => setShowCreateModal(false)}>Cancel</Button>
+                <Button type="submit">Add Value</Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteValue}
+        title="Delete Attribute Value"
+        message={`Are you sure you want to delete this attribute value?`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteValue(null)}
+      />
     </div>
   );
 }
