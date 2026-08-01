@@ -78,13 +78,9 @@ export default function EditUserPage() {
       };
 
       if (data.password) updateData.password = data.password;
-      if (data.role && data.role !== '') updateData.role = data.role;
+      if (data.role) updateData.role = data.role;
 
-      // Only include status if it's different from the original or explicitly changed
-      // We don't send status if it's the same as current (No change scenario)
-      if (data.status && data.status !== '') {
-        updateData.status = data.status;
-      }
+      updateData.status = data.status;
 
       console.log('[UpdateUser] Sending:', updateData);
       const response = await api.put(`/users/${user.id}`, updateData);
@@ -197,12 +193,12 @@ export default function EditUserPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                <Input id="name" name="name" type="text" {...register('name')} className={`w-full ${errors.name ? 'border-red-300' : 'border-gray-300'}`} />
+                <Input id="name" type="text" {...register('name')} className={`w-full ${errors.name ? 'border-red-300' : 'border-gray-300'}`} />
                 {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
               </div>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
-                <Input id="email" name="email" type="email" {...register('email')} readOnly className="w-full bg-gray-100 border-gray-300" />
+                <Input id="email" type="email" {...register('email')} readOnly className="w-full bg-gray-100 border-gray-300" />
               </div>
             </div>
           </section>
@@ -234,7 +230,7 @@ export default function EditUserPage() {
             <h2 className="text-xl font-semibold mb-4">Password Update</h2>
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">New Password (leave blank to keep unchanged)</label>
-              <Input id="password" name="password" type="password" {...register('password')} placeholder="••••••••" className="w-full border-gray-300" />
+              <Input id="password" type="password" {...register('password')} placeholder="••••••••" className="w-full border-gray-300" />
             </div>
           </section>
 

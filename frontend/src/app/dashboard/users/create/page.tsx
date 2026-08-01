@@ -74,13 +74,13 @@ export default function CreateUserPage() {
               <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name *</label>
-                  <Input id="name" name="name" type="text" required {...register('name')} className={`w-full ${errors.name ? 'border-red-300' : 'border-gray-300'}`} />
+                  <Input id="name" type="text" required {...register('name')} className={`w-full ${errors.name ? 'border-red-300' : 'border-gray-300'}`} />
                   {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
                 </div>
 
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email *</label>
-                  <Input id="email" name="email" type="email" required {...register('email')} className={`w-full ${errors.email ? 'border-red-300' : 'border-gray-300'}`} />
+                  <Input id="email" type="email" required {...register('email')} className={`w-full ${errors.email ? 'border-red-300' : 'border-gray-300'}`} />
                   {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
                 </div>
               </div>
@@ -89,7 +89,7 @@ export default function CreateUserPage() {
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password *</label>
-                    <Input id="password" name="password" type="password" required {...register('password')} className="w-full border-gray-300" />
+                    <Input id="password" type="password" required {...register('password')} className="w-full border-gray-300" />
                     {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
                   </div>
 

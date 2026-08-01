@@ -21,7 +21,7 @@ const productSchema = z.object({
   sku: z.string().max(50).optional(),
   shortDescription: z.string().max(500).optional(),
   description: z.string().max(2000).optional(),
-  hasVariants: z.boolean().default(false),
+  hasVariants: z.boolean(),
   price: z.number().min(0, 'Price must be non-negative'),
   salePrice: z.number().min(0).optional().nullable(),
   stock: z.number().min(0),
@@ -216,7 +216,7 @@ function AttributeMultiSelect({
       _values: (a as any).attributeValues || [],
     })).filter((a) =>
       a.name.toLowerCase().includes(search.toLowerCase()) ||
-      a._values.some((v) => v.label.toLowerCase().includes(search.toLowerCase()))
+      a._values.some((v: AttributeValue) => v.label.toLowerCase().includes(search.toLowerCase()))
     );
   }, [attrsData, search]);
 
@@ -643,11 +643,13 @@ export default function CreateProductPage() {
   // ── Handlers ──────────────────────────────────────────────────────────────
 
   const handleUploaded = useCallback((mediaId: string, _url: string) => {
-    setValue('mediaIds', (prev: string[]) => [...new Set([...prev, mediaId])]);
+    const current = watch('mediaIds');
+    const updated = [...new Set([...current, mediaId])];
+    setValue('mediaIds', updated);
     toast.success('Image uploaded and added!');
-  }, [setValue, toast]);
+  }, [watch, setValue, toast]);
 
-  const onSubmit = async (data: ProductFormValues) => {
+  const onSubmit = async (data: any) => {
     try {
       const payload = {
         name: data.name,
@@ -672,7 +674,7 @@ export default function CreateProductPage() {
       const res = await api.post('/products', payload);
       const productId = res.data?.data?.id;
       toast.success('Product created successfully!');
-      router.push(productId ? `/dashboard/products/${productId}/edit` : '/dashboard/products');
+      router.push('/dashboard/products');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create product');
     }
@@ -1026,11 +1028,14 @@ export default function CreateProductPage() {
               <p className="text-sm text-gray-500 mb-4">
                 Choose attribute values (e.g. Size: Large, Color: Red) that will define your product variants.
               </p>
-              <AttributeMultiSelect
-                value={watch('attributeValueIds')}
-                onChange={(ids) => setValue('attributeValueIds', ids)}
-                error={errors.attributeValueIds?.message}
-              />
+              <div className="p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                <p className="text-sm text-indigo-700">
+                  <strong>Variant attributes will be configured after product creation.</strong>
+                </p>
+                <p className="text-xs text-indigo-500 mt-1">
+                  Use the "Create Variant" button on the product edit page to define size, color, and other options.
+                </p>
+              </div>
             </section>
           )}
 
