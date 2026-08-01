@@ -168,6 +168,34 @@ export const updateRole = async (id: string, input: unknown) => {
     },
   });
 
+  // Update permissions if provided (full replacement)
+  if (validated.permissions !== undefined) {
+    // Remove all existing permissions
+    await prisma.rolePermission.deleteMany({ where: { roleId: id } });
+
+    // Assign new permissions if any
+    if (validated.permissions.length > 0) {
+      // Find permission IDs from keys
+      const permissions = await prisma.permission.findMany({
+        where: { key: { in: validated.permissions } },
+        select: { id: true, key: true },
+      });
+
+      // Check if all requested permissions exist
+      const foundKeys = permissions.map(p => p.key);
+      const missingKeys = validated.permissions.filter((key: string) => !foundKeys.includes(key));
+      if (missingKeys.length > 0) {
+        throw new AppError(`Permissions not found: ${missingKeys.join(', ')}`, 404);
+      }
+
+      // Create role-permission assignments
+      await prisma.rolePermission.createMany({
+        data: permissions.map(p => ({ roleId: id, permissionId: p.id })),
+        skipDuplicates: true,
+      });
+    }
+  }
+
   return getRoleById(id);
 };
 
