@@ -77,7 +77,12 @@ export default function CreateRolePage() {
 
   // Handle permission toggle
   const togglePermission = (perm: string) => {
-    setPermissions(prev => prev.includes(perm) ? prev.filter(p => p !== perm) : [...prev, perm]);
+    setPermissions(prev => {
+      const next = prev.includes(perm) ? prev.filter(p => p !== perm) : [...prev, perm];
+      // Also update the form's internal state for validation
+      setValue('permissions', next, { shouldValidate: true });
+      return next;
+    });
   };
 
   // Handle form submission
