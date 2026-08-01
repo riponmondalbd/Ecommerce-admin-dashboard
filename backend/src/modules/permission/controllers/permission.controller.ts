@@ -21,7 +21,7 @@ export const permissionController = {
         limit: req.query.limit ? Number(req.query.limit) : 10,
         group: req.query.group as string | undefined,
         search: req.query.search as string | undefined,
-        isActive: req.query.isActive === 'true'
+        isActive: req.query.isActive === 'true' ? true : (req.query.isActive === 'false' ? false : undefined)
       };
       const result = await getPermissions(queryParams);
       return successResponse(res, result, 'Permissions retrieved successfully');
