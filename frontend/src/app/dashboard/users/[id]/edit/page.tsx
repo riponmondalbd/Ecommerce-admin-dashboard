@@ -22,12 +22,6 @@ const userSchema = z.object({
 
 type UserFormValues = z.infer<typeof userSchema>;
 
-interface Role {
-  id: string;
-  name: string;
-  description: string | null;
-}
-
 export default function EditUserPage() {
   const toast = useToast();
   const { id } = useParams<{ id: string }>();
@@ -35,7 +29,7 @@ export default function EditUserPage() {
   const [user, setUser] = useState<any>(null);
   const [deleteUser, setDeleteUser] = useState<{ id: string | null; name: string } | null>(null);
   const [loading, setLoading] = useState(true);
-  const [roles, setRoles] = useState<Role[]>([]);
+  const [roles, setRoles] = useState<any[]>([]);
   const [rolesLoading, setRolesLoading] = useState(true);
 
   // Form initialization
@@ -54,7 +48,7 @@ export default function EditUserPage() {
     },
   });
 
-  // Fetch roles on mount
+  // Fetch roles on mount (only for display purposes - hardcoded options used for Select)
   useEffect(() => {
     const fetchRoles = async () => {
       try {
@@ -90,7 +84,6 @@ export default function EditUserPage() {
 
       const updateData = {
         ...data,
-        // Only include password if provided
         password: data.password ? data.password : undefined,
         role: data.role || undefined,
       };
@@ -165,12 +158,21 @@ export default function EditUserPage() {
     return (
       <div className="p-8 min-h-full">
         <div className="text-center py-12">
-          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600 mb-2"></div>
           <p className="mt-4 text-gray-500">Loading user...</p>
         </div>
       </div>
     );
   }
+
+  // Hardcoded valid roles for the dropdown (always available)
+  const hardcodedRoles = [
+    { id: '1', name: 'SUPER_ADMIN' },
+    { id: '2', name: 'ADMIN' },
+    { id: '3', name: 'CATALOG_MANAGER' },
+    { id: '4', name: 'SUPPORT_AGENT' },
+    { id: '5', name: 'VIEWER' },
+  ];
 
   return (
     <div className="p-8 min-h-full">
@@ -220,17 +222,10 @@ export default function EditUserPage() {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Personal Information */}
           <section className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              Personal Information
-            </h2>
+            <h2 className="text-xl font-semibold mb-4">Personal Information</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Name *
-                </label>
+                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
                 <Input
                   id="name"
                   {...register('name')}
@@ -238,15 +233,10 @@ export default function EditUserPage() {
                   onChange={(e) => setValue('name', e.target.value)}
                   className={`w-full ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
                 />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-                )}
+                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
               </div>
-
               <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email *
-                </label>
+                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
                 <Input
                   id="email"
                   type="email"
@@ -261,32 +251,26 @@ export default function EditUserPage() {
 
           {/* Role Assignment */}
           <section className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L15.71 8.245a2 2 0 00-2.83 0l-2.273 2.273a2 2 0 01-2.83 0L8.28 8.245a2 2 0 00-2.83 0L2.148 12.5C1.378 13.333 2.34 15 3.88 15h.11z" />
-              </svg>
-              Role Assignment
-            </h2>
+            <h2 className="text-xl font-semibold mb-4">Role Assignment</h2>
             <div>
-              <label htmlFor="roleId" className="block text-sm font-medium text-gray-700 mb-1">
-                Assign Role
-              </label>
+              <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">Assign Role</label>
               {rolesLoading ? (
-                <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
-                  Loading roles...
-                </div>
+                <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">Loading roles...</div>
               ) : (
                 <Controller
                   name="role"
                   control={control}
                   render={({ field }) => (
-                    <Select value={field.value || ''} onValueChange={(v) => field.onChange(v)}>
+                    <Select
+                      value={field.value || ''}
+                      onValueChange={(v) => field.onChange(v || null)}
+                    >
                       <SelectTrigger className="w-full">
                         <SelectValue placeholder="Select a role" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="">No change</SelectItem>
-                        {roles.map((role) => (
+                        {hardcodedRoles.map((role) => (
                           <SelectItem key={role.id} value={role.name}>
                             {role.name}
                           </SelectItem>
@@ -302,34 +286,16 @@ export default function EditUserPage() {
 
           {/* Password Update */}
           <section className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-              </svg>
-              Password Update
-            </h2>
+            <h2 className="text-xl font-semibold mb-4">Password Update</h2>
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                New Password (leave blank to keep unchanged)
-              </label>
-              <Input
-                id="password"
-                type="password"
-                {...register('password')}
-                placeholder="••••••••"
-                className="w-full border-gray-300"
-              />
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">New Password (leave blank to keep unchanged)</label>
+              <Input id="password" type="password" {...register('password')} placeholder="••••••••" className="w-full border-gray-300" />
             </div>
           </section>
 
           {/* Actions - Status controls based on current status */}
           <section className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Account Actions
-            </h2>
+            <h2 className="text-xl font-semibold mb-4">Account Actions</h2>
             <div className="flex flex-wrap gap-2">
               {(user?.status === 'INACTIVE' || user?.status === 'LOCKED') && (
                 <Button variant="secondary" onClick={handleActivate}>Activate User</Button>

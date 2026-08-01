@@ -1,22 +1,18 @@
-
 'use client';
-import { useState, useEffect } from 'react';
-import { useForm, type SubmitHandler } from 'react-hook-form';
+import { useState } from 'react';
+import { useForm, type SubmitHandler, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import useToast from '@/components/ui/Toast';
-import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
-import api from '@/lib/axios-client'
-
-// Valid role names that the backend accepts
-const VALID_ROLES = ['SUPER_ADMIN', 'ADMIN', 'CATALOG_MANAGER', 'SUPPORT_AGENT', 'VIEWER'] as const;
+import Button from '@/components/ui/button';
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import api from '@/lib/axios-client';
 
 // Validation schema for user creation (matches backend CreateUserDto)
 const userSchema = z.object({
-  name: z.string().min(2, 'Name is required'),
+  name: z.string().min(2, 'Name is required').max(100),
   email: z.string().email('Invalid email format'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   role: z.string().min(1, 'Role is required'),
@@ -25,44 +21,16 @@ const userSchema = z.object({
 
 type UserFormValues = z.infer<typeof userSchema>;
 
-interface Role {
-  id: string;
-  name: string;
-  description: string | null;
-}
-
 export default function CreateUserPage() {
   const toast = useToast();
   const router = useRouter();
-  const [roles, setRoles] = useState<Role[]>([]);
-  const [loading, setLoading] = useState(true);
 
-  // Fetch roles on mount
-  useEffect(() => {
-    const fetchRoles = async () => {
-      try {
-        const res = await api.get('/roles', { params: { limit: 100 } });
-        const response = res.data?.data || res.data;
-        const data = Array.isArray(response) ? response : (response?.data || []);
-        const filtered = data.filter((r: Role) => VALID_ROLES.includes(r.name as any));
-        setRoles(filtered);
-      } catch (error) {
-        console.error('Failed to fetch roles:', error);
-        toast.error('Failed to load roles');
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchRoles();
-  }, [toast]);
-
-  // Form initialization
+  // Form initialization with Controller for better select integration
   const {
+    control,
     register,
     handleSubmit,
     formState: { errors },
-    watch,
-    setValue,
   } = useForm<UserFormValues>({
     resolver: zodResolver(userSchema),
     defaultValues: {
@@ -73,165 +41,171 @@ export default function CreateUserPage() {
 
   // Handle form submission
   const onSubmit: SubmitHandler<UserFormValues> = async (data) => {
+    console.log('[CreateUser] Submitting:', data);
     try {
-      await api.post('/users', data);
+      const response = await api.post('/users', data);
+      console.log('[CreateUser] Success:', response);
       toast.success('User created successfully!');
       router.push('/dashboard/users');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to create user');
+      console.error('[CreateUser] Error:', error);
+      const errorMessage = error.response?.data?.message || error.message || 'Failed to create user';
+      toast.error(errorMessage);
     }
   };
 
+  // Valid roles for the dropdown
+  const roles = [
+    { id: '1', name: 'SUPER_ADMIN' },
+    { id: '2', name: 'ADMIN' },
+    { id: '3', name: 'CATALOG_MANAGER' },
+    { id: '4', name: 'SUPPORT_AGENT' },
+    { id: '5', name: 'VIEWER' },
+  ];
+
+  // Valid status options
+  const statusOptions = [
+    { value: 'ACTIVE', label: 'Active (can log in)' },
+    { value: 'INACTIVE', label: 'Inactive (disabled)' },
+    { value: 'SUSPENDED', label: 'Suspended' },
+    { value: 'LOCKED', label: 'Locked (temporarily disabled)' },
+  ];
+
   return (
-    <div className="p-8 min-h-full">
-      <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Create New User</h1>
-          <p className="text-gray-600">Add a new user to your admin team</p>
+    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-md mx-auto">
+        <div className="text-center">
+          <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
+            Create New User
+          </h2>
+          <p className="mt-2 text-sm text-gray-600">
+            Add a new user to your admin team
+          </p>
         </div>
+        <form onSubmit={handleSubmit(onSubmit)} className="mt-8 space-y-6">
+          <div className="rounded-lg shadow-sm bg-white py-6 px-4 sm:px-8">
+            <div className="space-y-6">
+              {/* Personal Information */}
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700">Name*</label>
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    {...register('name')}
+                    className={`appearance-none rounded-md border w-full px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                      errors.name ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                  />
+                  {errors.name && <p className="mt-1 text-xs text-red-600">{errors.name.message}</p>}
+                </div>
 
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Personal Information */}
-          <section className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-              </svg>
-              Personal Information
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Name *
-                </label>
-                <Input
-                  id="name"
-                  {...register('name')}
-                  placeholder="John Doe"
-                  className={`w-full ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
-                />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-                )}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-medium text-gray-700">Email*</label>
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    {...register('email')}
+                    className={`appearance-none rounded-md border w-full px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                      errors.email ? 'border-red-300' : 'border-gray-300'
+                    }`}
+                  />
+                  {errors.email && <p className="mt-1 text-xs text-red-600">{errors.email.message}</p>}
+                </div>
               </div>
 
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email *
-                </label>
-                <Input
-                  id="email"
-                  type="email"
-                  {...register('email')}
-                  placeholder="john@example.com"
-                  className={`w-full ${errors.email ? 'border-red-500' : 'border-gray-300'}`}
-                />
-                {errors.email && (
-                  <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-                )}
-              </div>
-            </div>
-          </section>
-
-          {/* Authentication & Role */}
-          <section className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 13V8a2 2 0 012-2h4l2 2h-2a2 2 0 01-2-2v-4a2 2 0 114 0v4m0 4h2m6 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-              Authentication & Role
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
-                  Password *
-                </label>
-                <Input
-                  id="password"
-                  type="password"
-                  {...register('password')}
-                  placeholder="••••••••"
-                  className={`w-full ${errors.password ? 'border-red-500' : 'border-gray-300'}`}
-                />
-                {errors.password && (
-                  <p className="mt-1 text-sm text-red-600">{errors.password.message}</p>
-                )}
-              </div>
-
-              <div>
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                  Role *
-                </label>
-                {loading ? (
-                  <div className="w-full p-2 border border-gray-300 rounded-md bg-gray-50 text-gray-500">
-                    Loading roles...
+              <div className="pt-1 border-t border-gray-200">
+                <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">Password*</label>
+                    <Input
+                      id="password"
+                      name="password"
+                      type="password"
+                      {...register('password')}
+                      className="appearance-none rounded-md border w-full px-3 py-2 text-gray-900 placeholder-gray-400 shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300"
+                    />
+                    {errors.password && <p className="mt-1 text-xs text-red-600">{errors.password.message}</p>}
                   </div>
-                ) : (
-                  <Select
-                    value={watch('role') || ''}
-                    onValueChange={(v) => setValue('role', v)}
-                  >
-                    <SelectTrigger id="role" className="w-full">
-                      <SelectValue placeholder="Select a role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.length === 0 ? (
-                        <SelectItem value="__none__">No roles available</SelectItem>
-                      ) : (
-                        roles.map((role) => (
-                          <SelectItem key={role.id} value={role.name}>
-                            {role.name}
-                          </SelectItem>
-                        ))
+
+                  <div>
+                    <label htmlFor="role" className="block text-sm font-medium text-gray-700">Role*</label>
+                    <Controller
+                      name="role"
+                      control={control}
+                      render={({ field }) => (
+                        <select
+                          id="role"
+                          name="role"
+                          value={field.value || ''}
+                          onChange={(e) => field.onChange(e.target.value)}
+                          className={`appearance-none rounded-md border w-full px-3 py-2 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300`}
+                        >
+                          <option value="">Select a role</option>
+                          {roles.map((role) => (
+                            <option key={role.id} value={role.name}>
+                              {role.name}
+                            </option>
+                          ))}
+                        </select>
                       )}
-                    </SelectContent>
-                  </Select>
-                )}
-                {errors.role && (
-                  <p className="mt-1 text-sm text-red-600">{errors.role.message}</p>
-                )}
+                    />
+                    {errors.role && <p className="mt-1 text-xs text-red-600">{errors.role.message}</p>}
+                  </div>
+                </div>
+              </div>
+
+              <div className="pt-4 border-t border-gray-200">
+                <div>
+                  <label htmlFor="status" className="block text-sm font-medium text-gray-700">Initial Status*</label>
+                  <Controller
+                    name="status"
+                    control={control}
+                    render={({ field }) => (
+                      <select
+                        id="status"
+                        name="status"
+                        value={field.value}
+                        onChange={(e) => field.onChange(e.target.value)}
+                        className={`appearance-none rounded-md border w-full px-3 py-2 text-gray-900 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm border-gray-300`}
+                      >
+                        <option value="">Select status</option>
+                        {statusOptions.map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    )}
+                  />
+                  {errors.status && <p className="mt-1 text-xs text-red-600">{errors.status.message}</p>}
+                </div>
               </div>
             </div>
-          </section>
+          </div>
 
-          {/* Account Status */}
-          <section className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-              </svg>
-              Account Status
-            </h2>
-            <div>
-              <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-                Initial Status *
-              </label>
-              <Select
-                value={watch('status')}
-                onValueChange={(v) => setValue('status', v as 'ACTIVE' | 'INACTIVE' | 'SUSPENDED' | 'LOCKED')}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="ACTIVE">Active (can log in)</SelectItem>
-                  <SelectItem value="INACTIVE">Inactive (disabled)</SelectItem>
-                  <SelectItem value="SUSPENDED">Suspended</SelectItem>
-                  <SelectItem value="LOCKED">Locked (temporarily disabled)</SelectItem>
-                </SelectContent>
-              </Select>
-              {errors.status && (
-                <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
-              )}
+          <div className="pt-5 border-t border-gray-200">
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <button
+                  type="button"
+                  onClick={() => router.back()}
+                  className="w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Cancel
+                </button>
+              </div>
+              <div>
+                <button
+                  type="submit"
+                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-sm font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Create User
+                </button>
+              </div>
             </div>
-          </section>
-
-          {/* Actions */}
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-            <Button variant="secondary" onClick={() => router.back()}>Cancel</Button>
-            <Button type="submit">Create User</Button>
           </div>
         </form>
       </div>
