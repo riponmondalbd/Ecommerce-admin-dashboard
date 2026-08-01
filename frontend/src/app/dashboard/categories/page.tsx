@@ -147,10 +147,29 @@ export default function CategoriesPage() {
 
       {/* Create Category Modal */}
       {creatingNew && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg p-6 w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Create New Category</h3>
-            <form onSubmit={handleCreate}>
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl w-full max-w-md">
+            <div className="px-6 py-4 border-b border-gray-200 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900">Create New Category</h3>
+                <p className="text-sm text-gray-500 mt-0.5">
+                  {newCategory.parentId ? (
+                    <>Adding to <span className="font-medium text-gray-700">Parent Category</span></>
+                  ) : (
+                    'Add a new top-level category to your catalog'
+                  )}
+                </p>
+              </div>
+              <button
+                onClick={() => setCreatingNew(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            <form onSubmit={handleCreate} className="p-6">
               <div className="space-y-4">
                 <div>
                   <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name *</label>
@@ -160,6 +179,7 @@ export default function CategoriesPage() {
                     onChange={(e) => setNewCategory({...newCategory, name: e.target.value})}
                     required
                     placeholder="e.g., Electronics"
+                    autoFocus
                   />
                 </div>
                 <div>
@@ -172,9 +192,11 @@ export default function CategoriesPage() {
                   />
                 </div>
               </div>
-              <div className="flex justify-end space-x-3 mt-6">
-                <Button variant="secondary" type="button" onClick={() => setCreatingNew(false)}>Cancel</Button>
-                <Button type="submit">Create</Button>
+              <div className="flex justify-end gap-3 mt-6">
+                <Button variant="secondary" type="button" onClick={() => setCreatingNew(false)}>
+                  Cancel
+                </Button>
+                <Button type="submit">Create Category</Button>
               </div>
             </form>
           </div>
