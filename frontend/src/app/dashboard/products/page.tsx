@@ -2,11 +2,11 @@
 import { useState, useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import api from '@/lib/axios-client';
+import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
-import ConfirmDialog from '@/components/ConfirmDialog';
 import Link from 'next/link';
-import useToast from '@/components/ui/Toast';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 const EmptyState = () => (
   <div className="text-center py-12">
@@ -69,10 +69,15 @@ export default function ProductsPage() {
   const totalPages = Math.ceil(totalItems / LIMIT) || 1;
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Are you sure you want to delete "${name}"?`)) return;
+    setDeleteProduct({ id, name });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteProduct) return;
     try {
-      await api.delete(`/products/${id}`);
+      await api.delete(`/products/${deleteProduct.id}`);
       toast.success('Product deleted successfully!');
+      setDeleteProduct(null);
       await queryClient.invalidateQueries({ queryKey: ['products'] });
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to delete product');
@@ -196,6 +201,19 @@ export default function ProductsPage() {
         </table>
         <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
+    </div>
+
+    {/* Delete Confirmation Dialog */}
+    <ConfirmDialog
+      isOpen={!!deleteProduct}
+      title="Delete Product"
+      message={`Are you sure you want to delete "${deleteProduct?.name}"? This action cannot be undone.`}
+      confirmText="Delete"
+      cancelText="Cancel"
+      variant="danger"
+      onConfirm={confirmDelete}
+      onCancel={() => setDeleteProduct(null)}
+    />
     </div>
   );
 }
