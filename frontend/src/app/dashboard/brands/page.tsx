@@ -22,6 +22,7 @@ export default function BrandsPage() {
       if (searchTerm) params.set('search', searchTerm);
       const res = await api.get('/brands', { params });
       console.log("FETCHED BRANDS API RESPONSE:", res.data);
+      console.log("FETCHED BRANDS RESPONSE TYPE:", typeof res.data, Array.isArray(res.data));
       // Handle both response formats
       const response = res.data;
       return Array.isArray(response) ? { data: response, pagination: { total: response.length, pages: 1 } } : response;
