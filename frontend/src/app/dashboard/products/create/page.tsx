@@ -1,44 +1,599 @@
 
 'use client';
-import { useEffect, useState } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import api from '@/lib/axios-client';
+import { Brand, CategoryNode, Media, Attribute, AttributeValue } from '@/types';
 
-// Validation schema for product creation (matches backend CreateProductDto)
+// ─── Validation schema ────────────────────────────────────────────────────────
+
 const productSchema = z.object({
-  name: z.string().min(2, 'Name is required'),
+  name: z.string().min(1, 'Name is required').max(255),
   slug: z.string().optional(),
-  shortDescription: z.string().min(5, 'Short description must be at least 5 characters'),
-  description: z.string().min(10, 'Description must be at least 10 characters'),
-  price: z.number().positive('Price must be positive'),
-  salePrice: z.number().optional().nullable(),
-  stock: z.number().nonnegative('Stock must be non-negative'),
-  stockStatus: z.enum(['IN_STOCK', 'OUT_OF_STOCK', 'LOW_STOCK']),
-  weight: z.number().optional().nullable(),
+  sku: z.string().max(50).optional(),
+  shortDescription: z.string().max(500).optional(),
+  description: z.string().max(2000).optional(),
+  hasVariants: z.boolean().default(false),
+  price: z.number().min(0, 'Price must be non-negative'),
+  salePrice: z.number().min(0).optional().nullable(),
+  stock: z.number().min(0),
+  stockStatus: z.enum(['IN_STOCK', 'OUT_OF_STOCK', 'LOW_STOCK']).optional(),
+  weight: z.number().min(0).optional().nullable(),
   isActive: z.boolean(),
   isFeatured: z.boolean(),
-  sortOrder: z.number().int().min(0),
-  sku: z.string().optional(),
+  sortOrder: z.number(),
   status: z.enum(['DRAFT', 'PUBLISHED', 'ARCHIVED']),
-  brandId: z.string(),
-  categoryIds: z.string().array(),
-  mediaIds: z.string().array().optional(),
-});
+  brandId: z.string().optional(),
+  categoryIds: z.array(z.string()),
+  mediaIds: z.array(z.string()),
+}).refine(
+  (data) => data.salePrice === undefined || data.salePrice === null || data.salePrice <= data.price,
+  { message: 'Sale price must not exceed price', path: ['salePrice'] }
+);
 
 type ProductFormValues = z.infer<typeof productSchema>;
+
+// ─── Category multi-select ────────────────────────────────────────────────────
+
+function CategoryMultiSelect({
+  value, onChange, error,
+}: {
+  value: string[];
+  onChange: (ids: string[]) => void;
+  error?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const { data: categoriesData, isLoading } = useQuery({
+    queryKey: ['categories-tree'],
+    queryFn: () => api.get('/categories/tree').then((r) => r.data?.data || r.data),
+  });
+
+  const categories = useMemo(() => {
+    const list: CategoryNode[] = Array.isArray(categoriesData) ? categoriesData : (categoriesData as any[]) || [];
+    return list.filter((c) => c.name.toLowerCase().includes(search.toLowerCase()));
+  }, [categoriesData, search]);
+
+  const selected = useMemo(
+    () => categories.filter((c) => value.includes(c.id)),
+    [categories, value]
+  );
+
+  const toggle = (id: string) => {
+    onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id]);
+  };
+
+  return (
+    <div className="space-y-1">
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-left bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between min-h-[42px]"
+        >
+          <span className="truncate flex-1">
+            {selected.length > 0
+              ? selected.map((c) => c.name).join(', ')
+              : 'Select categories…'}
+          </span>
+          <svg className="w-4 h-4 text-gray-400 ml-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {open && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+            <div className="absolute z-20 top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-72 overflow-hidden">
+              <div className="p-2 border-b border-gray-100 sticky top-0 bg-white">
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search categories…"
+                  className="w-full text-sm border border-gray-200 rounded px-2 py-1 focus:outline-none focus:border-indigo-400"
+                />
+              </div>
+              {isLoading ? (
+                <div className="p-4 text-center text-sm text-gray-500">Loading…</div>
+              ) : categories.length === 0 ? (
+                <div className="p-4 text-center text-sm text-gray-500">No categories found</div>
+              ) : (
+                <ul className="py-1 overflow-y-auto max-h-56">
+                  {categories.map((cat) => (
+                    <li key={cat.id}>
+                      <button
+                        type="button"
+                        onClick={() => toggle(cat.id)}
+                        className={`w-full text-left px-3 py-2 text-sm hover:bg-indigo-50 flex items-center gap-2 ${
+                          value.includes(cat.id) ? 'bg-indigo-50 text-indigo-700' : ''
+                        }`}
+                        style={{ paddingLeft: `${cat.level * 16 + 12}px` }}
+                      >
+                        <span className="w-4 h-4 border border-gray-300 rounded flex items-center justify-center shrink-0">
+                          {value.includes(cat.id) && (
+                            <svg className="w-3 h-3 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          )}
+                        </span>
+                        <span className="truncate">{cat.name}</span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+// ─── Brand single-select ──────────────────────────────────────────────────────
+
+function BrandSelect({
+  value, onChange, error,
+}: {
+  value: string | undefined;
+  onChange: (v: string) => void;
+  error?: string;
+}) {
+  const { data, isLoading } = useQuery({
+    queryKey: ['brands'],
+    queryFn: () =>
+      api.get('/brands?limit=200').then((r) => {
+        const resp = r.data?.data || r.data;
+        return Array.isArray(resp) ? resp : resp?.data || [];
+      }),
+  });
+
+  const brands: Brand[] = useMemo(
+    () => (Array.isArray(data) ? data : []),
+    [data]
+  );
+
+  return (
+    <div className="space-y-1">
+      <Select value={value || ''} onValueChange={onChange}>
+        <SelectTrigger className="w-full">
+          <SelectValue placeholder="Select a brand (optional)" />
+        </SelectTrigger>
+        <SelectContent>
+          <SelectItem value="">No brand</SelectItem>
+          {isLoading ? (
+            <SelectItem value="_loading" disabled>Loading…</SelectItem>
+          ) : (
+            brands.map((b) => (
+              <SelectItem key={b.id} value={b.id}>
+                {b.name}
+              </SelectItem>
+            ))
+          )}
+        </SelectContent>
+      </Select>
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+// ─── Attributes multi-select (shows only when hasVariants is on) ─────────────
+
+function AttributeMultiSelect({
+  value, onChange, error,
+}: {
+  value: string[];
+  onChange: (ids: string[]) => void;
+  error?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+
+  const { data: attrsData, isLoading } = useQuery({
+    queryKey: ['attributes'],
+    queryFn: () =>
+      api.get('/attributes?limit=100').then((r) => {
+        const resp = r.data?.data || r.data;
+        return Array.isArray(resp) ? resp : resp?.data || [];
+      }),
+  });
+
+  const attributes: (Attribute & { _values: AttributeValue[] })[] = useMemo(() => {
+    const list: Attribute[] = Array.isArray(attrsData) ? attrsData : (attrsData as any[]) || [];
+    return list.map((a) => ({
+      ...a,
+      _values: (a as any).attributeValues || [],
+    })).filter((a) =>
+      a.name.toLowerCase().includes(search.toLowerCase()) ||
+      a._values.some((v) => v.label.toLowerCase().includes(search.toLowerCase()))
+    );
+  }, [attrsData, search]);
+
+  const selectedValues: AttributeValue[] = useMemo(() => {
+    const all: AttributeValue[] = [];
+    for (const attr of attributes) {
+      for (const val of attr._values) {
+        if (value.includes(val.id)) all.push(val);
+      }
+    }
+    return all;
+  }, [attributes, value]);
+
+  const toggleValue = useCallback((attrId: string, valId: string, label: string) => {
+    onChange(
+      value.includes(valId)
+        ? value.filter((v) => v !== valId)
+        : [...value, valId]
+    );
+  }, [value, onChange]);
+
+  const getOptionLabel = useCallback((valId: string) => {
+    for (const attr of attributes) {
+      for (const val of attr._values) {
+        if (val.id === valId) return `${attr.name}: ${val.label}`;
+      }
+    }
+    return valId;
+  }, [attributes]);
+
+  return (
+    <div className="space-y-1">
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-left bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between min-h-[42px]"
+        >
+          <span className="truncate flex-1">
+            {selectedValues.length > 0
+              ? selectedValues.map((v) => v.label).join(', ')
+              : 'Select attribute values…'}
+          </span>
+          <svg className="w-4 h-4 text-gray-400 ml-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {open && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+            <div className="absolute z-20 top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-80 overflow-hidden">
+              <div className="p-2 border-b border-gray-100 sticky top-0 bg-white">
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search attributes or values…"
+                  className="w-full text-sm border border-gray-200 rounded px-2 py-1 focus:outline-none focus:border-indigo-400"
+                />
+              </div>
+              {isLoading ? (
+                <div className="p-4 text-center text-sm text-gray-500">Loading…</div>
+              ) : attributes.length === 0 ? (
+                <div className="p-4 text-center text-sm text-gray-500">
+                  No attributes found.{' '}
+                  <a href="/dashboard/attributes/create" className="text-indigo-600 hover:underline">
+                    Create one
+                  </a>
+                </div>
+              ) : (
+                <ul className="py-1 overflow-y-auto max-h-64">
+                  {attributes.map((attr) => (
+                    <li key={attr.id} className="border-b border-gray-50 last:border-0">
+                      <div className="px-3 py-1.5 text-xs font-semibold text-gray-500 uppercase tracking-wide bg-gray-50 sticky top-0">
+                        {attr.name}
+                        <span className="ml-2 font-normal normal-case text-gray-400">{attr.type}</span>
+                      </div>
+                      {attr._values.length === 0 ? (
+                        <div className="px-6 py-2 text-xs text-gray-400 italic">No values</div>
+                      ) : (
+                        attr._values.map((val) => {
+                          const checked = value.includes(val.id);
+                          return (
+                            <button
+                              key={val.id}
+                              type="button"
+                              onClick={() => toggleValue(attr.id, val.id, val.label)}
+                              className={`w-full text-left px-6 py-1.5 text-sm hover:bg-indigo-50 flex items-center gap-2 ${
+                                checked ? 'bg-indigo-50 text-indigo-700' : 'text-gray-700'
+                              }`}
+                            >
+                              <span className="w-4 h-4 border border-gray-300 rounded flex items-center justify-center shrink-0">
+                                {checked && (
+                                  <svg className="w-3 h-3 text-indigo-600" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                  </svg>
+                                )}
+                              </span>
+                              <span className="truncate">{val.label}</span>
+                              {val.referenceValue && (
+                                <span className="text-xs text-gray-400 ml-auto truncate max-w-24">
+                                  {val.referenceValue}
+                                </span>
+                              )}
+                            </button>
+                          );
+                        })
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+      {selectedValues.length > 0 && (
+        <div className="flex flex-wrap gap-1.5 mt-2">
+          {selectedValues.map((v) => {
+            const attr = attributes.find((a) => a._values.some((av) => av.id === v.id));
+            return (
+              <span
+                key={v.id}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs bg-indigo-50 text-indigo-700 border border-indigo-200"
+              >
+                {attr && <span className="text-indigo-400">{attr.name}: </span>}
+                {v.label}
+                <button
+                  type="button"
+                  onClick={() => toggleValue(attr?.id || '', v.id, v.label)}
+                  className="ml-0.5 text-indigo-400 hover:text-indigo-600"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </span>
+            );
+          })}
+        </div>
+      )}
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+    </div>
+  );
+}
+
+// ─── Media library multi-select (existing images) ─────────────────────────────
+
+function MediaMultiSelect({
+  value, onChange, error,
+}: {
+  value: string[];
+  onChange: (ids: string[]) => void;
+  error?: string;
+}) {
+  const [open, setOpen] = useState(false);
+
+  const { data: mediaData, isLoading } = useQuery({
+    queryKey: ['media-list'],
+    queryFn: () =>
+      api.get('/media?limit=200').then((r) => {
+        const resp = r.data?.data || r.data;
+        return Array.isArray(resp) ? resp : resp?.data || [];
+      }),
+  });
+
+  const mediaList: Media[] = useMemo(
+    () => (Array.isArray(mediaData) ? mediaData.filter((m) => m.status === 'READY') : []),
+    [mediaData]
+  );
+
+  const selected = useMemo(
+    () => mediaList.filter((m) => value.includes(m.id)),
+    [mediaList, value]
+  );
+
+  const toggle = (id: string) => {
+    onChange(value.includes(id) ? value.filter((v) => v !== id) : [...value, id]);
+  };
+
+  return (
+    <div className="space-y-3">
+      {/* Selected preview chips */}
+      {selected.length > 0 && (
+        <div>
+          <span className="text-xs text-gray-500 mb-2 block">Selected images</span>
+          <div className="flex flex-wrap gap-2">
+            {selected.map((m) => (
+              <div key={m.id} className="relative group w-20 h-20">
+                <img
+                  src={m.publicUrl}
+                  alt={m.fileName}
+                  className="w-full h-full object-cover rounded-md border border-gray-200"
+                />
+                <button
+                  type="button"
+                  onClick={() => toggle(m.id)}
+                  className="absolute -top-1.5 -right-1.5 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity shadow"
+                >
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Dropdown to pick from library */}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => setOpen(!open)}
+          className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm text-left bg-white focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 flex items-center justify-between min-h-[42px]"
+        >
+          <span className="truncate flex-1">
+            {selected.length > 0
+              ? `${selected.length} image${selected.length > 1 ? 's' : ''} from library`
+              : 'Select images from library…'}
+          </span>
+          <svg className="w-4 h-4 text-gray-400 ml-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
+
+        {open && (
+          <>
+            <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+            <div className="absolute z-20 top-full left-0 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-80 overflow-hidden">
+              {isLoading ? (
+                <div className="p-4 text-center text-sm text-gray-500">Loading…</div>
+              ) : mediaList.length === 0 ? (
+                <div className="p-4 text-center text-sm text-gray-500">
+                  No images in library. Upload some below or go to{' '}
+                  <a href="/dashboard/media" className="text-indigo-600 hover:underline">Media Library</a>.
+                </div>
+              ) : (
+                <ul className="p-2 overflow-y-auto max-h-64">
+                  <li className="grid grid-cols-4 gap-2">
+                    {mediaList.map((m) => (
+                      <button
+                        key={m.id}
+                        type="button"
+                        onClick={() => toggle(m.id)}
+                        className={`relative rounded-md overflow-hidden border-2 transition-colors aspect-square ${
+                          value.includes(m.id)
+                            ? 'border-indigo-500 ring-2 ring-indigo-300'
+                            : 'border-gray-200 hover:border-gray-400'
+                        }`}
+                      >
+                        <img
+                          src={m.publicUrl}
+                          alt={m.fileName}
+                          className="w-full h-full object-cover"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                        />
+                        {value.includes(m.id) && (
+                          <div className="absolute inset-0 bg-indigo-600/30 flex items-center justify-center">
+                            <svg className="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                        )}
+                        <span className="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-[10px] truncate px-1 py-0.5">
+                          {m.fileName}
+                        </span>
+                      </button>
+                    ))}
+                  </li>
+                </ul>
+              )}
+            </div>
+          </>
+        )}
+      </div>
+      {error && <p className="mt-1 text-sm text-red-600">{error}</p>}
+      <p className="text-xs text-gray-400">
+        Upload images from your device below, or select from the library above.
+      </p>
+    </div>
+  );
+}
+
+// ─── File upload zone (upload from device) ────────────────────────────────────
+
+function ImageUploadZone({
+  onUploaded,
+  uploading,
+}: {
+  onUploaded: (mediaId: string, url: string) => void;
+  uploading: boolean;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragOver, setDragOver] = useState(false);
+
+  const uploadFiles = async (files: FileList | null) => {
+    if (!files || files.length === 0) return;
+    for (const file of Array.from(files)) {
+      if (!file.type.startsWith('image/')) continue;
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('altText', file.name);
+      try {
+        const res = await api.post('/media', formData, {
+          headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        const media = res.data?.data;
+        if (media?.id) {
+          onUploaded(media.id, media.publicUrl || '');
+        }
+      } catch {
+        // Silently fail — user can retry
+      }
+    }
+  };
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-gray-700 mb-1">
+        Upload from Device
+        <span className="ml-1 text-xs text-gray-400 font-normal">(JPG, PNG, GIF, WebP — max 10 MB each)</span>
+      </label>
+      <div
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => {
+          e.preventDefault();
+          setDragOver(false);
+          uploadFiles(e.dataTransfer.files);
+        }}
+        onClick={() => inputRef.current?.click()}
+        className={`border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+          dragOver
+            ? 'border-indigo-400 bg-indigo-50'
+            : 'border-gray-300 hover:border-indigo-300 hover:bg-indigo-50/50'
+        }`}
+      >
+        <input
+          ref={inputRef}
+          type="file"
+          accept="image/*"
+          multiple
+          onChange={(e) => { uploadFiles(e.target.files); e.target.value = ''; }}
+          className="hidden"
+        />
+        {uploading ? (
+          <div className="flex flex-col items-center gap-2">
+            <svg className="animate-spin h-8 w-8 text-indigo-500" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            </svg>
+            <p className="text-sm text-gray-500">Uploading…</p>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2">
+            <svg className="w-10 h-10 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+            </svg>
+            <p className="text-sm text-gray-600 font-medium">
+              Click to upload or drag &amp; drop
+            </p>
+            <p className="text-xs text-gray-400">Images will be saved to your Media Library</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function CreateProductPage() {
   const toast = useToast();
   const router = useRouter();
 
-  // Form initialization with react-hook-form
   const {
     register,
     handleSubmit,
@@ -52,14 +607,19 @@ export default function CreateProductPage() {
       isFeatured: false,
       status: 'PUBLISHED',
       sortOrder: 0,
+      stock: 0,
+      categoryIds: [],
+      mediaIds: [],
+      hasVariants: false,
     },
   });
 
-  // Extract values to track changes
-  const watchSlug = watch('slug');
-
-  // Auto-generate slug if not provided
+  const hasVariants = watch('hasVariants');
   const watchName = watch('name');
+  const watchSlug = watch('slug');
+  const watchPrice = watch('price');
+
+  // Auto-generate slug from name
   useEffect(() => {
     if (watchName && !watchSlug) {
       const slug = watchName
@@ -70,30 +630,49 @@ export default function CreateProductPage() {
     }
   }, [watchName, watchSlug, setValue]);
 
-  // Handle form submission
-  const onSubmit: SubmitHandler<ProductFormValues> = async (data) => {
+  // Auto-clear sale price if it exceeds price
+  useEffect(() => {
+    if (watchPrice !== undefined && watchPrice !== null) {
+      const sp = watch('salePrice');
+      if (sp !== undefined && sp !== null && sp > watchPrice) {
+        setValue('salePrice', undefined);
+      }
+    }
+  }, [watchPrice, watch('salePrice'), setValue, watch]);
+
+  // ── Handlers ──────────────────────────────────────────────────────────────
+
+  const handleUploaded = useCallback((mediaId: string, _url: string) => {
+    setValue('mediaIds', (prev: string[]) => [...new Set([...prev, mediaId])]);
+    toast.success('Image uploaded and added!');
+  }, [setValue, toast]);
+
+  const onSubmit = async (data: ProductFormValues) => {
     try {
       const payload = {
         name: data.name,
         slug: data.slug || undefined,
-        shortDescription: data.shortDescription,
-        description: data.description,
+        sku: data.sku || undefined,
+        shortDescription: data.shortDescription || undefined,
+        description: data.description || undefined,
+        hasVariants: data.hasVariants,
         price: data.price,
         salePrice: data.salePrice ?? undefined,
-        stock: data.stock,
-        stockStatus: data.stockStatus,
+        stock: data.stock ?? 0,
+        stockStatus: data.stockStatus || undefined,
         weight: data.weight ?? undefined,
         isActive: data.isActive,
         isFeatured: data.isFeatured,
-        sortOrder: data.sortOrder,
-        sku: data.sku || undefined,
+        sortOrder: data.sortOrder ?? 0,
         status: data.status,
         brandId: data.brandId || undefined,
-        categories: data.categoryIds || [],
+        categories: data.categoryIds,
+        mediaIds: data.mediaIds.length > 0 ? data.mediaIds : undefined,
       };
-      await api.post('/products', payload);
+      const res = await api.post('/products', payload);
+      const productId = res.data?.data?.id;
       toast.success('Product created successfully!');
-      router.push('/dashboard/products');
+      router.push(productId ? `/dashboard/products/${productId}/edit` : '/dashboard/products');
     } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to create product');
     }
@@ -108,68 +687,68 @@ export default function CreateProductPage() {
           <p className="text-gray-600">Fill in the details below to create a new product</p>
         </div>
 
-        {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-          {/* Basic Information */}
+
+          {/* ═══ Basic Information ═══ */}
           <section className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
               </svg>
               Basic Information
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Name */}
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Name *
+                  Name <span className="text-red-500">*</span>
                 </label>
                 <Input
                   id="name"
                   {...register('name')}
-                  placeholder="e.g., Premium Headphones"
-                  className={`w-full ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
+                  placeholder="e.g., Premium Wireless Headphones"
+                  className={`w-full ${errors.name ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                 />
-                {errors.name && (
-                  <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>
-                )}
+                {errors.name && <p className="mt-1 text-sm text-red-600">{errors.name.message}</p>}
               </div>
 
+              {/* Slug */}
               <div>
                 <label htmlFor="slug" className="block text-sm font-medium text-gray-700 mb-1">
-                  Slug *
+                  Slug
+                  <span className="ml-1 text-xs text-gray-400 font-normal">(auto-generated)</span>
                 </label>
                 <Input
                   id="slug"
                   {...register('slug')}
-                  placeholder="e.g., premium-headphones"
-                  className={`w-full ${errors.slug ? 'border-red-500' : 'border-gray-300'}`}
+                  placeholder="premium-wireless-headphones"
+                  className={`w-full ${errors.slug ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
                 />
-                {errors.slug && (
-                  <p className="mt-1 text-sm text-red-600">{errors.slug.message}</p>
-                )}
+                {errors.slug && <p className="mt-1 text-sm text-red-600">{errors.slug.message}</p>}
               </div>
 
+              {/* SKU */}
               <div>
-                <label htmlFor="shortDescription" className="block text-sm font-medium text-gray-700 mb-1">
-                  Short Description *
+                <label htmlFor="sku" className="block text-sm font-medium text-gray-700 mb-1">
+                  SKU
                 </label>
-                <textarea
-                  id="shortDescription"
-                  rows={4}
-                  {...register('shortDescription')}
-                  placeholder="Brief product description"
-                  className={`w-full border-gray-300 rounded-md focus:ring-primary focus:border-primary px-3 py-2 ${errors.shortDescription ? 'border-red-500' : ''}`}
+                <Input
+                  id="sku"
+                  {...register('sku')}
+                  placeholder="e.g., WH-1000XM5"
+                  className="w-full border-gray-300"
                 />
-                {errors.shortDescription && (
-                  <p className="mt-1 text-sm text-red-600">{errors.shortDescription.message}</p>
-                )}
               </div>
 
+              {/* Status */}
               <div>
                 <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
-                  Status *
+                  Status <span className="text-red-500">*</span>
                 </label>
-                <Select value={watch('status') as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED' | undefined} onValueChange={(v) => setValue('status', v as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED')}>
+                <Select
+                  value={watch('status')}
+                  onValueChange={(v) => setValue('status', v as 'DRAFT' | 'PUBLISHED' | 'ARCHIVED')}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Select status" />
                   </SelectTrigger>
@@ -179,203 +758,313 @@ export default function CreateProductPage() {
                     <SelectItem value="ARCHIVED">Archived</SelectItem>
                   </SelectContent>
                 </Select>
-                {errors.status && (
-                  <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>
-                )}
+                {errors.status && <p className="mt-1 text-sm text-red-600">{errors.status.message}</p>}
+              </div>
+
+              {/* Short Description */}
+              <div className="md:col-span-2">
+                <label htmlFor="shortDescription" className="block text-sm font-medium text-gray-700 mb-1">
+                  Short Description
+                </label>
+                <textarea
+                  id="shortDescription"
+                  rows={2}
+                  {...register('shortDescription')}
+                  placeholder="A brief summary for listings and search results…"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                {errors.shortDescription && <p className="mt-1 text-sm text-red-600">{errors.shortDescription.message}</p>}
+              </div>
+
+              {/* Full Description */}
+              <div className="md:col-span-2">
+                <label htmlFor="description" className="block text-sm font-medium text-gray-700 mb-1">
+                  Full Description
+                </label>
+                <textarea
+                  id="description"
+                  rows={5}
+                  {...register('description')}
+                  placeholder="Detailed product description…"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
+                />
+                {errors.description && <p className="mt-1 text-sm text-red-600">{errors.description.message}</p>}
               </div>
             </div>
           </section>
 
-          {/* Pricing & Inventory */}
+          {/* ═══ Pricing & Inventory ═══ */}
           <section className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0升到38c-.553 0-1 .448-1 1s.447 1 1 1h.001c.553 0 1-.448 1-1s-.447-1-1-1zm3 0H6a3 3 0 00-3 3v1a3 3 0 003 3h10a3 3 0 003-3v-1a3 3 0 00-3-3z" />
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z" />
               </svg>
-              Pricing & Inventory
+              Pricing &amp; Inventory
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Price */}
               <div>
                 <label htmlFor="price" className="block text-sm font-medium text-gray-700 mb-1">
-                  Price *
+                  Price <span className="text-red-500">*</span>
                 </label>
-                <Input
-                  id="price"
-                  type="number"
-                  step="0.01"
-                  {...register('price')}
-                  placeholder="0.00"
-                  className={`w-full ${errors.price ? 'border-red-500' : 'border-gray-300'}`}
-                />
-                {errors.price && (
-                  <p className="mt-1 text-sm text-red-600">{errors.price.message}</p>
-                )}
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                  <Input
+                    id="price"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    {...register('price', { valueAsNumber: true })}
+                    placeholder="0.00"
+                    className={`w-full pl-7 ${errors.price ? 'border-red-500 focus:ring-red-500' : 'border-gray-300'}`}
+                  />
+                </div>
+                {errors.price && <p className="mt-1 text-sm text-red-600">{errors.price.message}</p>}
               </div>
 
+              {/* Sale Price */}
               <div>
                 <label htmlFor="salePrice" className="block text-sm font-medium text-gray-700 mb-1">
                   Sale Price
+                  <span className="ml-1 text-xs text-gray-400 font-normal">(optional)</span>
                 </label>
-                <Input
-                  id="salePrice"
-                  type="number"
-                  step="0.01"
-                  {...register('salePrice')}
-                  placeholder="Optional"
-                  className="w-full border-gray-300"
-                />
+                <div className="relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-sm">$</span>
+                  <Input
+                    id="salePrice"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    {...register('salePrice', {
+                      setValueAs: (v: any) =>
+                        v === '' || v === null || v === undefined ? undefined : parseFloat(v),
+                    })}
+                    placeholder="0.00"
+                    className="w-full pl-7 border-gray-300"
+                  />
+                </div>
+                {errors.salePrice && <p className="mt-1 text-sm text-red-600">{errors.salePrice.message}</p>}
               </div>
 
+              {/* Stock */}
               <div>
                 <label htmlFor="stock" className="block text-sm font-medium text-gray-700 mb-1">
-                  Stock *
+                  Stock
+                  <span className="ml-1 text-xs text-gray-400 font-normal">(optional)</span>
                 </label>
                 <Input
                   id="stock"
                   type="number"
-                  {...register('stock')}
+                  min="0"
+                  {...register('stock', { valueAsNumber: true })}
                   placeholder="0"
-                  className={`w-full ${errors.stock ? 'border-red-500' : 'border-gray-300'}`}
+                  className="w-full border-gray-300"
                 />
-                {errors.stock && (
-                  <p className="mt-1 text-sm text-red-600">{errors.stock.message}</p>
-                )}
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
+              {/* Stock Status */}
               <div>
                 <label htmlFor="stockStatus" className="block text-sm font-medium text-gray-700 mb-1">
-                  Stock Status *
+                  Stock Status
                 </label>
                 <select
+                  id="stockStatus"
                   value={watch('stockStatus') || ''}
-                  onChange={(e) => setValue('stockStatus', e.target.value as 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK')}
-                  className="border border-gray-300 rounded-md px-3 py-2 w-full focus:ring-indigo-500 focus:border-indigo-500"
+                  onChange={(e) =>
+                    setValue('stockStatus', (e.target.value || undefined) as 'IN_STOCK' | 'LOW_STOCK' | 'OUT_OF_STOCK' | undefined)
+                  }
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:ring-indigo-500 focus:border-indigo-500"
                 >
+                  <option value="">Auto (based on stock)</option>
                   <option value="IN_STOCK">In Stock</option>
                   <option value="LOW_STOCK">Low Stock</option>
                   <option value="OUT_OF_STOCK">Out of Stock</option>
                 </select>
-                {errors.stockStatus && (
-                  <p className="mt-1 text-sm text-red-600">{errors.stockStatus.message}</p>
-                )}
+                {errors.stockStatus && <p className="mt-1 text-sm text-red-600">{errors.stockStatus.message}</p>}
               </div>
 
+              {/* Weight */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label htmlFor="weight" className="block text-sm font-medium text-gray-700 mb-1">
                   Weight (kg)
+                  <span className="ml-1 text-xs text-gray-400 font-normal">(optional)</span>
                 </label>
                 <Input
                   id="weight"
                   type="number"
                   step="0.001"
-                  {...register('weight')}
-                  placeholder="Optional"
+                  min="0"
+                  {...register('weight', {
+                    setValueAs: (v: any) =>
+                      v === '' || v === null || v === undefined ? undefined : parseFloat(v),
+                  })}
+                  placeholder="0.000"
                   className="w-full border-gray-300"
                 />
               </div>
             </div>
           </section>
 
-          {/* Features */}
+          {/* ═══ Features ═══ */}
           <section className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
               </svg>
               Features
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {/* Active toggle */}
               <div>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={watch('isActive') || false}
-                    onChange={(e) => setValue('isActive', e.target.checked)}
-                    className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Active</span>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div className="relative">
+                    <input type="checkbox" {...register('isActive')} className="sr-only peer" />
+                    <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-indigo-600 transition-colors" />
+                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-4 transition-transform" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">Active</span>
+                    <p className="text-xs text-gray-500 mt-0.5 ml-14">Visible to customers</p>
+                  </div>
                 </label>
               </div>
 
+              {/* Featured toggle */}
               <div>
-                <label className="flex items-center space-x-3">
-                  <input
-                    type="checkbox"
-                    checked={watch('isFeatured') || false}
-                    onChange={(e) => setValue('isFeatured', e.target.checked)}
-                    className="h-4 w-4 text-primary border-gray-300 rounded focus:ring-primary"
-                  />
-                  <span className="text-sm font-medium text-gray-700">Featured</span>
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div className="relative">
+                    <input type="checkbox" {...register('isFeatured')} className="sr-only peer" />
+                    <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-amber-500 transition-colors" />
+                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-4 transition-transform" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">Featured</span>
+                    <p className="text-xs text-gray-500 mt-0.5 ml-14">Show on homepage</p>
+                  </div>
                 </label>
               </div>
 
+              {/* Has Variants toggle */}
               <div>
-                <label htmlFor="sortOrder" className="block text-sm font-medium text-gray-700 mb-1">
-                  Sort Order
+                <label className="flex items-center gap-3 cursor-pointer">
+                  <div className="relative">
+                    <input type="checkbox" {...register('hasVariants')} className="sr-only peer" />
+                    <div className="w-10 h-6 bg-gray-200 rounded-full peer-checked:bg-emerald-500 transition-colors" />
+                    <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow peer-checked:translate-x-4 transition-transform" />
+                  </div>
+                  <div>
+                    <span className="text-sm font-medium text-gray-700">Has Variants</span>
+                    <p className="text-xs text-gray-500 mt-0.5 ml-14">Product has size/color options</p>
+                  </div>
                 </label>
-                <Input
-                  id="sortOrder"
-                  type="number"
-                  {...register('sortOrder')}
-                  value={watch('sortOrder') || 0}
-                  className="w-full border-gray-300"
-                />
               </div>
+            </div>
+
+            <div className="mt-6">
+              <label htmlFor="sortOrder" className="block text-sm font-medium text-gray-700 mb-1">
+                Sort Order
+              </label>
+              <Input
+                id="sortOrder"
+                type="number"
+                min="0"
+                {...register('sortOrder', { valueAsNumber: true })}
+                className="w-full max-w-xs border-gray-300"
+              />
+              <p className="text-xs text-gray-500 mt-1">Lower numbers appear first in listings</p>
             </div>
           </section>
 
-          {/* Associations */}
+          {/* ═══ Associations ═══ */}
           <section className="bg-white rounded-lg border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold mb-4 flex items-center">
-              <svg className="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
               </svg>
               Associations
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {/* Brand */}
               <div>
                 <label htmlFor="brandId" className="block text-sm font-medium text-gray-700 mb-1">
-                  Brand *
+                  Brand
                 </label>
-                <Select value={watch('brandId')} onValueChange={(v) => setValue('brandId', v)}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a brand" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Select a brand</SelectItem>
-                    {/* Brands would be populated from API */}
-                  </SelectContent>
-                </Select>
-                {errors.brandId && (
-                  <p className="mt-1 text-sm text-red-600">{errors.brandId.message}</p>
-                )}
+                <BrandSelect
+                  value={watch('brandId')}
+                  onChange={(v) => setValue('brandId', v)}
+                  error={errors.brandId?.message}
+                />
               </div>
 
+              {/* Categories */}
               <div>
-                <label htmlFor="categoryIds" className="block text-sm font-medium text-gray-700 mb-1">
-                  Categories *
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Categories
+                  <span className="ml-1 text-xs text-gray-400 font-normal">(select one or more)</span>
                 </label>
-                <Select value={watch('categoryIds')?.[0] || ''} onValueChange={(v) => setValue('categoryIds', [v])}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a category" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="">Select a category</SelectItem>
-                    {/* Categories would be populated from API */}
-                  </SelectContent>
-                </Select>
-                {errors.categoryIds && (
-                  <p className="mt-1 text-sm text-red-600">{errors.categoryIds.message}</p>
-                )}
+                <CategoryMultiSelect
+                  value={watch('categoryIds')}
+                  onChange={(ids) => setValue('categoryIds', ids)}
+                  error={errors.categoryIds?.message}
+                />
               </div>
             </div>
           </section>
 
-          {/* Actions */}
-          <div className="flex justify-end space-x-3 pt-6 border-t border-gray-200">
-            <Button variant="secondary" onClick={() => router.back()}>Cancel</Button>
+          {/* ═══ Attributes (shown only when hasVariants is enabled) ═══ */}
+          {hasVariants && (
+            <section className="bg-white rounded-lg border border-gray-200 p-6">
+              <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                <svg className="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                </svg>
+                Attributes
+                <span className="text-sm font-normal text-gray-400">— select values for product variants</span>
+              </h2>
+              <p className="text-sm text-gray-500 mb-4">
+                Choose attribute values (e.g. Size: Large, Color: Red) that will define your product variants.
+              </p>
+              <AttributeMultiSelect
+                value={watch('attributeValueIds')}
+                onChange={(ids) => setValue('attributeValueIds', ids)}
+                error={errors.attributeValueIds?.message}
+              />
+            </section>
+          )}
+
+          {/* ═══ Product Images ═══ */}
+          <section className="bg-white rounded-lg border border-gray-200 p-6">
+            <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
+              <svg className="w-5 h-5 text-indigo-600 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+              </svg>
+              Product Images
+            </h2>
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Left: Upload from device */}
+              <div>
+                <ImageUploadZone onUploaded={handleUploaded} uploading={false} />
+              </div>
+
+              {/* Right: Select from library */}
+              <div>
+                <MediaMultiSelect
+                  value={watch('mediaIds')}
+                  onChange={(ids) => setValue('mediaIds', ids)}
+                  error={errors.mediaIds?.message}
+                />
+              </div>
+            </div>
+          </section>
+
+          {/* ═══ Actions ═══ */}
+          <div className="flex justify-end gap-3 pt-2 border-t border-gray-200">
+            <Button variant="secondary" type="button" onClick={() => router.back()}>
+              Cancel
+            </Button>
             <Button type="submit">Create Product</Button>
           </div>
         </form>

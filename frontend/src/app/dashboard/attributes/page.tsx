@@ -7,6 +7,7 @@ import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import Link from 'next/link';
 import ConfirmDialog from '@/components/ConfirmDialog';
+import { ATTRIBUTE_TYPE_LABELS, ATTRIBUTE_TYPE_BADGE_COLORS } from '@/types';
 
 export default function AttributesPage() {
   const toast = useToast();
@@ -52,23 +53,7 @@ export default function AttributesPage() {
     }
   };
 
-  const typeLabels: Record<string, string> = {
-    TEXT: 'Text',
-    DROPDOWN: 'Dropdown',
-    RADIO: 'Radio',
-    CHECKBOX: 'Checkbox',
-    COLOR_SWATCH: 'Color',
-    IMAGE_SWATCH: 'Image',
-  };
-
-  const typeColors: Record<string, string> = {
-    TEXT: 'bg-gray-100 text-gray-800',
-    DROPDOWN: 'bg-blue-100 text-blue-800',
-    RADIO: 'bg-green-100 text-green-800',
-    CHECKBOX: 'bg-purple-100 text-purple-800',
-    COLOR_SWATCH: 'bg-yellow-100 text-yellow-800',
-    IMAGE_SWATCH: 'bg-pink-100 text-pink-800',
-  };
+  // Type labels and badge colors are now imported from types
 
   return (
     <div className="p-8 min-h-full">
@@ -135,8 +120,8 @@ export default function AttributesPage() {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 font-mono">{attr.slug}</td>
                   <td className="px-6 py-4 whitespace-nowrap">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${typeColors[attr.type] || 'bg-gray-100 text-gray-800'}`}>
-                      {typeLabels[attr.type] || attr.type}
+                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${ATTRIBUTE_TYPE_BADGE_COLORS[attr.type] || 'bg-gray-100 text-gray-800'}`}>
+                      {ATTRIBUTE_TYPE_LABELS[attr.type] || attr.type}
                     </span>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">

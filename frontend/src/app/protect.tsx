@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuthStore } from '@/store/authStore';
+import { isAuthenticated } from '@/lib/auth-utils';
 
 /**
  * Protect wrapper — ensures user is authenticated before rendering children.

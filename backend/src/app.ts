@@ -16,6 +16,7 @@ import { categoryRoutes } from './modules/category/category.routes';
 import { brandRoutes } from './modules/brand/brand.routes';
 import { attributeRoutes } from './modules/attribute/attribute.routes';
 import { productRoutes } from './modules/product/product.routes';
+import { dashboardRoutes } from './modules/dashboard/dashboard.routes';
 
 /**
  * Express application instance.
@@ -100,6 +101,9 @@ attributeRoutes(app);
 
 // Mount product routes (star feature: products, variants, inventory, transactions)
 productRoutes(app);
+
+// Mount dashboard routes (aggregate stats)
+dashboardRoutes(app);
 
 // Global error handler — must be last
 app.use(errorHandler);

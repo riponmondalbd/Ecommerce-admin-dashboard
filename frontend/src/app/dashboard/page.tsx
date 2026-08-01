@@ -1,37 +1,17 @@
 'use client';
-import { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import api from '@/lib/axios-client';
 import StatCard from '@/components/StatCard';
 
 export default function DashboardPage() {
-  // Fetch stats in parallel
-  const { data: productRes, isLoading: productLoading } = useQuery({
-    queryKey: ['products'],
-    queryFn: () => api.get('/products?limit=1'),
+  // Single efficient call for all dashboard stats
+  const { data, isLoading, error } = useQuery({
+    queryKey: ['dashboard-stats'],
+    queryFn: () => api.get('/dashboard/stats'),
+    retry: 1,
   });
 
-  const { data: categoryRes, isLoading: categoryLoading } = useQuery({
-    queryKey: ['categories'],
-    queryFn: () => api.get('/categories?limit=1'),
-  });
-
-  const { data: brandRes, isLoading: brandLoading } = useQuery({
-    queryKey: ['brands'],
-    queryFn: () => api.get('/brands?limit=1'),
-  });
-
-  const { data: userRes, isLoading: userLoading } = useQuery({
-    queryKey: ['users'],
-    queryFn: () => api.get('/users?limit=1'),
-  });
-
-  const { data: mediaRes, isLoading: mediaLoading } = useQuery({
-    queryKey: ['media'],
-    queryFn: () => api.get('/media?limit=1'),
-  });
-
-  const loading = productLoading || categoryLoading || brandLoading || userLoading || mediaLoading;
+  const loading = isLoading;
 
   if (loading) {
     return (
@@ -46,16 +26,31 @@ export default function DashboardPage() {
     );
   }
 
-  const products = productRes?.data?.data || [];
-  const categories = categoryRes?.data?.data || [];
-  const brands = brandRes?.data?.data || [];
-  const users = userRes?.data?.data || [];
-  const media = mediaRes?.data?.data || [];
-  const totalProducts = productRes?.data?.pagination?.total || 0;
-  const totalCategories = categoryRes?.data?.pagination?.total || 0;
-  const totalBrands = brandRes?.data?.pagination?.total || 0;
-  const totalUsers = userRes?.data?.pagination?.total || 0;
-  const totalMedia = mediaRes?.data?.pagination?.total || 0;
+  // Show error state clearly instead of silently rendering 0
+  if (error) {
+    return (
+      <div className="p-6 lg:p-8">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <p className="text-red-500 font-medium">Failed to load dashboard data</p>
+            <p className="text-gray-400 text-sm mt-2">{error instanceof Error ? error.message : 'Unknown error'}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="mt-4 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm hover:bg-indigo-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  const stats = data?.data?.data || {};
+  const totalProducts = stats.products || 0;
+  const totalCategories = stats.categories || 0;
+  const totalBrands = stats.brands || 0;
+  const totalUsers = stats.users || 0;
 
   return (
     <div className="p-6 lg:p-8">

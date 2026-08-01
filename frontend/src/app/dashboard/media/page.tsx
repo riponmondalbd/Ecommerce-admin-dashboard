@@ -8,7 +8,9 @@ import Input from '@/components/ui/input';
 import ConfirmDialog from '@/components/ConfirmDialog';
 import Link from 'next/link';
 
-const MediaItem = ({ media, onDelete }) => {
+import { Media } from '@/types';
+
+const MediaItem = ({ media, onDelete }: { media: Media; onDelete: () => void }) => {
   const isImage = media.type === 'IMAGE';
   const isVideo = media.type === 'VIDEO';
   const isDocument = media.type === 'DOCUMENT';
@@ -71,15 +73,15 @@ const MediaItem = ({ media, onDelete }) => {
 
 export default function MediaPage() {
   const toast = useToast();
-  const [filterType, setFilterType] = useState(null);
-  const [filterStatus, setFilterStatus] = useState(null);
+  const [filterType, setFilterType] = useState<string | null>(null);
+  const [filterStatus, setFilterStatus] = useState<string | null>(null);
   const [showUploadModal, setShowUploadModal] = useState(false);
-  const [file, setFile] = useState(null);
+  const [file, setFile] = useState<File | null>(null);
   const [altText, setAltText] = useState('');
   const [uploading, setUploading] = useState(false);
   const [page, setPage] = useState(1);
   const LIMIT = 12;
-  const [deleteMediaId, setDeleteMediaId] = useState(null);
+  const [deleteMediaId, setDeleteMediaId] = useState<string | null>(null);
 
   const { data, isLoading, refetch } = useQuery({
     queryKey: ['media', filterType, filterStatus, page],
@@ -97,7 +99,7 @@ export default function MediaPage() {
   const totalItems = data?.pagination?.total || mediaList.length || 0;
   const totalPages = data?.pagination?.pages || Math.ceil(totalItems / LIMIT) || 1;
 
-  const handleDelete = async (id) => {
+  const handleDelete = async (id: string) => {
     setDeleteMediaId(id);
   };
 
@@ -108,12 +110,12 @@ export default function MediaPage() {
       toast.success('Media deleted successfully!');
       setDeleteMediaId(null);
       await refetch();
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to delete media');
     }
   };
 
-  const handleUploadSubmit = async (e) => {
+  const handleUploadSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!file) return;
 
@@ -129,7 +131,7 @@ export default function MediaPage() {
       setFile(null);
       setAltText('');
       await refetch();
-    } catch (error) {
+    } catch (error: any) {
       toast.error(error.response?.data?.message || 'Failed to upload media');
     } finally {
       setUploading(false);
@@ -182,7 +184,7 @@ export default function MediaPage() {
             No media found. Upload your first file above.
           </div>
         ) : (
-          mediaList.map((media) => (
+          mediaList.map((media: Media) => (
             <MediaItem key={media.id} media={media} onDelete={() => handleDelete(media.id)} />
           ))
         )}

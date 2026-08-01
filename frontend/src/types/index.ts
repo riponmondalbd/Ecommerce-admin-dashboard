@@ -238,43 +238,67 @@ export interface Attribute {
   id: string;
   name: string;
   slug: string;
-  type: 'TEXT' | 'SELECT' | 'COLOR' | 'IMAGE';
-  values: AttributeValue[];
+  type: AttributeTypeEnum;
+  attributeValues: AttributeValue[];
   createdAt: string;
   updatedAt: string;
 }
 
+export enum AttributeTypeEnum {
+  TEXT = 'TEXT',
+  DROPDOWN = 'DROPDOWN',
+  RADIO = 'RADIO',
+  CHECKBOX = 'CHECKBOX',
+  COLOR_SWATCH = 'COLOR_SWATCH',
+  IMAGE_SWATCH = 'IMAGE_SWATCH',
+}
+
+export const ATTRIBUTE_TYPE_LABELS: Record<string, string> = {
+  TEXT: 'Text',
+  DROPDOWN: 'Dropdown',
+  RADIO: 'Radio',
+  CHECKBOX: 'Checkbox',
+  COLOR_SWATCH: 'Color',
+  IMAGE_SWATCH: 'Image',
+};
+
+export const ATTRIBUTE_TYPE_BADGE_COLORS: Record<string, string> = {
+  TEXT: 'bg-gray-100 text-gray-800',
+  DROPDOWN: 'bg-blue-100 text-blue-800',
+  RADIO: 'bg-green-100 text-green-800',
+  CHECKBOX: 'bg-purple-100 text-purple-800',
+  COLOR_SWATCH: 'bg-yellow-100 text-yellow-800',
+  IMAGE_SWATCH: 'bg-pink-100 text-pink-800',
+};
+
 interface CreateAttributeDto {
   name: string;
   slug?: string;
-  type: 'TEXT' | 'SELECT' | 'COLOR' | 'IMAGE';
+  type: AttributeTypeEnum;
 }
 
 export interface AttributeValue {
   id: string;
-  attributeId: string;
+  slug: string;
   label: string;
-  referenceValue: string;
-  type: 'COLOR' | 'IMAGE' | 'TEXT';
-  color?: string; // for COLOR type
-  imageUrl?: string; // for IMAGE type
+  referenceValue: string | null;
+  sortOrder: number;
+  attributeId: string;
   createdAt: string;
   updatedAt: string;
 }
 
 interface CreateAttributeValueDto {
-  attributeId: string;
   label: string;
-  referenceValue: string;
-  type: 'COLOR' | 'IMAGE' | 'TEXT';
-  color?: string;
-  imageUrl?: string;
+  referenceValue?: string;
+  sortOrder?: number;
 }
 
 // Media types
 export interface Media {
   id: string;
   fileName: string;
+  altText?: string;
   filePath: string;
   publicUrl: string;
   type: MediaType;
