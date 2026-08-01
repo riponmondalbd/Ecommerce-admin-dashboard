@@ -69,8 +69,8 @@ async function main() {
     // MEDIA
     { key: 'media:watch', name: 'Watch Media', group: 'MEDIA' },
     { key: 'media:read', name: 'Read Media', group: 'MEDIA' },
-    { key: 'media:upload', name: 'Upload Media', group: 'MEDIA' },
-    { key: 'media:write', name: 'Write Media', group: 'MEDIA' },
+    { key: 'media:create', name: 'Create Media', group: 'MEDIA' },
+    { key: 'media:update', name: 'Update Media', group: 'MEDIA' },
     { key: 'media:delete', name: 'Delete Media', group: 'MEDIA' },
 
     // CATEGORY
@@ -312,8 +312,8 @@ async function main() {
         slug,
         label: val,
         referenceValue: val.toLowerCase(),
-        type: 'COLOR',
-        color: val.toLowerCase(),
+        // type: 'COLOR',  // Not in schema
+        // color: val.toLowerCase(),  // Not in schema
       },
       update: {},
     })
@@ -330,7 +330,7 @@ async function main() {
         slug,
         label: val,
         referenceValue: val.toLowerCase(),
-        type: 'TEXT',
+        // type: 'TEXT',  // Not in schema
       },
       update: {},
     })
