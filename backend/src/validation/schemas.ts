@@ -44,6 +44,8 @@ export const ListPermissionDto = z.object({
   group: PermissionGroupSchema.optional(),
   search: z.string().optional(),
   isActive: z.boolean().optional(),
+  sort: z.enum(['key', 'name', 'group', 'isActive', 'createdAt']).optional(),
+  order: z.enum(['asc', 'desc']).optional(),
 });
 
 // Export types for convenience

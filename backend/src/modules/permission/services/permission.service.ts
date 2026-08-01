@@ -42,15 +42,23 @@ export const getPermissions = async (input: unknown) => {
   }
 
   const page = validated.page || 1;
-const limit = validated.limit || 10;
-const skip = (page - 1) * limit;
+  const limit = validated.limit || 10;
+  const skip = (page - 1) * limit;
+
+  // Build orderBy
+  const orderBy: any = {};
+  if (validated.sort) {
+    orderBy[validated.sort] = validated.order || 'asc';
+  } else {
+    orderBy.createdAt = 'desc';
+  }
 
   const [permissions, total] = await Promise.all([
     prisma.permission.findMany({
       where,
       take: limit,
       skip,
-      orderBy: { createdAt: 'desc' },
+      orderBy,
       include: {
         roles: {
           select: {
