@@ -5,8 +5,8 @@ import { useAuthStore } from '@/store/authStore';
 import useToast from '@/components/ui/Toast';
 
 export default function LoginPage() {
-  const [email, setEmail] = useState('admin@trends-bird.com');
-  const [password, setPassword] = useState('admin123');
+  const [email, setEmail] = useState('admin@trendsbird.com');
+  const [password, setPassword] = useState('Admin@123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -107,7 +107,7 @@ export default function LoginPage() {
             <p className="text-xs text-center text-gray-500">Demo credentials</p>
             <div className="mt-2 bg-gray-50 rounded-lg p-3 text-center">
               <p className="text-xs font-mono text-gray-600">
-                admin@trends-bird.com / admin123
+                admin@trendsbird.com / Admin@123
               </p>
             </div>
           </div>
