@@ -42,6 +42,21 @@ export default function EditRolePage() {
   const [loading, setLoading] = useState(true);
   const [groupedPermissions, setGroupedPermissions] = useState<Record<string, Permission[]>>({});
 
+  // Form initialization - MUST be before useEffect that uses setValue
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    formState: { errors },
+  } = useForm<RoleFormValues>({
+    resolver: zodResolver(roleSchema),
+    defaultValues: {
+      name: '',
+      description: '',
+      permissions: [],
+    },
+  });
+
   // Fetch all permissions on mount
   useEffect(() => {
     const fetchPermissions = async () => {
@@ -73,7 +88,12 @@ export default function EditRolePage() {
         const res = await api.get(`/roles/${roleId}`);
         const role = res.data?.data || res.data;
         if (role) {
-          setPermissions(role.permissions?.map((p: { permission: { key: string } }) => p.permission.key) || []);
+          const permissionKeys = role.permissions?.map((p: { permission: { key: string } }) => p.permission.key) || [];
+          setPermissions(permissionKeys);
+          // Set form values for name and description
+          setValue('name', role.name || '', { shouldValidate: true });
+          setValue('description', role.description || '', { shouldValidate: true });
+          setValue('permissions', permissionKeys, { shouldValidate: true });
         }
       } catch (error: any) {
         toast.error(error.response?.data?.message || 'Failed to load role');
@@ -84,22 +104,7 @@ export default function EditRolePage() {
     };
 
     fetchRole();
-  }, [roleId, router, toast]);
-
-  // Form initialization
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    formState: { errors },
-  } = useForm<RoleFormValues>({
-    resolver: zodResolver(roleSchema),
-    defaultValues: {
-      name: '',
-      description: '',
-      permissions: [],
-    },
-  });
+  }, [roleId, router, toast, setValue]);
 
   // Handle permission toggle
   const togglePermission = (perm: string) => {
