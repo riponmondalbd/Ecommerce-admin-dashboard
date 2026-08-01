@@ -237,7 +237,7 @@ export const partialUpdateRole = async (id: string, input: unknown) => {
 /**
  * Delete a role with safety guards
  */
-export const deleteRole = async (id: string) => {
+export const deleteRole = async (id: string, force: boolean = false) => {
   const role = await prisma.role.findUnique({ where: { id } });
   if (!role) {
     throw new AppError('Role not found', 404);
@@ -245,19 +245,36 @@ export const deleteRole = async (id: string) => {
 
   // Safety guard 1: Check if role has any users assigned
   const userCount = await prisma.user.count({ where: { roleId: id } });
-  if (userCount > 0) {
-    throw new AppError(`Cannot delete role: ${role.name} has ${userCount} user(s) assigned`, 400);
+  if (userCount > 0 && !force) {
+    throw new AppError(`Cannot delete role: ${role.name} has ${userCount} user(s) assigned. Use force=true to override.`, 400);
   }
 
   // Safety guard 2: Check if role has any permissions assigned
   const permissionCount = await prisma.rolePermission.count({ where: { roleId: id } });
-  if (permissionCount > 0) {
-    throw new AppError(`Cannot delete role: ${role.name} has ${permissionCount} permission(s) assigned`, 400);
+  if (permissionCount > 0 && !force) {
+    throw new AppError(`Cannot delete role: ${role.name} has ${permissionCount} permission(s) assigned. Use force=true to override.`, 400);
   }
 
-  // Safety guard 3: Prevent deleting system roles
-  if (role.isSystem) {
-    throw new AppError(`Cannot delete system role: ${role.name}`, 400);
+  // Safety guard 3: Prevent deleting system roles (unless forced by super admin)
+  if (role.isSystem && !force) {
+    throw new AppError(`Cannot delete system role: ${role.name}. Use force=true to override.`, 400);
+  }
+
+  // If force=true, remove all permissions and users first
+  if (force) {
+    await prisma.rolePermission.deleteMany({ where: { roleId: id } });
+    // Note: Users with this role will need to be reassigned or handled separately
+    // We don't delete users, just remove the role assignment
+    // Find a default role (first non-system role) to assign users to
+    const defaultRole = await prisma.role.findFirst({
+      where: { isSystem: false, id: { not: id } },
+      select: { id: true },
+    });
+    const defaultRoleId = defaultRole?.id || id; // fallback to same id if no other role exists
+    await prisma.user.updateMany({
+      where: { roleId: id },
+      data: { roleId: defaultRoleId },
+    });
   }
 
   await prisma.role.delete({ where: { id } });

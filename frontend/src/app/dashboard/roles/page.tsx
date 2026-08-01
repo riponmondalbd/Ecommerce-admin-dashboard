@@ -6,33 +6,85 @@ import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
 import Link from 'next/link';
+import ConfirmDialog from '@/components/ConfirmDialog';
+import { useAuthStore } from '@/store/authStore';
 
-const RoleRow = ({ role, onRefresh }: { role: any; onRefresh: () => void }) => (
-  <tr className="border-t hover:bg-gray-50">
-    <td className="px-6 py-4 whitespace-nowrap">
-      <div>
-        <p className="font-medium text-gray-900">{role.name}</p>
-        {role.isActive === false && (
-          <span className="text-xs text-gray-500">Inactive</span>
-        )}
-        {role.isSystem && (
-          <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">System</span>
-        )}
-      </div>
-    </td>
-    <td className="px-6 py-4 whitespace-nowrap">
-      <span className="text-sm text-gray-500">{role.users?.length || 0} user(s)</span>
-    </td>
-    <td className="px-6 py-4 whitespace-nowrap">
-      <span className="text-sm text-gray-500">{role.permissions?.length || 0} permission(s)</span>
-    </td>
-    <td className="px-6 py-4 whitespace-nowrap">
-      <Link href={`/dashboard/roles/${role.id}/edit`}>
-        <Button variant="secondary" size="sm">Edit</Button>
-      </Link>
-    </td>
-  </tr>
-);
+const RoleRow = ({ role }: { role: any }) => {
+  const toast = useToast();
+  const queryClient = useQueryClient();
+  const { user } = useAuthStore();
+  // Handle both cases: role might be a string or an object with name property
+  const userRole = user?.role?.name || user?.role;
+  const isSuperAdmin = userRole === 'SUPER_ADMIN';
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+
+  const handleDelete = async () => {
+    try {
+      // Add force=true query param for SUPER_ADMIN
+      const url = isSuperAdmin ? `/roles/${role.id}?force=true` : `/roles/${role.id}`;
+      await api.delete(url);
+      toast.success('Role deleted successfully!');
+      queryClient.invalidateQueries({ queryKey: ['roles'] });
+      setShowDeleteDialog(false);
+    } catch (error: any) {
+      toast.error(error.response?.data?.message || 'Failed to delete role');
+    }
+  };
+
+  // Don't allow deleting system roles (unless SUPER_ADMIN with force)
+  const isSystemRole = role.isSystem && !isSuperAdmin;
+
+  return (
+    <tr className="border-t hover:bg-gray-50">
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div>
+          <p className="font-medium text-gray-900">{role.name}</p>
+          {role.isActive === false && (
+            <span className="text-xs text-gray-500">Inactive</span>
+          )}
+          {role.isSystem && (
+            <span className="ml-2 text-xs bg-gray-100 text-gray-600 px-1.5 py-0.5 rounded">System</span>
+          )}
+        </div>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className="text-sm text-gray-500">{role.users?.length || 0} user(s)</span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <span className="text-sm text-gray-500">{role.permissions?.length || 0} permission(s)</span>
+      </td>
+      <td className="px-6 py-4 whitespace-nowrap">
+        <div className="flex items-center gap-2">
+          <Link href={`/dashboard/roles/${role.id}/edit`}>
+            <Button variant="secondary" size="sm">Edit</Button>
+          </Link>
+          {!isSystemRole && (
+            <>
+              <Button variant="destructive" size="sm" onClick={() => setShowDeleteDialog(true)}>
+                Delete
+              </Button>
+              <ConfirmDialog
+                isOpen={showDeleteDialog}
+                title="Delete Role"
+                message={`Are you sure you want to delete "${role.name}"? This action cannot be undone.`}
+                confirmText="Delete"
+                cancelText="Cancel"
+                variant="danger"
+                onConfirm={handleDelete}
+                onCancel={() => setShowDeleteDialog(false)}
+              />
+            </>
+          )}
+          {isSystemRole && (
+            <Button variant="destructive" size="sm" disabled title="System roles cannot be deleted">
+              Delete
+            </Button>
+          )}
+        </div>
+      </td>
+    </tr>
+  );
+};
 
 export default function RolesPage() {
   const toast = useToast();
@@ -53,6 +105,10 @@ export default function RolesPage() {
     },
   });
 
+  const handleRefresh = () => {
+    queryClient.invalidateQueries({ queryKey: ['roles'] });
+  };
+
   // Extract roles list safely
   const roleList = Array.isArray(data?.data) ? data.data : (Array.isArray(data) ? data : []);
 
@@ -68,7 +124,7 @@ export default function RolesPage() {
           <p className="text-sm text-gray-500 mt-1">Define roles and assign permissions</p>
         </div>
         <div className="flex gap-2">
-          <Button variant="secondary" onClick={() => refetch()}>Refresh</Button>
+          <Button variant="secondary" onClick={handleRefresh}>Refresh</Button>
           <Link href="/dashboard/roles/create">
             <Button>Create Role</Button>
           </Link>
@@ -106,7 +162,7 @@ export default function RolesPage() {
               <tr><td colSpan={4} className="px-6 py-12 text-center text-gray-500">No roles found</td></tr>
             ) : (
               roleList.map((role: any) => (
-                <RoleRow key={role.id} role={role} onRefresh={() => queryClient.invalidateQueries({ queryKey: ['roles'] })} />
+                <RoleRow key={role.id} role={role} />
               ))
             )}
           </tbody>

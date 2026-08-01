@@ -103,7 +103,9 @@ export const partialUpdateRoleController = (req: Request, res: Response) => {
 export const deleteRoleController = (req: Request, res: Response) => {
   try {
     const id = req.params.id as string;
-    deleteRole(id)
+    // Allow force delete only for SUPER_ADMIN (from JWT token)
+    const force = req.role === 'SUPER_ADMIN' && req.query.force === 'true';
+    deleteRole(id, force)
       .then((result) => successResponse(res, result))
       .catch((error) => errorResponse(res, error.message, error.statusCode || 500));
   } catch (error) {
