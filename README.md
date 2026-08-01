@@ -23,7 +23,6 @@ Developed as part of the Backend Developer Intern assignment for **Trends Bird L
 - [Seed Data](#seed-data)
 - [Build & Quality](#build--quality)
 - [Development Guidelines](#development-guidelines)
-- [Evaluation Checklist](#evaluation-checklist)
 
 ---
 
@@ -833,22 +832,6 @@ Error responses:
 - Feature-based commits (one feature per commit)
 - Meaningful commit messages
 - Never commit secrets (`.env`, `.env.local`)
-
----
-
-## Evaluation Checklist
-
-- [x] All modules completed
-- [x] All routes protected with JWT authentication
-- [ ] Permissions tested (401 / 403 responses correct)
-- [ ] Refresh token rotation works end-to-end
-- [ ] Logout revokes token properly
-- [ ] Database migrations work from scratch
-- [x] Seed works from empty database
-- [x] README complete and professional
-- [ ] Code is explainable in interview
-- [ ] Backend deployed (live URL)
-- [ ] Frontend deployed (live URL)
 
 ---
 
