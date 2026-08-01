@@ -1,4 +1,3 @@
-
 'use client';
 import { useState, useEffect } from 'react';
 import { useForm, type SubmitHandler } from 'react-hook-form';
@@ -8,7 +7,7 @@ import { useRouter, useParams } from 'next/navigation';
 import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
+import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import api from '@/lib/axios-client';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
@@ -29,19 +28,7 @@ export default function EditUserPage() {
   const router = useRouter();
   const [user, setUser] = useState<any>(null);
   const [deleteUser, setDeleteUser] = useState<{ id: string | null; name: string } | null>(null);
-
-  // Fetch user data on mount
-  useEffect(() => {
-    if (id) {
-      api.get(`/api/users/${id}`)
-        .then(res => {
-          setUser(res.data);
-          formMethods.reset(res.data);
-        })
-        .catch(err => console.error('Failed to fetch user:', err))
-        .finally(() => setLoading(false));
-    }
-  }, [id]);
+  const [loading, setLoading] = useState(true);
 
   // Form initialization
   const {
@@ -55,6 +42,19 @@ export default function EditUserPage() {
     resolver: zodResolver(userSchema),
     defaultValues: {},
   });
+
+  // Fetch user data on mount
+  useEffect(() => {
+    if (id) {
+      api.get(`/api/users/${id}`)
+        .then(res => {
+          setUser(res.data);
+          formMethods.reset(res.data);
+        })
+        .catch(err => console.error('Failed to fetch user:', err))
+        .finally(() => setLoading(false));
+    }
+  }, [id]);
 
   const formMethods = { register, handleSubmit, errors, watch, setValue, reset };
 
@@ -83,7 +83,6 @@ export default function EditUserPage() {
     try {
       await api.put(`/api/users/${id}/activate`);
       toast.success('User activated!');
-      // Refresh the page to show updated status
       window.location.reload();
     } catch (err) {
       toast.error('Failed to activate user');
@@ -97,6 +96,16 @@ export default function EditUserPage() {
       window.location.reload();
     } catch (err) {
       toast.error('Failed to deactivate user');
+    }
+  };
+
+  const handleLock = async () => {
+    try {
+      await api.put(`/api/users/${id}/lock`);
+      toast.success('User locked!');
+      window.location.reload();
+    } catch (err) {
+      toast.error('Failed to lock user');
     }
   };
 
@@ -116,14 +125,25 @@ export default function EditUserPage() {
       toast.error(err.response?.data?.message || 'Failed to delete user');
     }
   };
-}
 
-export default function EditUserPage() {
+  if (loading) {
+    return (
+      <div className="p-8 min-h-full">
+        <div className="text-center py-12">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-indigo-600"></div>
+          <p className="mt-4 text-gray-500">Loading user...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="p-8 min-h-full">
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Edit User</h1>
-          <p className="text-gray-60">Update user details and permissions</p>
+          <p className="text-gray-600">Update user details and permissions</p>
         </div>
 
         {/* Current Info Display */}
@@ -132,31 +152,31 @@ export default function EditUserPage() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <p className="text-sm text-gray-500">Email</p>
-              <p className="font-medium text-gray-900">{user.email}</p>
+              <p className="font-medium text-gray-900">{user?.email}</p>
             </div>
             <div>
               <p className="text-sm text-gray-500">Role</p>
-              <span className={`inline-flex items-rounded-full px-2.5 py-.5 text-xs font-medium ${
-                user.role?.name === 'SUPER_ADMIN' ? 'bg-red-100 text-red-800' :
-                user.role?.name === 'ADMIN' ? 'bg-blue-100 text-blue-800' :
+              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                user?.role?.name === 'SUPER_ADMIN' ? 'bg-red-100 text-red-800' :
+                user?.role?.name === 'ADMIN' ? 'bg-blue-100 text-blue-800' :
                 'bg-gray-100 text-gray-800'
               }`}>
-                {user.role?.name || 'N/A'}
+                {user?.role?.name || 'N/A'}
               </span>
             </div>
             <div>
               <p className="text-sm text-gray-500">Status</p>
-              <span className={`inline-flex items-rounded-full px-2.5 py-.5 text-xs font-medium ${
-                user.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
-                user.status === 'INACTIVE' ? 'bg-gray-100 text-gray-800' :
+              <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${
+                user?.status === 'ACTIVE' ? 'bg-green-100 text-green-800' :
+                user?.status === 'INACTIVE' ? 'bg-gray-100 text-gray-800' :
                 'bg-yellow-100 text-yellow-800'
               }`}>
-                {user.status}
+                {user?.status}
               </span>
             </div>
             <div>
               <p className="text-sm text-gray-500">Created</p>
-              <p className="text-sm text-gray-500">{new Date(user.createdAt).toLocaleDateString()}</p>
+              <p className="text-sm text-gray-500">{user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</p>
             </div>
           </div>
         </section>
@@ -179,7 +199,7 @@ export default function EditUserPage() {
                 <Input
                   id="name"
                   {...register('name')}
-                  value={user.name}
+                  value={user?.name || ''}
                   onChange={(e) => setValue('name', e.target.value)}
                   className={`w-full ${errors.name ? 'border-red-500' : 'border-gray-300'}`}
                 />
@@ -196,7 +216,7 @@ export default function EditUserPage() {
                   id="email"
                   type="email"
                   {...register('email')}
-                  value={user.email}
+                  value={user?.email || ''}
                   readOnly
                   className="w-full bg-gray-100 border-gray-300"
                 />
@@ -260,16 +280,17 @@ export default function EditUserPage() {
               Account Actions
             </h2>
             <div className="flex flex-wrap gap-2">
-              {(user.status === 'INACTIVE' || user.status === 'LOCKED') && (
+              {(user?.status === 'INACTIVE' || user?.status === 'LOCKED') && (
                 <Button variant="secondary" onClick={handleActivate}>Activate User</Button>
               )}
-              {(user.status === 'ACTIVE' || user.status === 'LOCKED') && (
+              {(user?.status === 'ACTIVE' || user?.status === 'LOCKED') && (
                 <Button variant="secondary" onClick={handleDeactivate}>Deactivate User</Button>
               )}
-              {user.status !== 'LOCKED' && (
+              {user?.status !== 'LOCKED' && (
                 <Button variant="secondary" onClick={handleLock}>Lock User</Button>
               )}
-              </div>
+              <Button variant="destructive" onClick={handleDelete}>Delete User</Button>
+            </div>
           </section>
 
           {/* Save changes */}
@@ -279,18 +300,18 @@ export default function EditUserPage() {
           </div>
         </form>
       </div>
-    </div>
 
-    {/* Delete Confirmation Dialog */}
-    <ConfirmDialog
-      isOpen={!!deleteUser}
-      title="Delete User"
-      message={`Are you sure you want to delete "${deleteUser?.name}"? This action cannot be undone.`}
-      confirmText="Delete"
-      cancelText="Cancel"
-      variant="danger"
-      onConfirm={confirmDelete}
-      onCancel={() => setDeleteUser(null)}
-    />
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteUser}
+        title="Delete User"
+        message={`Are you sure you want to delete "${deleteUser?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteUser(null)}
+      />
+    </div>
   );
 }

@@ -201,19 +201,18 @@ export default function ProductsPage() {
         </table>
         <Pagination currentPage={page} totalPages={totalPages} onPageChange={setPage} />
       </div>
-    </div>
 
-    {/* Delete Confirmation Dialog */}
-    <ConfirmDialog
-      isOpen={!!deleteProduct}
-      title="Delete Product"
-      message={`Are you sure you want to delete "${deleteProduct?.name}"? This action cannot be undone.`}
-      confirmText="Delete"
-      cancelText="Cancel"
-      variant="danger"
-      onConfirm={confirmDelete}
-      onCancel={() => setDeleteProduct(null)}
-    />
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteProduct}
+        title="Delete Product"
+        message={`Are you sure you want to delete "${deleteProduct?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteProduct(null)}
+      />
     </div>
   );
 }

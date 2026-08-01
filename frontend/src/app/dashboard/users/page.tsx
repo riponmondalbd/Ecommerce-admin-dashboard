@@ -8,7 +8,7 @@ import Input from '@/components/ui/input';
 import Link from 'next/link';
 import ConfirmDialog from '@/components/ConfirmDialog';
 
-const UserRow = ({ user, onStatusChange }: { user: any; onStatusChange: () => void }) => {
+const UserRow = ({ user, onStatusChange, onDeleteClick }: { user: any; onStatusChange: () => void; onDeleteClick: (id: string, name: string) => void }) => {
   const toast = useToast();
 
   const handleAction = async (action: string) => {
@@ -18,22 +18,6 @@ const UserRow = ({ user, onStatusChange }: { user: any; onStatusChange: () => vo
       onStatusChange();
     } catch (err: any) {
       toast.error(err.response?.data?.message || `Failed to ${action} user`);
-    }
-  };
-
-  const handleDelete = async (id: string, name: string) => {
-    setDeleteUser({ id, name });
-  };
-
-  const confirmDelete = async () => {
-    if (!deleteUser) return;
-    try {
-      await api.delete(`/users/${deleteUser.id}`);
-      toast.success('User deleted successfully!');
-      setDeleteUser(null);
-      refetch();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to delete user');
     }
   };
 
@@ -88,7 +72,7 @@ const UserRow = ({ user, onStatusChange }: { user: any; onStatusChange: () => vo
           <Link href={`/dashboard/users/${user.id}/edit`}>
             <Button variant="outline" size="sm">Edit</Button>
           </Link>
-          <Button variant="destructive" size="sm" onClick={handleDelete}>Delete</Button>
+          <Button variant="destructive" size="sm" onClick={() => onDeleteClick(user.id, user.name)}>Delete</Button>
         </div>
       </td>
     </tr>
@@ -122,6 +106,22 @@ export default function UsersPage() {
 
   const totalItems = data?.pagination?.total || 0;
   const totalPages = Math.ceil(totalItems / LIMIT) || 1;
+
+  const handleDelete = (id: string, name: string) => {
+    setDeleteUser({ id, name });
+  };
+
+  const confirmDelete = async () => {
+    if (!deleteUser) return;
+    try {
+      await api.delete(`/users/${deleteUser.id}`);
+      toast.success('User deleted successfully!');
+      setDeleteUser(null);
+      refetch();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to delete user');
+    }
+  };
 
   return (
     <div className="p-8 min-h-full">
@@ -181,7 +181,7 @@ export default function UsersPage() {
               <tr><td colSpan={5} className="px-6 py-12 text-center text-gray-500">No users found</td></tr>
             ) : (
               (Array.isArray(data?.data) ? data.data : []).map((user: any) => (
-                <UserRow key={user.id} user={user} onStatusChange={() => refetch()} />
+                <UserRow key={user.id} user={user} onStatusChange={() => refetch()} onDeleteClick={handleDelete} />
               ))
             )}
           </tbody>
@@ -204,6 +204,18 @@ export default function UsersPage() {
           </div>
         )}
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <ConfirmDialog
+        isOpen={!!deleteUser}
+        title="Delete User"
+        message={`Are you sure you want to delete "${deleteUser?.name}"? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        variant="danger"
+        onConfirm={confirmDelete}
+        onCancel={() => setDeleteUser(null)}
+      />
     </div>
   );
 }
