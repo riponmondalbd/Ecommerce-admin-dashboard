@@ -80,14 +80,24 @@ export default function EditUserPage() {
       if (data.password) updateData.password = data.password;
       if (data.role && data.role !== '') updateData.role = data.role;
 
+      // Only include status if it's different from the original or explicitly changed
+      // We don't send status if it's the same as current (No change scenario)
+      if (data.status && data.status !== '') {
+        updateData.status = data.status;
+      }
+
+      console.log('[UpdateUser] Sending:', updateData);
       const response = await api.put(`/users/${user.id}`, updateData);
+      console.log('[UpdateUser] Success:', response.data);
       toast.success('User updated successfully!');
       router.push('/dashboard/users');
     } catch (error: any) {
+      console.error('[UpdateUser] Error:', error);
       let errorMsg = 'Failed to update user';
       if (error.response?.data?.message) errorMsg = error.response.data.message;
+      else if (error.response?.data?.errorMsg) errorMsg = error.response.data.errorMsg;
       else if (error.message) errorMsg = error.message;
-      else errorMsg = 'Unknown error';
+      else errorMsg = 'Unknown error occurred';
 
       toast.error(errorMsg);
       alert('Update failed: ' + errorMsg);
