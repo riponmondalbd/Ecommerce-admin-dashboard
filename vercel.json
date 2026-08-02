@@ -1,0 +1,23 @@
+{
+  "version": 2,
+  "buildCommand": "cd backend && npm install && npm run build && npx prisma generate && npx prisma migrate deploy && npx prisma db seed",
+  "outputDirectory": "backend/dist",
+  "functions": {
+    "backend/dist/**/*.js": {
+      "runtime": "nodejs20.x"
+    }
+  },
+  "rewrites": [
+    { "source": "/api/(.*)", "destination": "/api/$1" }
+  ],
+  "headers": [
+    {
+      "source": "/api/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,POST,PUT,PATCH,DELETE,OPTIONS" },
+        { "key": "Access-Control-Allow-Headers", "value": "Content-Type,Authorization" }
+      ]
+    }
+  ]
+}

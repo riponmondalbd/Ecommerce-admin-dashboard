@@ -6,19 +6,6 @@ const prisma = new PrismaClient()
 async function main() {
   console.log('Seeding database...')
 
-  // Clear existing data - delete in correct order to avoid FK constraints
-  await prisma.product.deleteMany()
-  await prisma.attributeValue.deleteMany()
-  await prisma.attribute.deleteMany()
-  await prisma.category.deleteMany()
-  await prisma.brand.deleteMany()
-  await prisma.media.deleteMany()
-  await prisma.refreshToken.deleteMany()
-  await prisma.user.deleteMany()
-  await prisma.rolePermission.deleteMany()
-  await prisma.role.deleteMany()
-  await prisma.permission.deleteMany()
-
   // Create Roles
   console.log('Creating roles...')
   const roles = {}
