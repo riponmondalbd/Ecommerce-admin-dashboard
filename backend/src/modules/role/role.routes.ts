@@ -10,7 +10,7 @@ import {
   removePermissionFromRoleController,
   getPermissionsForRole,
 } from './controllers/role.controller';
-import { requirePermission } from './middleware/requirePermission.middleware';
+import { requirePermission } from '../permission/middleware/requirePermission.middleware';
 import { authenticate } from '../../middleware/auth.middleware';
 
 export const roleRoutes = (app: Express) => {

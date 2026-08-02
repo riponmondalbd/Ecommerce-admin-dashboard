@@ -360,3 +360,8 @@ enum TransactionType {
   ADJUST
   TRANSFER
 }
+
+# 数据库迁移在此管理，不要手动修改迁移文件
+
+# 种子数据配置
+seed = "tsx prisma/seed.ts"
