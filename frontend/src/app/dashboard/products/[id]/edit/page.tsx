@@ -5,7 +5,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter, useParams } from 'next/navigation';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import useToast from '@/components/ui/Toast';
 import Button from '@/components/ui/button';
 import Input from '@/components/ui/input';
@@ -431,6 +431,7 @@ export default function EditProductPage() {
   const toast = useToast();
   const router = useRouter();
   const { id } = useParams<{ id: string }>();
+  const queryClient = useQueryClient();
 
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -522,7 +523,7 @@ export default function EditProductPage() {
     toast.success('Image uploaded and added!');
   }, [watch, setValue, toast]);
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = useCallback(async (data: any) => {
     if (!id) return;
     setSaving(true);
     try {
@@ -542,19 +543,32 @@ export default function EditProductPage() {
         isFeatured: data.isFeatured,
         sortOrder: data.sortOrder ?? 0,
         status: data.status,
-        brandId: data.brandId || undefined,
-        categories: data.categoryIds,
-        mediaIds: data.mediaIds.length > 0 ? data.mediaIds : undefined,
+        brandId: data.brandId || null,
+        categories: data.categoryIds || [],
+        mediaIds: data.mediaIds.length > 0 ? data.mediaIds : null,
       };
-      await api.put(`/products/${id}`, payload);
+
+      console.log('[EditProduct] Submitting payload:', payload);
+      console.log('[EditProduct] Product ID:', id);
+
+      const res = await api.put(`/products/${id}`, payload);
+      console.log('[EditProduct] Response:', res.data);
+
+      // Invalidate product queries so the list refreshes
+      await queryClient.invalidateQueries({ queryKey: ['products'] });
+      await queryClient.invalidateQueries({ queryKey: ['product', id] });
+
       toast.success('Product updated successfully!');
       router.push('/dashboard/products');
     } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Failed to update product');
+      console.error('[EditProduct] Error:', error);
+      console.error('[EditProduct] Response:', error.response?.data);
+      const message = error.response?.data?.message || error.message || 'Failed to update product';
+      toast.error(message);
     } finally {
       setSaving(false);
     }
-  };
+  }, [id, queryClient, router, toast]);
 
   if (loading) {
     return (
