@@ -6,7 +6,7 @@ import useToast from '@/components/ui/Toast';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('admin@trendsbird.com');
-  const [password, setPassword] = useState('Admin@123');
+  const [password, setPassword] = useState('SuperAdmin@123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
