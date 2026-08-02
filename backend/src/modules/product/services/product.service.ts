@@ -210,12 +210,12 @@ export const updateProduct = async (id: string, input: unknown, createdBy: strin
       hasVariants: validated.hasVariants,
       price: Number(Number(validated.price).toFixed(2)),
       salePrice: validated.salePrice !== undefined ? Number(Number(validated.salePrice).toFixed(2)) : null,
-      stock: validated.stock,
+      stock: validated.stock ?? undefined,
       stockStatus: validated.stockStatus,
       weight: validated.weight !== undefined ? Number(Number(validated.weight).toFixed(3)) : null,
       isActive: validated.isActive,
       isFeatured: validated.isFeatured,
-      sortOrder: validated.sortOrder,
+      sortOrder: validated.sortOrder ?? undefined,
       sku: validated.sku,
       status: validated.status,
       categories: validated.categories ? { set: validated.categories.map(id => ({ id })) } : undefined,
@@ -262,13 +262,13 @@ export const partialUpdateProduct = async (id: string, input: unknown, createdBy
   if (validated.sortOrder !== undefined) updateData.sortOrder = validated.sortOrder;
   if (validated.sku !== undefined) updateData.sku = validated.sku;
   if (validated.status !== undefined) updateData.status = validated.status;
-  if (validated.categories !== undefined) {
+  if (validated.categories !== undefined && validated.categories !== null) {
     updateData.categories = { set: validated.categories.map(id => ({ id })) };
   }
   if (validated.brandId !== undefined) {
     updateData.brandId = validated.brandId || null;
   }
-  if (validated.mediaIds !== undefined) {
+  if (validated.mediaIds !== undefined && validated.mediaIds !== null) {
     updateData.mediaAttachments = { deleteMany: {}, create: validated.mediaIds.map((id, idx) => ({ mediaId: id, sortOrder: idx })) };
   }
 
