@@ -14,6 +14,7 @@ const envSchema = z.object({
   JWT_REFRESH_EXPIRES_IN: z.string().default('7d'),
   UPLOAD_DIR: z.string().default('./uploads'),
   MAX_FILE_SIZE: z.string().default('5242880'),
+  BASE_URL: z.string(),
 });
 
 const parsed = envSchema.safeParse(process.env);
@@ -34,4 +35,5 @@ export const env = {
   jwtRefreshExpiresIn: parsed.data.JWT_REFRESH_EXPIRES_IN,
   uploadDir: parsed.data.UPLOAD_DIR,
   maxFileSize: parseInt(parsed.data.MAX_FILE_SIZE, 10),
+  baseUrl: parsed.data.BASE_URL,
 };

@@ -7,21 +7,40 @@ import multer from 'multer';
 import sharp from 'sharp';
 import fs from 'fs/promises';
 import path from 'path';
+import { env } from '../../../config/env';
+
+/**
+ * Resolve a writable upload directory for the current environment.
+ * - In serverless / containerized production (e.g. Vercel), process.cwd() may be read-only.
+ * - Fall back to /tmp/uploads which is always writable, otherwise use env.uploadDir.
+ */
+const resolveUploadDir = (): string => {
+  // Try env.uploadDir first (e.g. ./uploads or /data/uploads)
+  if (env.uploadDir) {
+    return env.uploadDir;
+  }
+  // Default: use a platform-appropriate writable directory
+  try {
+    const fallback = path.join(process.cwd(), 'uploads');
+    return fallback;
+  } catch {
+    return '/tmp/uploads';
+  }
+};
+
+const uploadDir = resolveUploadDir();
+
+// Ensure the upload directory exists before multer starts
+void fs.mkdir(uploadDir, { recursive: true }).catch((err) => {
+  console.warn('[media] Failed to create upload dir:', err?.message);
+});
 
 // Configure storage - use disk storage for file uploads
 const storage = multer.diskStorage({
   destination: (_req, _file, cb) => {
-    const uploadDir = path.join(process.cwd(), 'uploads');
-    // Ensure directory exists
-    fs.mkdir(uploadDir, { recursive: true })
+    void fs.mkdir(uploadDir, { recursive: true })
       .then(() => cb(null, uploadDir))
-      .catch(err => {
-        if (err?.code !== 'EEXIST') {
-          cb(err, uploadDir);
-          return;
-        }
-        cb(null, uploadDir);
-      });
+      .catch(() => cb(null, uploadDir));
   },
   filename: (_req, file, cb) => {
     const ext = path.extname(file.originalname);
@@ -189,7 +208,7 @@ export const createMedia = async (uploadedFile: any, requestBody: unknown) => {
     type = MediaType.OTHER;
   }
   
-  const publicUrl = `${process.env.BASE_URL || 'http://localhost:5000'}/uploads/${fileName}`;
+  const publicUrl = `${env.baseUrl}/uploads/${fileName}`;
 
   const fullData = {
     ...(typeof requestBody === 'object' && requestBody !== null ? requestBody : {}),
